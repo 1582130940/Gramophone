@@ -52,30 +52,4 @@
 
     </PreferenceCategory>
 
-    <PreferenceCategory
-        android:layout="@layout/preference_category_md"
-        android:title="@string/settings_category_links">
-
-        <Preference
-            android:layout="@layout/preference_basic"
-            android:summary="https://github.com/AkaneTan/Gramophone"
-            android:title="@string/settings_repository"
-            app:iconSpaceReserved="false">
-            <intent
-                android:action="android.intent.action.VIEW"
-                android:data="https://github.com/AkaneTan/Gramophone" />
-        </Preference>
-
-        <Preference
-            android:layout="@layout/preference_basic"
-            android:summary="@string/check_for_updates"
-            android:title="Telegram"
-            app:iconSpaceReserved="false">
-            <intent
-                android:action="android.intent.action.VIEW"
-                android:data="https://t.me/FoedusProgramme" />
-        </Preference>
-
-    </PreferenceCategory>
-
 </PreferenceScreen>
