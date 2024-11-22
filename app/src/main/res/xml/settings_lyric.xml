@@ -19,7 +19,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <SwitchPreferenceCompat
-        android:defaultValue="false"
+        android:defaultValue="true"
         android:key="lyric_bold"
         android:layout="@layout/preference_switch"
         android:summary="@string/settings_lyrics_bold_summary"
@@ -28,7 +28,7 @@
         app:iconSpaceReserved="false" />
 
     <SwitchPreferenceCompat
-        android:defaultValue="false"
+        android:defaultValue="true"
         android:key="lyric_center"
         android:layout="@layout/preference_switch"
         android:summary="@string/settings_lyrics_center_summary"
@@ -73,7 +73,7 @@
         app:iconSpaceReserved="false" />
 
     <SwitchPreferenceCompat
-        android:defaultValue="false"
+        android:defaultValue="true"
         android:key="translation_auto_word"
         android:layout="@layout/preference_switch"
         android:summary="@string/settings_translation_auto_word_summary"

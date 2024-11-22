@@ -23,7 +23,7 @@
         android:title="@string/settings_category_misc">
 
         <SwitchPreferenceCompat
-            android:defaultValue="false"
+            android:defaultValue="true"
             android:key="color_accuracy"
             android:layout="@layout/preference_switch"
             android:summary="@string/settings_color_accuracy_summary"
@@ -43,10 +43,11 @@
             android:key="self_log"
             android:layout="@layout/preference_basic"
             android:title="@string/settings_export_logs"
+            app:isPreferenceVisible="false"
             app:iconSpaceReserved="false" />
 
         <SwitchPreferenceCompat
-            android:defaultValue="false"
+            android:defaultValue="true"
             android:key="lyric_ui"
             android:layout="@layout/preference_switch"
             android:summary="@string/settings_lyrics_ui_summary"
