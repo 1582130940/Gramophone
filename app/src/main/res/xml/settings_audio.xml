@@ -23,7 +23,7 @@
         android:title="@string/preference_category_quality">
 
         <SwitchPreferenceCompat
-            android:defaultValue="false"
+            android:defaultValue="true"
             android:key="floatoutput"
             android:layout="@layout/preference_switch"
             android:summary="@string/settings_float_output_summary"

@@ -92,10 +92,6 @@ class ViewPager2Adapter(
         enum class Tab(val id: Int, val label: Int) {
             // Do not rename entries here, names are written to disk. Order is default tab order
             Songs(R.id.songs, R.string.category_songs),
-            Albums(R.id.albums, R.string.category_albums),
-            Artists(R.id.artists, R.string.category_artists),
-            Genres(R.id.genres, R.string.category_genres),
-            Dates(R.id.dates, R.string.category_dates),
             Folders(R.id.folders, R.string.filesystem),
             FileSystem(R.id.detailed_folders, R.string.folders),
             Playlist(R.id.playlists, R.string.category_playlists)
