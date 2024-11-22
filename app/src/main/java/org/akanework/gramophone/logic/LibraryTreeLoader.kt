@@ -228,10 +228,6 @@ class LibraryTreeLoader(
 
     private fun mapTabToMediaId(tab: ViewPager2Adapter.Companion.Tab) = when (tab) {
         ViewPager2Adapter.Companion.Tab.Songs -> "songs"
-        ViewPager2Adapter.Companion.Tab.Albums -> "albums"
-        ViewPager2Adapter.Companion.Tab.Artists -> "artists"
-        ViewPager2Adapter.Companion.Tab.Genres -> "genres"
-        ViewPager2Adapter.Companion.Tab.Dates -> "dates"
         ViewPager2Adapter.Companion.Tab.Folders -> "folders"
         ViewPager2Adapter.Companion.Tab.Playlist -> "playlists"
         ViewPager2Adapter.Companion.Tab.FileSystem -> "detailed_folders"

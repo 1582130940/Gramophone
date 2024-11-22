@@ -41,7 +41,7 @@
             android:widgetLayout="@layout/preference_switch_widget" />
 
         <SwitchPreferenceCompat
-            android:defaultValue="false"
+            android:defaultValue="true"
             android:icon="@drawable/ic_format_align_center"
             android:key="centered_title"
             android:layout="@layout/preference_switch"
@@ -68,7 +68,7 @@
             android:widgetLayout="@layout/preference_switch_widget" />
 
         <SwitchPreferenceCompat
-            android:defaultValue="false"
+            android:defaultValue="true"
             android:icon="@drawable/ic_high_res"
             android:key="audio_quality_info"
             android:layout="@layout/preference_switch"
