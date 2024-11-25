@@ -34,15 +34,15 @@ import androidx.core.view.marginLeft
 import androidx.core.view.marginRight
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
-import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.Locale
 import org.akanework.gramophone.BuildConfig
 import org.akanework.gramophone.R
 import org.akanework.gramophone.logic.allowDiskAccessInStrictMode
 import org.akanework.gramophone.logic.enableEdgeToEdgePaddingListener
 import org.akanework.gramophone.logic.hasOsClipboardDialog
 import org.akanework.gramophone.logic.updateMargin
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 
 /**
  * BugHandlerActivity:

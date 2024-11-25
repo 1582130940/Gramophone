@@ -7,10 +7,10 @@ import android.graphics.Shader
 import android.text.TextPaint
 import android.text.style.CharacterStyle
 import android.text.style.UpdateAppearance
-import kotlin.math.max
-import kotlin.math.min
 import org.akanework.gramophone.logic.utils.CalculationUtils.lerp
 import org.akanework.gramophone.logic.utils.CalculationUtils.lerpInv
+import kotlin.math.max
+import kotlin.math.min
 
 // Hacks, hacks, hacks...
 class MyGradientSpan(val gradientWidth: Float, color: Int, highlightColor: Int) : CharacterStyle(),

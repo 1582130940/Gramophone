@@ -19,8 +19,6 @@ import androidx.core.graphics.TypefaceCompat
 import androidx.core.text.getSpans
 import androidx.core.widget.NestedScrollView
 import androidx.preference.PreferenceManager
-import kotlin.math.max
-import kotlin.math.min
 import org.akanework.gramophone.R
 import org.akanework.gramophone.logic.dpToPx
 import org.akanework.gramophone.logic.getBooleanStrict
@@ -32,6 +30,8 @@ import org.akanework.gramophone.logic.utils.CalculationUtils.lerpInv
 import org.akanework.gramophone.logic.utils.SemanticLyrics
 import org.akanework.gramophone.logic.utils.SpeakerEntity
 import org.akanework.gramophone.ui.MainActivity
+import kotlin.math.max
+import kotlin.math.min
 
 class NewLyricsView(context: Context, attrs: AttributeSet) : View(context, attrs) {
 

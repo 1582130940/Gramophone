@@ -61,8 +61,6 @@ import androidx.media3.session.SessionCommand
 import androidx.vectordrawable.graphics.drawable.AnimatedVectorDrawableCompat
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.appbar.CollapsingToolbarLayout
-import java.io.File
-import java.util.Locale
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -78,6 +76,8 @@ import org.akanework.gramophone.logic.utils.AudioFormatDetector.Companion.AudioF
 import org.akanework.gramophone.logic.utils.MediaStoreUtils
 import org.akanework.gramophone.logic.utils.SemanticLyrics
 import org.jetbrains.annotations.Contract
+import java.io.File
+import java.util.Locale
 
 fun Player.playOrPause() {
     if (isPlaying) {

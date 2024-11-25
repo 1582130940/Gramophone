@@ -9,11 +9,11 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.extractor.metadata.id3.BinaryFrame
 import androidx.media3.extractor.metadata.id3.TextInformationFrame
 import androidx.media3.extractor.metadata.vorbis.VorbisComment
+import org.akanework.gramophone.logic.replaceAllSupport
+import org.akanework.gramophone.logic.utils.SemanticLyrics.Word
 import java.io.File
 import java.nio.charset.Charset
 import kotlin.math.min
-import org.akanework.gramophone.logic.replaceAllSupport
-import org.akanework.gramophone.logic.utils.SemanticLyrics.Word
 
 object LrcUtils {
 

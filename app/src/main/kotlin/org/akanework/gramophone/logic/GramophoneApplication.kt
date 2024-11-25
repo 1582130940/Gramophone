@@ -42,14 +42,10 @@ import coil3.fetch.ImageFetchResult
 import coil3.request.NullRequestDataException
 import coil3.size.pxOrElse
 import coil3.util.Logger
-import java.io.File
-import java.io.IOException
-import kotlin.system.exitProcess
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.akanework.gramophone.BuildConfig
@@ -57,7 +53,9 @@ import org.akanework.gramophone.R
 import org.akanework.gramophone.logic.ui.BugHandlerActivity
 import org.akanework.gramophone.ui.LyricWidgetProvider
 import uk.akane.libphonograph.reader.FlowReader
-import uk.akane.libphonograph.reader.FlowReaderConfiguration
+import java.io.File
+import java.io.IOException
+import kotlin.system.exitProcess
 
 /**
  * GramophoneApplication

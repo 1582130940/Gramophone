@@ -2,8 +2,6 @@ package org.akanework.gramophone.logic.utils
 
 import android.os.Parcel
 import android.os.Parcelable
-import java.util.concurrent.atomic.AtomicReference
-import kotlin.collections.map
 import kotlinx.parcelize.Parceler
 import kotlinx.parcelize.Parcelize
 import kotlinx.parcelize.WriteWith
@@ -12,6 +10,8 @@ import org.akanework.gramophone.logic.utils.SemanticLyrics.LyricLineHolder
 import org.akanework.gramophone.logic.utils.SemanticLyrics.SyncedLyrics
 import org.akanework.gramophone.logic.utils.SemanticLyrics.UnsyncedLyrics
 import org.akanework.gramophone.logic.utils.SemanticLyrics.Word
+import java.util.concurrent.atomic.AtomicReference
+import kotlin.collections.map
 
 /*
  * Syntactic-semantic lyric parser.
