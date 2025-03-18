@@ -16,12 +16,12 @@ import android.widget.RemoteViews
 import android.widget.RemoteViewsService
 import androidx.appcompat.view.ContextThemeWrapper
 import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import org.akanework.gramophone.R
 import org.akanework.gramophone.logic.GramophonePlaybackService
-import androidx.core.net.toUri
 
 private inline val service
     get() = GramophonePlaybackService.instanceForWidgetAndLyricsOnly

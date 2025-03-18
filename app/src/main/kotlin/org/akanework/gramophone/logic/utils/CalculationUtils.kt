@@ -19,6 +19,7 @@ package org.akanework.gramophone.logic.utils
 
 import androidx.annotation.ColorInt
 import androidx.annotation.IntRange
+import org.akanework.gramophone.logic.utils.CalculationUtils.convertDurationToTimeStamp
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale

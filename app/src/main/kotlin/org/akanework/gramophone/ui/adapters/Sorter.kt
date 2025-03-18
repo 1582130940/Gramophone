@@ -18,9 +18,9 @@
 package org.akanework.gramophone.ui.adapters
 
 import android.net.Uri
-import java.io.File
 import org.akanework.gramophone.logic.comparators.SupportComparator
 import org.akanework.gramophone.logic.utils.CalculationUtils
+import java.io.File
 
 class Sorter<T>(
     val sortingHelper: Helper<T>,

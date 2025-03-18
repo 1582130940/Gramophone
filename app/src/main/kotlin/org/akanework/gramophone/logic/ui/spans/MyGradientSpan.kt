@@ -8,10 +8,10 @@ import android.text.TextPaint
 import android.text.style.CharacterStyle
 import android.text.style.UpdateAppearance
 import android.view.animation.PathInterpolator
-import kotlin.math.abs
-import kotlin.math.min
 import org.akanework.gramophone.logic.utils.CalculationUtils.lerp
 import org.akanework.gramophone.logic.utils.CalculationUtils.lerpInv
+import kotlin.math.abs
+import kotlin.math.min
 
 // Hacks, hacks, hacks...
 private val gradientPathInterpolator = PathInterpolator(0.38f, 0.39f, 0f, 1f)
