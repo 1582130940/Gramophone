@@ -14,8 +14,8 @@ import android.graphics.Rect
 import android.graphics.Region
 import android.graphics.drawable.Drawable
 import androidx.annotation.ColorInt
-import kotlin.random.Random
 import org.akanework.gramophone.logic.utils.CalculationUtils.lerp
+import kotlin.random.Random
 
 private inline val padding
     get() = 160f

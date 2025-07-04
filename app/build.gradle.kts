@@ -2,7 +2,6 @@
 
 import com.android.build.api.dsl.ApplicationBuildType
 import com.android.build.gradle.tasks.PackageAndroidArtifact
-import org.gradle.kotlin.dsl.support.kotlinCompilerOptions
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.util.removeSuffixIfPresent
 import java.util.Properties

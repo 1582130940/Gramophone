@@ -23,7 +23,6 @@ import android.text.TextDirectionHeuristics
 import android.text.TextPaint
 import android.text.TextUtils
 import androidx.annotation.IntRange
-import java.lang.Exception
 import java.lang.reflect.Constructor
 import kotlin.math.max
 import kotlin.math.min
