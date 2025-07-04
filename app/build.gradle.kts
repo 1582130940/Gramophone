@@ -6,7 +6,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.util.removeSuffixIfPresent
 import java.util.Properties
 
-val aboutLibsVersion = "12.2.3" // keep in sync with plugin version
+val aboutLibsVersion = "12.2.4" // keep in sync with plugin version
 
 plugins {
     id("com.android.application")
@@ -266,7 +266,7 @@ aboutLibraries {
 
 dependencies {
     implementation(project(":hificore"))
-    val composeBom = platform("androidx.compose:compose-bom:2025.05.00")
+    val composeBom = platform("androidx.compose:compose-bom:2025.06.01")
     implementation(composeBom)
     androidTestImplementation(composeBom)
     implementation("androidx.compose.material:material-icons-extended")
@@ -280,11 +280,11 @@ dependencies {
     implementation("androidx.concurrent:concurrent-futures-ktx:1.2.0")
     implementation("androidx.constraintlayout:constraintlayout:2.2.1")
     implementation("androidx.core:core-ktx:1.16.0")
-    implementation("androidx.core:core-splashscreen:1.2.0-beta02")
+    implementation("androidx.core:core-splashscreen:1.2.0-rc01")
     //implementation("androidx.datastore:datastore-preferences:1.1.0-rc01") TODO don't abuse shared prefs
     implementation("androidx.fragment:fragment-ktx:1.8.8")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.1")
-    implementation("androidx.mediarouter:mediarouter:1.8.0")
+    implementation("androidx.mediarouter:mediarouter:1.8.1")
     val media3Version = "1.7.1"
     implementation("androidx.media3:media3-common-ktx:$media3Version")
     implementation("androidx.media3:media3-exoplayer:$media3Version")
