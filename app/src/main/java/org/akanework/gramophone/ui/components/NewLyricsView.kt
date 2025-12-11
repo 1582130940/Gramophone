@@ -360,7 +360,7 @@ class NewLyricsView(context: Context, attrs: AttributeSet?) : ScrollingView2(con
                 lastTs + (timeOffsetForUse * 2).toULong()
             else lastTs + timeOffsetForUse.toULong()
             val highlight = posForRender in fadeInStart..fadeOutEnd
-            val scrollTarget = posForRender in fadeInStart..fadeOutStart
+            val scrollTarget = posForRender in fadeInStart..(lastTs - timeOffsetForUse.toULong())
             val scaleInProgress = if (it.line == null) 1f else lerpInv(
                 fadeInStart.toFloat(), fadeInEnd.toFloat(),
                 posForRender.toFloat()
