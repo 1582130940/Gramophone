@@ -1456,7 +1456,7 @@ fun parseTtml(audioMimeType: String?, lyricText: String): SemanticLyrics? {
             Pair(text, speaker)
         })
     }
-    return SyncedLyrics(paragraphs.map {
+    return SyncedLyrics(paragraphs.mapIndexed { j, it ->
         val text = StringBuilder()
         val words = mutableListOf<IntRange>()
         for (i in it.texts) {
@@ -1484,7 +1484,9 @@ fun parseTtml(audioMimeType: String?, lyricText: String): SemanticLyrics? {
         if (it.time == null) {
             throw IllegalArgumentException("it.time == null but some other P has non-null time")
         }
-        LyricLine(text.toString(), it.time.first, it.time.last, false,
+        val next = paragraphs.getOrNull(j + 1)?.time?.first
+        LyricLine(text.toString(), it.time.first, it.time.last,
+            next != null && (it.time.last == next || it.time.last == next - 1uL),
             theWords, speaker, it.translated)
     }).also { splitBidirectionalWords(it) }
 }
