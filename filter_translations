@@ -70,6 +70,7 @@ def delete_strings(xml_file: Path, names_to_delete: list[str]) -> None:
     else:
         print("  No strings to delete")
 
+    xml_file.parent.mkdir(parents=True, exist_ok=True)
     tree.write(
         str(xml_file),
         encoding='utf-8',
