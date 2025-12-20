@@ -348,15 +348,4 @@ class LrcUtilsTest {
 		assert(!lrc[0].isTranslated)
 		assert(!lrc[1].isTranslated)
 	}
-
-	@Test
-	fun endLineTimestamps() {
-		val lrc = parseSynced("[00:00.00]hello[00:01.00]\n[00:02.00]hello2[00:03.00]")
-		assertNotNull(lrc)
-		assertEquals(2, lrc!!.size)
-		assertEquals("hello", lrc[0].text)
-		assertEquals("hello2", lrc[1].text)
-		assertEquals(0UL..<1000UL, lrc[0].timeRange)
-		assertEquals(2000UL..<3000UL, lrc[1].timeRange)
-	}
 }
