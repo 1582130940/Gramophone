@@ -35,9 +35,8 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.channels.BufferOverflow
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted.Companion.WhileSubscribed
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.combineTransform
 import kotlinx.coroutines.flow.map
@@ -51,6 +50,7 @@ import org.akanework.gramophone.logic.getStringStrict
 import org.akanework.gramophone.logic.ui.DefaultItemHeightHelper
 import org.akanework.gramophone.logic.ui.ItemHeightHelper
 import org.akanework.gramophone.logic.ui.MyRecyclerView
+import org.akanework.gramophone.logic.utils.flows.PauseManagingSharedFlow.Companion.sharePauseableIn
 import org.akanework.gramophone.ui.MainActivity
 import org.akanework.gramophone.ui.fragments.AdapterFragment
 import org.akanework.gramophone.ui.getAdapterType
@@ -89,18 +89,25 @@ class DetailedFolderAdapter(
         prefSortType
     else
         Sorter.Type.ByFilePathAscending)
-    private var fileNodePath = MutableSharedFlow<List<String>>(replay = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
+    private var fileNodePath = MutableStateFlow<List<String>?>(null)
     private val liveData = if (isDetailed) mainActivity.reader.folderStructureFlow
         else mainActivity.reader.shallowFolderFlow
     private val dataFlow = liveData.combineTransform(fileNodePath) { root, path ->
-        var item: FileNode? = root
-        for (path in path) {
-            item = item?.folderList?.get(path)
+        var item: FileNode? = null
+        if (path != null) {
+            item = root
+            for (path in path) {
+                item = item?.folderList?.get(path)
+            }
         }
-        if (item == null || path.isEmpty()) {
+        // 1. path is null because we don't have any location yet, choose default path;
+        // 2. item is null because folder no longer exists on disk, reset to default path
+        if (item == null) {
+            item = root
             var newPath = mutableListOf<String>()
             if (isDetailed) {
-                while (item?.folderList?.size == 1) {
+                // Enter as many single-child-only folders as we can starting from root
+                while (item!!.folderList.size == 1 && item.songList.isEmpty()) {
                     newPath.add(item.folderList.keys.first())
                     item = item.folderList.values.first()
                 }
@@ -110,7 +117,7 @@ class DetailedFolderAdapter(
             return@combineTransform // we will run again with new path soon
         }
         emit(item)
-    }
+    }.sharePauseableIn(CoroutineScope(Dispatchers.Default), WhileSubscribed(), replay = 1)
     private val folderFlow = dataFlow.combine(sortType) { item, sortType ->
         if (sortType == Sorter.Type.BySizeDescending)
             item.folderList.values.sortedByDescending { it.folderList.size + it.songList.size }
@@ -120,11 +127,10 @@ class DetailedFolderAdapter(
                     it.folderName
                 }))
     }
-    private var folderList: List<FileNode>? = null
+    private var folderList: ImmutableList<FileNode> = persistentListOf()
     private var scope: CoroutineScope? = null
     private val folderPopAdapter: FolderPopAdapter = FolderPopAdapter(this)
-    private val folderAdapter: FolderListAdapter =
-        FolderListAdapter(persistentListOf(), mainActivity, this)
+    private val folderAdapter: FolderListAdapter = FolderListAdapter(mainActivity, this)
     private val decorAdapter = BaseDecorAdapter<DetailedFolderAdapter>(this, R.plurals.folders_plural)
     private val songAdapter: SongAdapter =
         SongAdapter(fragment, dataFlow.map { it.songList }, folder = true).apply {
@@ -152,7 +158,7 @@ class DetailedFolderAdapter(
         this.scope!!.launch {
             folderFlow.collect { newList ->
                 val oldList = folderList
-                val canDiff = oldList != null && this@DetailedFolderAdapter.recyclerView != null
+                val canDiff = this@DetailedFolderAdapter.recyclerView != null
                 val diffResult = if (canDiff) DiffUtil.calculateDiff(
                     DiffCallback(oldList, newList)) else null
                 withContext(Dispatchers.Main) {
@@ -174,7 +180,7 @@ class DetailedFolderAdapter(
         this.scope!!.launch {
             fileNodePath.collect {
                 withContext(Dispatchers.Main) {
-                    folderPopAdapter.enabled = !it.isEmpty()
+                    folderPopAdapter.enabled = !it.isNullOrEmpty()
                 }
             }
         }
@@ -296,8 +302,7 @@ class DetailedFolderAdapter(
     override fun getItemCount() = 0
 
 
-    private class FolderListAdapter(
-        private var folderList: ImmutableList<FileNode>,
+    private inner class FolderListAdapter(
         private val activity: MainActivity,
         frag: DetailedFolderAdapter
     ) : FolderCardAdapter(frag), PopupTextProvider {
