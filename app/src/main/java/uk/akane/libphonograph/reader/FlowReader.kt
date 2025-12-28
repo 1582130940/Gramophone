@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.launch
+import org.akanework.gramophone.logic.emitOrDie
 import org.akanework.gramophone.logic.hasAudioPermission
 import org.akanework.gramophone.logic.utils.Flags
 import org.akanework.gramophone.logic.utils.flows.Invalidation
@@ -61,8 +62,7 @@ class FlowReader(
     private val finishRefreshTrigger = MutableSharedFlow<Unit>(replay = 0)
     private val manualRefreshTrigger = MutableSharedFlow<Unit>(replay = 1)
     init {
-        if (!manualRefreshTrigger.tryEmit(Unit))
-            throw IllegalStateException()
+        manualRefreshTrigger.emitOrDie(Unit)
     }
     // Start observing as soon as class gets instantiated. ContentObservers are cheap, and more
     // importantly, this allows us to skip the expensive Reader call if nothing changed while we

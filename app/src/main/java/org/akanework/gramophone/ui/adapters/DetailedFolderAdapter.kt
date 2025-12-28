@@ -17,7 +17,6 @@
 
 package org.akanework.gramophone.ui.adapters
 
-import android.annotation.SuppressLint
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.Animation
@@ -25,23 +24,29 @@ import android.view.animation.AnimationUtils
 import android.widget.TextView
 import androidx.core.view.doOnLayout
 import androidx.fragment.app.Fragment
-import androidx.media3.common.MediaItem
 import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.combineTransform
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import me.zhanghai.android.fastscroll.PopupTextProvider
 import org.akanework.gramophone.R
 import org.akanework.gramophone.logic.comparators.SupportComparator
+import org.akanework.gramophone.logic.emitOrDie
 import org.akanework.gramophone.logic.getStringStrict
 import org.akanework.gramophone.logic.ui.DefaultItemHeightHelper
 import org.akanework.gramophone.logic.ui.ItemHeightHelper
@@ -84,16 +89,45 @@ class DetailedFolderAdapter(
         prefSortType
     else
         Sorter.Type.ByFilePathAscending)
+    private var fileNodePath = MutableSharedFlow<List<String>>(replay = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
     private val liveData = if (isDetailed) mainActivity.reader.folderStructureFlow
         else mainActivity.reader.shallowFolderFlow
+    private val dataFlow = liveData.combineTransform(fileNodePath) { root, path ->
+        var item: FileNode? = root
+        for (path in path) {
+            item = item?.folderList?.get(path)
+        }
+        if (item == null || path.isEmpty()) {
+            var newPath = mutableListOf<String>()
+            if (isDetailed) {
+                while (item?.folderList?.size == 1) {
+                    newPath.add(item.folderList.keys.first())
+                    item = item.folderList.values.first()
+                }
+            }
+            // This may race with user click if a folder was deleted while a user clicks.
+            fileNodePath.emitOrDie(newPath)
+            return@combineTransform // we will run again with new path soon
+        }
+        emit(item)
+    }
+    private val folderFlow = dataFlow.combine(sortType) { item, sortType ->
+        if (sortType == Sorter.Type.BySizeDescending)
+            item.folderList.values.sortedByDescending { it.folderList.size + it.songList.size }
+        else
+            item.folderList.values.sortedWith(
+                SupportComparator.createAlphanumericComparator(cnv = {
+                    it.folderName
+                }))
+    }
+    private var folderList: List<FileNode>? = null
     private var scope: CoroutineScope? = null
     private val folderPopAdapter: FolderPopAdapter = FolderPopAdapter(this)
     private val folderAdapter: FolderListAdapter =
-        FolderListAdapter(listOf(), mainActivity, this)
-    private val songList = MutableSharedFlow<List<MediaItem>>(1)
+        FolderListAdapter(persistentListOf(), mainActivity, this)
     private val decorAdapter = BaseDecorAdapter<DetailedFolderAdapter>(this, R.plurals.folders_plural)
     private val songAdapter: SongAdapter =
-        SongAdapter(fragment, songList, folder = true).apply {
+        SongAdapter(fragment, dataFlow.map { it.songList }, folder = true).apply {
             onFullyDrawnListener = { reportFullyDrawn() }
             decorAdapter.jumpUpPos = { 0 }
         }
@@ -106,8 +140,6 @@ class DetailedFolderAdapter(
             DefaultItemHeightHelper.concatItemHeightHelper(folderAdapter,
                 { folderAdapter.itemCount }, songAdapter.itemHeightHelper)))
     }
-    private var root: FileNode? = null
-    private var fileNodePath = ArrayList<String>()
     private var recyclerView: MyRecyclerView? = null
     init {
         decorAdapter.jumpDownPos = { decorAdapter.itemCount + folderPopAdapter.itemCount + folderAdapter.itemCount }
@@ -118,11 +150,32 @@ class DetailedFolderAdapter(
         this.recyclerView = recyclerView
         this.scope = CoroutineScope(Dispatchers.Default)
         this.scope!!.launch {
-            liveData.collect {
-                if (root !== it)
-                    withContext(Dispatchers.Main) {
-                        onChanged(it)
+            folderFlow.collect { newList ->
+                val oldList = folderList
+                val canDiff = oldList != null && this@DetailedFolderAdapter.recyclerView != null
+                val diffResult = if (canDiff) DiffUtil.calculateDiff(
+                    DiffCallback(oldList, newList)) else null
+                withContext(Dispatchers.Main) {
+                    folderList = newList.toImmutableList()
+                    if (diffResult != null)
+                        diffResult.dispatchUpdatesTo(folderAdapter)
+                    else
+                        @Suppress("NotifyDataSetChanged")
+                        folderAdapter.notifyDataSetChanged()
+                    decorAdapter.updateSongCounter()
+                    this@DetailedFolderAdapter.recyclerView?.doOnLayout {
+                        this@DetailedFolderAdapter.recyclerView?.postOnAnimation {
+                            folderAdapter.reportFullyDrawn()
+                        }
                     }
+                }
+            }
+        }
+        this.scope!!.launch {
+            fileNodePath.collect {
+                withContext(Dispatchers.Main) {
+                    folderPopAdapter.enabled = !it.isEmpty()
+                }
             }
         }
     }
@@ -133,50 +186,48 @@ class DetailedFolderAdapter(
         scope = null
     }
 
-    fun onChanged(value: FileNode) {
-        root = value
-        var value = value
-        if (fileNodePath.isEmpty() && isDetailed) {
-            while (value.folderList.size == 1) {
-                fileNodePath.add(value.folderList.keys.first())
-                value = value.folderList.values.first()
-            }
-        }
-        update(null)
-    }
-
     fun enter(path: String?) {
+        val currentPath = fileNodePath.replayCache.firstOrNull() ?: return
         if (path != null) {
-            fileNodePath.add(path)
-            update(false)
-        } else if (fileNodePath.isNotEmpty()) {
-            fileNodePath.removeAt(fileNodePath.lastIndex)
-            update(true)
+            update(false) {
+                fileNodePath.emitOrDie(currentPath + path)
+            }
+        } else if (currentPath.isNotEmpty()) {
+            update(true) {
+                // Remove last
+                fileNodePath.emitOrDie(currentPath.subList(0, currentPath.size - 1))
+            }
         }
     }
 
     override fun sort(type: Sorter.Type) {
         sortType.value = type
-        update(null)
     }
 
-    private fun update(invertedDirection: Boolean?) {
-        var item = root
-        for (path in fileNodePath) {
-            item = item?.folderList?.get(path)
-        }
-        if (item == null) {
-            fileNodePath.clear()
-            item = root
-        }
-        val doUpdate = { canDiff: Boolean ->
-            folderPopAdapter.enabled = fileNodePath.isNotEmpty()
-            folderAdapter.updateList(item?.folderList?.values ?: listOf(), canDiff, sortType.value)
-            runBlocking { songList.emit(item?.songList ?: listOf()) }
-        }
+    private class DiffCallback(
+        private val oldList: List<FileNode>,
+        private val newList: List<FileNode>,
+    ) : DiffUtil.Callback() {
+        override fun getOldListSize() = oldList.size
+
+        override fun getNewListSize() = newList.size
+
+        override fun areItemsTheSame(
+            oldItemPosition: Int,
+            newItemPosition: Int,
+        ) = oldList[oldItemPosition].folderName == newList[newItemPosition].folderName
+
+        override fun areContentsTheSame(
+            oldItemPosition: Int,
+            newItemPosition: Int,
+        ) = oldList[oldItemPosition] == newList[newItemPosition]
+
+    }
+
+    private fun update(invertedDirection: Boolean, doUpdate: () -> Unit) {
         recyclerView.let {
-            if (it == null || invertedDirection == null) {
-                doUpdate(it != null)
+            if (it == null) {
+                doUpdate()
                 return@let
             }
             val animation = AnimationUtils.loadAnimation(
@@ -207,7 +258,7 @@ class DetailedFolderAdapter(
                     folderAdapter.onFullyDrawnListener = {
                         if (i.decrementAndGet() == 0) next()
                     }
-                    doUpdate(false)
+                    doUpdate()
                 }
 
                 override fun onAnimationRepeat(animation: Animation) {}
@@ -246,12 +297,11 @@ class DetailedFolderAdapter(
 
 
     private class FolderListAdapter(
-        private var folderList: List<FileNode>,
+        private var folderList: ImmutableList<FileNode>,
         private val activity: MainActivity,
         frag: DetailedFolderAdapter
     ) : FolderCardAdapter(frag), PopupTextProvider {
 
-        @SuppressLint("SetTextI18n")
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
             val item = folderList[position]
             holder.folderName.text = item.folderName
@@ -274,55 +324,8 @@ class DetailedFolderAdapter(
 
         override fun getItemCount(): Int = folderList.size
 
-        @SuppressLint("NotifyDataSetChanged")
-        fun updateList(newCollection: Collection<FileNode>, canDiff: Boolean, sortType: Sorter.Type) {
-            val newList = newCollection.toMutableList()
-            CoroutineScope(Dispatchers.Default).launch {
-                val diffResult = if (canDiff) DiffUtil.calculateDiff(
-                    DiffCallback(folderList, newList)) else null
-                val newList2 = if (sortType == Sorter.Type.BySizeDescending)
-                    newList.sortedByDescending { it.folderList.size + it.songList.size }
-                else
-                    newList.sortedWith(
-                    SupportComparator.createAlphanumericComparator(cnv = {
-                        it.folderName
-                    }))
-                withContext(Dispatchers.Main) {
-                    folderList = newList2
-                    if (diffResult != null)
-                        diffResult.dispatchUpdatesTo(this@FolderListAdapter)
-                    else
-                        notifyDataSetChanged()
-                    folderFragment.decorAdapter.updateSongCounter()
-                    folderFragment.recyclerView?.doOnLayout {
-                        folderFragment.recyclerView?.postOnAnimation { reportFullyDrawn() }
-                    }
-                }
-            }
-        }
-
-        private inner class DiffCallback(
-            private val oldList: List<FileNode>,
-            private val newList: List<FileNode>,
-        ) : DiffUtil.Callback() {
-            override fun getOldListSize() = oldList.size
-
-            override fun getNewListSize() = newList.size
-
-            override fun areItemsTheSame(
-                oldItemPosition: Int,
-                newItemPosition: Int,
-            ) = oldList[oldItemPosition].folderName == newList[newItemPosition].folderName
-
-            override fun areContentsTheSame(
-                oldItemPosition: Int,
-                newItemPosition: Int,
-            ) = oldList[oldItemPosition] == newList[newItemPosition]
-
-        }
-
         var onFullyDrawnListener: (() -> Unit)? = null
-        private fun reportFullyDrawn() {
+        fun reportFullyDrawn() {
             onFullyDrawnListener?.invoke()
             onFullyDrawnListener = null
         }

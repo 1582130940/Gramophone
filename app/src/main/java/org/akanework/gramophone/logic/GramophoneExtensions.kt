@@ -36,7 +36,6 @@ import android.os.Looper
 import android.os.Message
 import android.os.StrictMode
 import android.os.ext.SdkExtensions
-import androidx.media3.common.util.Log
 import android.view.View
 import android.view.ViewGroup.MarginLayoutParams
 import android.view.ViewPropertyAnimator
@@ -64,18 +63,17 @@ import androidx.media3.common.C
 import androidx.media3.common.Format
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
-import androidx.media3.common.Timeline
-import androidx.media3.exoplayer.analytics.AnalyticsListener
+import androidx.media3.common.util.Log
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionCommand
 import androidx.vectordrawable.graphics.drawable.AnimatedVectorDrawableCompat
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.appbar.CollapsingToolbarLayout
+import kotlinx.coroutines.flow.MutableSharedFlow
 import org.akanework.gramophone.BuildConfig
 import org.akanework.gramophone.R
 import org.akanework.gramophone.logic.GramophonePlaybackService.Companion.SERVICE_GET_AUDIO_FORMAT
 import org.akanework.gramophone.logic.GramophonePlaybackService.Companion.SERVICE_GET_LYRICS
-import org.akanework.gramophone.logic.GramophonePlaybackService.Companion.SERVICE_GET_SESSION
 import org.akanework.gramophone.logic.GramophonePlaybackService.Companion.SERVICE_QUERY_TIMER
 import org.akanework.gramophone.logic.GramophonePlaybackService.Companion.SERVICE_SET_TIMER
 import org.akanework.gramophone.logic.utils.AfFormatInfo
@@ -155,6 +153,11 @@ fun Drawable.startAnimation() {
         is AnimatedVectorDrawableCompat -> start()
         else -> throw IllegalArgumentException()
     }
+}
+
+fun <T> MutableSharedFlow<T>.emitOrDie(value: T) {
+    if (!tryEmit(value))
+        throw IllegalStateException("tryEmit should have succeeded")
 }
 
 fun TextView.setTextAnimation(
@@ -297,7 +300,7 @@ fun MediaController.getLyrics(): SemanticLyrics? =
         BundleCompat.getParcelable(it, "lyrics", SemanticLyrics::class.java)
     }
 
-fun MediaController.getAudioFormat(): AudioFormatDetector.AudioFormats? =
+fun MediaController.getAudioFormat(): AudioFormatDetector.AudioFormats =
     sendCustomCommand(
         SessionCommand(SERVICE_GET_AUDIO_FORMAT, Bundle.EMPTY),
         Bundle.EMPTY
@@ -312,15 +315,6 @@ fun MediaController.getAudioFormat(): AudioFormatDetector.AudioFormats? =
             BundleCompat.getParcelable(it, "hal_format", AfFormatInfo::class.java),
             BundleCompat.getParcelable(it, "bt", BtCodecInfo::class.java)
         )
-    }
-
-@Suppress("UNCHECKED_CAST")
-fun MediaController.getSessionId(): Int? =
-    sendCustomCommand(
-        SessionCommand(SERVICE_GET_SESSION, Bundle.EMPTY),
-        Bundle.EMPTY
-    ).get().extras.getInt("session", C.AUDIO_SESSION_ID_UNSET).let {
-        if (it == C.AUDIO_SESSION_ID_UNSET) null else it
     }
 
 // https://twitter.com/Piwai/status/1529510076196630528

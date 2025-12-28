@@ -149,7 +149,6 @@ class GramophonePlaybackService : MediaLibraryService(), MediaSessionService.Lis
         const val SERVICE_QUERY_TIMER = "query_timer"
         const val SERVICE_GET_AUDIO_FORMAT = "get_audio_format"
         const val SERVICE_GET_LYRICS = "get_lyrics"
-        const val SERVICE_GET_SESSION = "get_session"
         const val SERVICE_TIMER_CHANGED = "changed_timer"
         var instanceForWidgetAndLyricsOnly: GramophonePlaybackService? = null
     }
@@ -687,7 +686,6 @@ class GramophonePlaybackService : MediaLibraryService(), MediaSessionService.Lis
             handler.post { this.controller?.prepare() }
         }
         availableSessionCommands.add(SessionCommand(SERVICE_SET_TIMER, Bundle.EMPTY))
-        availableSessionCommands.add(SessionCommand(SERVICE_GET_SESSION, Bundle.EMPTY))
         availableSessionCommands.add(SessionCommand(SERVICE_QUERY_TIMER, Bundle.EMPTY))
         availableSessionCommands.add(SessionCommand(SERVICE_GET_LYRICS, Bundle.EMPTY))
         availableSessionCommands.add(SessionCommand(SERVICE_GET_AUDIO_FORMAT, Bundle.EMPTY))
@@ -859,12 +857,6 @@ class GramophonePlaybackService : MediaLibraryService(), MediaSessionService.Lis
                 SERVICE_GET_LYRICS -> {
                     SessionResult(SessionResult.RESULT_SUCCESS).also {
                         it.extras.putParcelable("lyrics", lyrics)
-                    }
-                }
-
-                SERVICE_GET_SESSION -> {
-                    SessionResult(SessionResult.RESULT_SUCCESS).also {
-                        it.extras.putInt("session", lastSessionId)
                     }
                 }
 

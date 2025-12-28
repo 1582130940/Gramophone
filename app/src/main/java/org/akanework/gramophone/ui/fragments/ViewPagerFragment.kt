@@ -46,7 +46,6 @@ import kotlinx.coroutines.runBlocking
 import org.akanework.gramophone.R
 import org.akanework.gramophone.logic.clone
 import org.akanework.gramophone.logic.enableEdgeToEdgePaddingListener
-import org.akanework.gramophone.logic.getSessionId
 import org.akanework.gramophone.logic.needsManualSnackBarInset
 import org.akanework.gramophone.logic.updateMargin
 import org.akanework.gramophone.logic.utils.SdScanner
@@ -98,7 +97,7 @@ class ViewPagerFragment : BaseFragment(true) {
                             putExtra(AudioEffect.EXTRA_PACKAGE_NAME, requireContext().packageName)
                             putExtra(
                                 AudioEffect.EXTRA_AUDIO_SESSION,
-                                activity.getPlayer()?.getSessionId()
+                                activity.getPlayer()?.audioSessionId
                             )
                             putExtra(AudioEffect.EXTRA_CONTENT_TYPE, AudioEffect.CONTENT_TYPE_MUSIC)
                         }
