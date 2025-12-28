@@ -159,6 +159,7 @@ class DetailedFolderAdapter(
             folderFlow.collect { newList ->
                 val oldList = folderList
                 val canDiff = this@DetailedFolderAdapter.recyclerView != null
+                        && folderAdapter.onFullyDrawnListener == null /* not changing folder */
                 val diffResult = if (canDiff) DiffUtil.calculateDiff(
                     DiffCallback(oldList, newList)) else null
                 withContext(Dispatchers.Main) {
@@ -226,8 +227,8 @@ class DetailedFolderAdapter(
         override fun areContentsTheSame(
             oldItemPosition: Int,
             newItemPosition: Int,
-        ) = oldList[oldItemPosition] == newList[newItemPosition]
-
+        ) = oldList[oldItemPosition].folderList.size == newList[newItemPosition].folderList.size
+                && oldList[oldItemPosition].songList.size == newList[newItemPosition].songList.size
     }
 
     private fun update(invertedDirection: Boolean, doUpdate: () -> Unit) {

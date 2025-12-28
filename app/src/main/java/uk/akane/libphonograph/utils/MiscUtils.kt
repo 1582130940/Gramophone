@@ -10,7 +10,7 @@ import uk.akane.libphonograph.items.artistId
 import java.io.File
 
 object MiscUtils {
-    internal data class FileNodeImpl(
+    internal class FileNodeImpl(
         override val folderName: String
     ) : FileNode {
         override val folderList = hashMapOf<String, FileNode>()
