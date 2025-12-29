@@ -13,6 +13,10 @@ android {
         consumerProguardFiles("consumer-rules.pro")
     }
 
+    lint {
+        lintConfig = file("../../app/lint.xml")
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false

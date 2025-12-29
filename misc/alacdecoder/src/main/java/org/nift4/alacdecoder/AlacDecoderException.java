@@ -1,8 +1,6 @@
 package org.nift4.alacdecoder;
 
 import androidx.annotation.Nullable;
-import androidx.annotation.OptIn;
-import androidx.media3.common.util.UnstableApi;
 import androidx.media3.decoder.DecoderException;
 
 public class AlacDecoderException extends DecoderException {
