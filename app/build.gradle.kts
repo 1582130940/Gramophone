@@ -1,18 +1,17 @@
 @file:Suppress("UnstableApiUsage")
 
-import com.android.build.api.dsl.ApplicationBuildType
 import com.android.build.gradle.tasks.PackageAndroidArtifact
-import org.gradle.kotlin.dsl.support.kotlinCompilerOptions
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.util.removeSuffixIfPresent
 import java.util.Properties
 
 val aboutLibsVersion = "13.1.0" // keep in sync with plugin version
+val kotlinVersion = "2.3.0"
 
 plugins {
     id("com.android.application")
+    id("com.android.built-in-kotlin")
     id("androidx.baselineprofile")
-    kotlin("android")
     kotlin("plugin.parcelize")
     kotlin("plugin.compose")
     id("com.mikepenz.aboutlibraries.plugin")
@@ -80,17 +79,6 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_21
         targetCompatibility = JavaVersion.VERSION_21
-    }
-    kotlin {
-        compilerOptions {
-            jvmTarget = JvmTarget.JVM_21
-            freeCompilerArgs = listOf(
-                "-Xno-param-assertions",
-                "-Xno-call-assertions",
-                "-Xno-receiver-assertions",
-                "-Xannotation-default-target=param-property", // can remove later
-            )
-        }
     }
 
     lint {
@@ -188,35 +176,32 @@ android {
             isPseudoLocalesEnabled = true
             applicationIdSuffix = ".debug"
         }
-    }
-
-    buildTypes.forEach {
-        (it as ApplicationBuildType).run {
-            vcsInfo {
+        forEach {
+            it.vcsInfo {
                 include = false
             }
             if (project.hasProperty("AKANE_RELEASE_KEY_ALIAS") || project.hasProperty("signing2")) {
-                signingConfig = signingConfigs[if (project.hasProperty("signing2"))
+                it.signingConfig = signingConfigs[if (project.hasProperty("signing2"))
                     "release2" else "release"]
             }
-            isCrunchPngs = false // for reproducible builds TODO how much size impact does this have? where are the pngs from? can we use webp?
+            it.isCrunchPngs = false // for reproducible builds TODO how much size impact does this have? where are the pngs from? can we use webp?
         }
     }
 
     sourceSets {
         getByName("debug") {
             // This does NOT remove src/debug/ source sets, hence "debug" is a superset of "userdebug"
-            java.srcDir("src/userdebug/java")
-            kotlin.srcDir("src/userdebug/kotlin")
-            resources.srcDir("src/userdebug/resources")
-            res.srcDir("src/userdebug/res")
-            assets.srcDir("src/userdebug/assets")
-            aidl.srcDir("src/userdebug/aidl")
-            renderscript.srcDir("src/userdebug/renderscript")
-            baselineProfiles.srcDir("src/userdebug/baselineProfiles")
-            jniLibs.srcDir("src/userdebug/jniLibs")
-            shaders.srcDir("src/userdebug/shaders")
-            mlModels.srcDir("src/userdebug/mlModels")
+            java.directories += "src/userdebug/java"
+            kotlin.directories += "src/userdebug/kotlin"
+            resources.directories += "src/userdebug/resources"
+            res.directories += "src/userdebug/res"
+            assets.directories += "src/userdebug/assets"
+            aidl.directories += "src/userdebug/aidl"
+            renderscript.directories += "src/userdebug/renderscript"
+            baselineProfiles.directories += "src/userdebug/baselineProfiles"
+            jniLibs.directories += "src/userdebug/jniLibs"
+            shaders.directories += "src/userdebug/shaders"
+            mlModels.directories += "src/userdebug/mlModels"
         }
     }
 
@@ -226,6 +211,18 @@ android {
         includeInBundle = false
     }
     testOptions.unitTests.isIncludeAndroidResources = true
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget = JvmTarget.JVM_21
+        freeCompilerArgs = listOf(
+            "-Xno-param-assertions",
+            "-Xno-call-assertions",
+            "-Xno-receiver-assertions",
+            "-Xannotation-default-target=param-property", // can remove later
+        )
+    }
 }
 
 base {
@@ -312,8 +309,8 @@ dependencies {
     debugImplementation("net.jthink:jaudiotagger:3.0.1") // <-- for "SD Exploder"
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.robolectric:robolectric:4.16")
-    "userdebugImplementation"(kotlin("reflect")) // who thought String.invoke() is a good idea?????
-    debugImplementation(kotlin("reflect"))
+    "userdebugImplementation"(kotlin("reflect", kotlinVersion)) // who thought String.invoke() is a good idea?????
+    debugImplementation(kotlin("reflect", kotlinVersion))
 }
 
 fun String.runCommand(

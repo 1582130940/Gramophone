@@ -2,7 +2,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     id("com.android.library")
-    id("org.jetbrains.kotlin.android")
+    id("com.android.built-in-kotlin")
 }
 
 android {
@@ -40,26 +40,27 @@ android {
         sourceCompatibility = JavaVersion.VERSION_21
         targetCompatibility = JavaVersion.VERSION_21
     }
-    kotlin {
-        compilerOptions {
-            jvmTarget = JvmTarget.JVM_21
-            freeCompilerArgs = listOf(
-                "-Xno-param-assertions",
-                "-Xno-call-assertions",
-                "-Xno-receiver-assertions",
-                "-Xannotation-default-target=param-property", // can remove later
-                "-Xstring-concat=inline", // https://issuetracker.google.com/issues/250197571#comment29
-            )
-        }
-    }
     buildFeatures {
         prefab = true
     }
 }
 
+kotlin {
+    compilerOptions {
+        jvmTarget = JvmTarget.JVM_21
+        freeCompilerArgs = listOf(
+            "-Xno-param-assertions",
+            "-Xno-call-assertions",
+            "-Xno-receiver-assertions",
+            "-Xannotation-default-target=param-property", // can remove later
+            "-Xstring-concat=inline", // https://issuetracker.google.com/issues/250197571#comment29
+        )
+    }
+}
+
 dependencies {
     implementation("androidx.core:core-ktx:1.17.0")
-    implementation("androidx.media3:media3-common:1.8.0")
+    implementation("androidx.media3:media3-common:1.9.0")
     implementation("io.github.nift4.dlfunc:dlfunc:0.1.6")
     implementation(project(":misc:audiofxfwd"))
     // stub project that provides hidden SDK classes, which themselves depend on public SDK

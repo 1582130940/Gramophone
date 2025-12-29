@@ -2,6 +2,7 @@
 plugins {
     val agpVersion = "9.0.0-rc01"
     id("com.android.application") version agpVersion apply false
+    id("com.android.built-in-kotlin") version agpVersion apply false
 	id("com.android.library") version agpVersion apply false
 	id("com.android.test") version agpVersion apply false
 	id("androidx.baselineprofile") version "1.4.1" apply false
