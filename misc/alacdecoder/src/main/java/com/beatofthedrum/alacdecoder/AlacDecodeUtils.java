@@ -540,8 +540,6 @@ public class AlacDecodeUtils
 
 				if (bitspersample == 20) {
 					left = left << 4;
-				}
-				if (bitspersample == 20) {
 					right = right << 4;
 				}
 
