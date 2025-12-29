@@ -18,6 +18,7 @@ import androidx.media3.decoder.SimpleDecoderOutputBuffer;
 import org.nift4.alacdecoder.AlacDecoderException;
 
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 
 public class AlacDecodeUtils
 {
@@ -744,7 +745,8 @@ public class AlacDecodeUtils
 				if (decoutbuffer.data == null) {
 					decoutbuffer.init(decinbuffer.timeUs, outputsize);
 				} else if (outputsize > decoutbuffer.data.limit()) {
-					Log.w("AlacDecoder", "had to grow buffer, shouldn't happen");
+					Log.w("AlacDecoder", "had to grow buffer from " +
+							decoutbuffer.data.limit() + " to " + outputsize + ", shouldn't happen");
 					decoutbuffer.grow(outputsize);
 				}
 				ByteBuffer outbuffer = Util.castNonNull(decoutbuffer.data);
@@ -918,7 +920,8 @@ public class AlacDecodeUtils
 				if (decoutbuffer.data == null) {
 					decoutbuffer.init(decinbuffer.timeUs, outputsize);
 				} else if (outputsize > decoutbuffer.data.limit()) {
-					Log.w("AlacDecoder", "had to grow buffer, shouldn't happen");
+					Log.w("AlacDecoder", "had to grow buffer from " +
+							decoutbuffer.data.limit() + " to " + outputsize + ", shouldn't happen");
 					decoutbuffer.grow(outputsize);
 				}
 				ByteBuffer outbuffer = Util.castNonNull(decoutbuffer.data);
@@ -1097,9 +1100,7 @@ public class AlacDecodeUtils
 				Log.w("AlacDecoder", "got " + size + " bytes of filler");
 			} else if (frame_type == 6) {
 				int tag = readbits(alac, 4);
-				if (tag != 0) {
-					throw new AlacDecoderException("unsupported data stream element tag " + tag);
-				}
+				boolean filler = tag == 0;
 				boolean align = readbit(alac) != 0;
 				int size = readbits(alac, 8);
 				if (size == 255)
@@ -1112,15 +1113,21 @@ public class AlacDecodeUtils
 					}
 				} else if (!align) {
 					// encoder doesn't do this and we're paranoid.
-					throw new AlacDecoderException("found DSE data with align disabled");
+					filler = false;
 				}
+				int[] buffer = new int[size];
 				for (int i = 0; i < size; i++) {
-					int data = readbits(alac, 8);
-					if (data != 0x5a) {
-						throw new AlacDecoderException("found non-filler DSE data " + data);
+					buffer[i] = readbits(alac, 8);
+					if (buffer[i] != 0x5a) {
+						filler = false;
 					}
 				}
-				Log.w("AlacDecoder", "got " + size + " bytes of filler DSE");
+				if (filler) {
+					Log.w("AlacDecoder", "got " + size + " bytes of filler DSE, " +
+							"debug encoder used");
+				} else {
+					Log.w("AlacDecoder", "got DSE: " + Arrays.toString(buffer));
+				}
 			} else if (frame_type == 2 || frame_type == 5) {
 				throw new AlacDecoderException("refalac does not support tag " + frame_type + ", is this file corrupt? or is there a new version of ALAC?");
 			} else if (frame_type == 7) {
@@ -1129,14 +1136,15 @@ public class AlacDecodeUtils
 				throw new AlacDecoderException("invalid tag " + frame_type);
 			}
 		}
+		int length = decinbuffer.data.limit();
 		if (alac.input_buffer_bitaccumulator > 0) {
 			int cnt = 8 - alac.input_buffer_bitaccumulator;
 			int bits = readbits(alac, cnt);
 			if (bits != 0) {
-				throw new AlacDecoderException("found trailing data " + bits + " in last " + cnt + " bits");
+				throw new AlacDecoderException("found trailing data " + bits + " in last " + cnt
+					+ " bits (" + (length - alac.ibIdx) + " bytes trailing)");
 			}
 		}
-		int length = decinbuffer.data.limit();
 		if (alac.ibIdx < length) {
 			throw new AlacDecoderException("found " + (length - alac.ibIdx) + " bytes trailing");
 		}
