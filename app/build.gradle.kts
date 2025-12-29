@@ -7,7 +7,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.util.removeSuffixIfPresent
 import java.util.Properties
 
-val aboutLibsVersion = "13.0.0-rc01" // keep in sync with plugin version
+val aboutLibsVersion = "13.2.1" // keep in sync with plugin version
 
 plugins {
     id("com.android.application")
@@ -15,6 +15,7 @@ plugins {
     kotlin("android")
     kotlin("plugin.parcelize")
     kotlin("plugin.compose")
+    id("com.mikepenz.aboutlibraries.plugin")
     id("com.mikepenz.aboutlibraries.plugin.android")
 }
 
@@ -269,7 +270,7 @@ aboutLibraries {
 dependencies {
     implementation(project(":hificore"))
     implementation(project(":misc:alacdecoder"))
-    val composeBom = platform("androidx.compose:compose-bom:2025.05.00")
+    val composeBom = platform("androidx.compose:compose-bom:2025.12.00")
     implementation(composeBom)
     androidTestImplementation(composeBom)
     implementation("androidx.compose.material:material-icons-extended")
@@ -277,17 +278,17 @@ dependencies {
     implementation("androidx.compose.material3.adaptive:adaptive")
     implementation("androidx.compose.ui:ui-tooling-preview")
     debugImplementation("androidx.compose.ui:ui-tooling")
-    implementation("androidx.activity:activity-compose:1.11.0")
+    implementation("androidx.activity:activity-compose:1.12.2")
     implementation("androidx.appcompat:appcompat:1.7.1")
     implementation("androidx.collection:collection-ktx:1.5.0")
     implementation("androidx.concurrent:concurrent-futures-ktx:1.3.0")
     implementation("androidx.constraintlayout:constraintlayout:2.2.1")
     implementation("androidx.core:core-ktx:1.17.0")
-    implementation("androidx.core:core-splashscreen:1.2.0-rc01")
+    implementation("androidx.core:core-splashscreen:1.2.0")
     implementation("androidx.fragment:fragment-ktx:1.8.9")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.4")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.10.0")
     implementation("androidx.mediarouter:mediarouter:1.8.1")
-    val media3Version = "1.8.0"
+    val media3Version = "1.9.0"
     implementation("androidx.media3:media3-common-ktx:$media3Version")
     implementation("androidx.media3:media3-exoplayer:$media3Version")
     implementation("androidx.media3:media3-exoplayer-midi:$media3Version")
