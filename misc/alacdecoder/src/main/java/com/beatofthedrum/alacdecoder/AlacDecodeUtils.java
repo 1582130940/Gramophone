@@ -533,18 +533,19 @@ public class AlacDecodeUtils
 				int right;
 
 				midright = buffer_a[i];
-				if (bitspersample == 20) {
-					midright = midright << 4;
-				}
 				difference = buffer_b[i];
-				if (bitspersample == 20) {
-					difference = difference << 4;
-				}
 
 				right = midright - ((difference * interlacing_leftweight) >> interlacing_shift);
 				left = right + difference;
 
-				if (uncompressed_bytes != 0 && uncompressed_bytes_buffer_a != null)
+				if (bitspersample == 20) {
+					left = left << 4;
+				}
+				if (bitspersample == 20) {
+					right = right << 4;
+				}
+
+				if (bitspersample == 24 && uncompressed_bytes != 0 && uncompressed_bytes_buffer_a != null)
 				{
 					int mask = ~(0xFFFFFFFF << (uncompressed_bytes * 8));
 					left <<= (uncompressed_bytes * 8);
@@ -555,9 +556,9 @@ public class AlacDecodeUtils
 				}
 
 				buffer_out.position((i * numchannels + channel_index_a) * 3);
-				Util.putInt24(buffer_out, left & 0xffffff);
+				Util.putInt24(buffer_out, (left << 8) >> 8);
 				buffer_out.position((i * numchannels + channel_index_b) * 3);
-				Util.putInt24(buffer_out, right & 0xffffff);
+				Util.putInt24(buffer_out, (right << 8) >> 8);
 			}
 
 			return;
@@ -578,7 +579,7 @@ public class AlacDecodeUtils
 				right = right << 4;
 			}
 
-			if (uncompressed_bytes != 0 && uncompressed_bytes_buffer_a != null)
+			if (bitspersample == 24 && uncompressed_bytes != 0 && uncompressed_bytes_buffer_a != null)
 			{
 				int mask = ~(0xFFFFFFFF << (uncompressed_bytes * 8));
 				left <<= (uncompressed_bytes * 8);
@@ -589,9 +590,9 @@ public class AlacDecodeUtils
 			}
 
 			buffer_out.position((i * numchannels + channel_index_a) * 3);
-			Util.putInt24(buffer_out, left & 0xffffff);
+			Util.putInt24(buffer_out, (left << 8) >> 8);
 			buffer_out.position((i * numchannels + channel_index_b) * 3);
-			Util.putInt24(buffer_out, right & 0xffffff);
+			Util.putInt24(buffer_out, (right << 8) >> 8);
 
 		}
 
@@ -850,7 +851,7 @@ public class AlacDecodeUtils
 							int sample = alac.outputsamples_buffer[channel_index][i] << 4;
 
 							outbuffer.position((i * alac.numchannels + channel_index_a) * 3);
-							Util.putInt24(outbuffer, sample & 0xffffff);
+							Util.putInt24(outbuffer, (sample << 8) >> 8);
 						}
 						break;
 					case 24: {
@@ -865,7 +866,7 @@ public class AlacDecodeUtils
 							}
 
 							outbuffer.position((i * alac.numchannels + channel_index_a) * 3);
-							Util.putInt24(outbuffer, sample);
+							Util.putInt24(outbuffer, (sample << 8) >> 8);
 
 						}
 						break;
@@ -1048,8 +1049,8 @@ public class AlacDecodeUtils
 							audiobits_b = audiobits_b << (alac.bitspersample_input - 16);
 							audiobits_b = audiobits_b | readbits(alac, alac.bitspersample_input - 16);
 							if (alac.bitspersample_input != 32) {
-								x = audiobits_a & ((1 << alac.bitspersample_input) - 1);
-								audiobits_a = (x ^ m) - m;        // sign extend our data bits
+								x = audiobits_b & ((1 << alac.bitspersample_input) - 1);
+								audiobits_b = (x ^ m) - m;        // sign extend our data bits
 							}
 
 							alac.outputsamples_buffer[channel_index][i] = audiobits_a;
