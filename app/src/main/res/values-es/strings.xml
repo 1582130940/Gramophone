@@ -414,8 +414,6 @@
     <string name="settings_mp3_index_seeking">Indexación para búsqueda en MP3</string>
     <string name="log_will_auto_send">Los registros se enviarán de forma automática; por favor, describa el problema a continuación</string>
     <string name="forbidden_symbol_error">El nombre contiene caracteres no válidos</string>
-    <string name="track_gain">Por pista</string>
-    <string name="album_gain">Por álbum</string>
     <string name="smart">Inteligente</string>
     <string name="scroll_to_playing">Ir a la canción actual</string>
     <string name="gramophone_crashed_explainer2">Gramophone se detuvo :(\n&lt;b&gt;&lt;b&gt;\n¡Por favor, envía un informe de error para que los fallos como este puedan solucionarse!\n\nCada situación es tan única como la música; sin tu ayuda, es probable que este error &lt;b&gt;NO&lt;/b&gt; se solucione</string>
