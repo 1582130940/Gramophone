@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.media.audiofx.AudioEffect
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.media3.common.util.Log
 import java.lang.reflect.Method
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -58,9 +59,32 @@ open class ReflectionAudioEffect(type: UUID, uuid: UUID, priority: Int, audioSes
 			}
 			return false
 		}
-		fun isEffectTypeOffloadable(type: UUID, uuid: UUID): Boolean {
-			TODO("implement this using AudioSystem::queryEffect")
+        fun isEffectTypeOffloadable(type: UUID, uuid: UUID): Boolean {
+            return getDescriptorPlus(type, uuid)?.flags?.and(4194304) == 4194304
+        }
+		fun getDescriptorPlus(type: UUID, uuid: UUID): EffectDescriptorPlus? {
+            if (!AudioTrackHiddenApi.libLoaded)
+                return null
+            val out = IntArray(4)
+            val ret = try {
+                getFlagsInternal(type.mostSignificantBits, type.leastSignificantBits,
+                    uuid.mostSignificantBits, uuid.leastSignificantBits,
+                    0, out)
+            } catch (t: Throwable) {
+                Log.e("ReflectionAudioEffect", "getFlagsInternal($type, $uuid) failed", t)
+                return null
+            }
+            if (ret != 0) {
+                Log.e("ReflectionAudioEffect", "getFlagsInternal($type, $uuid) failed: $ret")
+                return null
+            }
+            return EffectDescriptorPlus(out[0], out[1], out[2].toShort(),
+                out[3].toShort())
 		}
+        data class EffectDescriptorPlus(val api: Int, val flags: Int, val cpuLoad: Short,
+                                        val memoryUsage: Short)
+        private external fun getFlagsInternal(type1: Long, type2: Long, uuid1: Long, uuid2: Long,
+                                              preferredFlags: Int, out: IntArray): Int
 
         data class AudioConfigBase(val sampleRate: Int, val channelMask: Int, val format: Int)
 

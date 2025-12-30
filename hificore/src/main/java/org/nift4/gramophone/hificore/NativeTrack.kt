@@ -141,14 +141,18 @@ class NativeTrack(context: Context, attributes: AudioAttributes, streamType: Int
                                     and AudioManager.DIRECT_PLAYBACK_BITSTREAM_SUPPORTED) != 0
                             DirectPlaybackSupport(!hasGaplessOffloadCurrently,
                                 hasGaplessOffloadCurrently, hasDirect)
-                        } else
-                        // Either offload is prevented by master mono or props, or it doesn't exist.
-                        // TODO: use AudioSystem.getMasterMono to report that offload is not working
-                        if (profiles.size > 1) {
-                            // While possible, odds are that there is a direct port instead of two
-                            // offload ports.
-                            DirectPlaybackSupport.DIRECT
-                        } else DirectPlaybackSupport.DIRECT // TODO: low confidence flag
+                        } else {
+                            // Either offload is prevented by master mono or props, or it doesn't exist.
+                            if (AudioSystemHiddenApi.getMasterMono() == true) {
+                                // TODO: flag that offload is not working due to master mono
+                                return DirectPlaybackSupport.NONE
+                            }
+                            if (profiles.size > 1) {
+                                // While possible, odds are that there is a direct port instead of
+                                // two offload ports.
+                                DirectPlaybackSupport.DIRECT
+                            } else DirectPlaybackSupport.DIRECT // TODO: low confidence flag
+                        }
                     } else {
                         // Data point: there's a non-offloadable effect present. But the port could
                         // still be unimpacted because it's direct.

@@ -80,6 +80,18 @@ static ZN7android18ExtendedMediaUtils26AudioTrackIsTrackOffloadedEi_t ZN7android
 
 typedef int32_t(*ZN7android11AudioEffect10getConfigsEP17audio_config_baseS2__t)(void* thisptr, void* c1, void* c2);
 static ZN7android11AudioEffect10getConfigsEP17audio_config_baseS2__t ZN7android11AudioEffect10getConfigsEP17audio_config_baseS2_ = nullptr;
+typedef int32_t(*ZN7android11AudioEffect19getEffectDescriptorEPK12audio_uuid_sP19effect_descriptor_s_t)(void* uuid, void* out);
+static ZN7android11AudioEffect19getEffectDescriptorEPK12audio_uuid_sP19effect_descriptor_s_t ZN7android11AudioEffect19getEffectDescriptorEPK12audio_uuid_sP19effect_descriptor_s = nullptr;
+typedef int32_t(*ZN7android11AudioEffect19getEffectDescriptorEPK12audio_uuid_sS3_jP19effect_descriptor_s_t)(void* uuid, void* type, uint32_t preferredTypeFlag, void* out);
+static ZN7android11AudioEffect19getEffectDescriptorEPK12audio_uuid_sS3_jP19effect_descriptor_s_t ZN7android11AudioEffect19getEffectDescriptorEPK12audio_uuid_sS3_jP19effect_descriptor_s = nullptr;
+typedef int32_t(*ZN7android11AudioSystem15getStreamVolumeE19audio_stream_type_tPfi_t)(int stream, float* out, int output);
+static ZN7android11AudioSystem15getStreamVolumeE19audio_stream_type_tPfi_t ZN7android11AudioSystem15getStreamVolumeE19audio_stream_type_tPfi = nullptr;
+typedef int32_t(*ZN7android11AudioSystem15getMasterVolumeEPf_t)(float* out);
+static ZN7android11AudioSystem15getMasterVolumeEPf_t ZN7android11AudioSystem15getMasterVolumeEPf = nullptr;
+typedef int32_t(*ZN7android11AudioSystem16getMasterBalanceEPf_t)(float* out);
+static ZN7android11AudioSystem16getMasterBalanceEPf_t ZN7android11AudioSystem16getMasterBalanceEPf = nullptr;
+typedef int32_t(*ZN7android11AudioSystem13getMasterMonoEPb_t)(bool* out);
+static ZN7android11AudioSystem13getMasterMonoEPb_t ZN7android11AudioSystem13getMasterMonoEPb = nullptr;
 
 bool initLib(JNIEnv *env) {
     if (init_done)
@@ -720,4 +732,166 @@ Java_org_nift4_gramophone_hificore_ReflectionAudioEffect_00024Companion_getEffec
 	env->SetIntArrayRegion(out, sizeof(audio_config_base) / sizeof(int32_t),
 						   sizeof(audio_config_base) / sizeof(int32_t), (int32_t*)&c2);
 	return ret;
+}
+
+extern "C"
+JNIEXPORT jfloat JNICALL
+Java_org_nift4_gramophone_hificore_AudioSystemHiddenApi_getStreamVolumeInternal(JNIEnv *env,
+                                                                                jobject thiz,
+                                                                                jint stream,
+                                                                                jint output) {
+    if (!initLib(env)) {
+        env->ThrowNew(env->FindClass("java/lang/Exception"), "failed to init lib");
+        return 0;
+    }
+    DLSYM_OR_ELSE(libaudioclient, ZN7android11AudioSystem15getStreamVolumeE19audio_stream_type_tPfi) {
+        env->ThrowNew(env->FindClass("java/lang/Exception"), "dlsym failed");
+        return 0;
+    }
+    float out;
+    int ret = ZN7android11AudioSystem15getStreamVolumeE19audio_stream_type_tPfi(stream, &out, output);
+    if (ret != 0) {
+        char buf[40];
+        snprintf(buf, sizeof(buf), "getStreamVolume failed: %d", ret);
+        env->ThrowNew(env->FindClass("java/lang/Exception"), buf);
+        return 0;
+    }
+    return out;
+}
+
+extern "C"
+JNIEXPORT jfloat JNICALL
+Java_org_nift4_gramophone_hificore_AudioSystemHiddenApi_getMasterVolumeInternal(JNIEnv *env,
+                                                                                jobject thiz) {
+    if (!initLib(env)) {
+        env->ThrowNew(env->FindClass("java/lang/Exception"), "failed to init lib");
+        return 0;
+    }
+    DLSYM_OR_ELSE(libaudioclient, ZN7android11AudioSystem15getMasterVolumeEPf) {
+        env->ThrowNew(env->FindClass("java/lang/Exception"), "dlsym failed");
+        return 0;
+    }
+    float out;
+    int ret = ZN7android11AudioSystem15getMasterVolumeEPf(&out);
+    if (ret != 0) {
+        char buf[40];
+        snprintf(buf, sizeof(buf), "getMasterVolume failed: %d", ret);
+        env->ThrowNew(env->FindClass("java/lang/Exception"), buf);
+        return 0;
+    }
+    return out;
+}
+
+extern "C"
+JNIEXPORT jfloat JNICALL
+Java_org_nift4_gramophone_hificore_AudioSystemHiddenApi_getMasterBalanceInternal(JNIEnv *env,
+                                                                                jobject thiz) {
+    if (!initLib(env)) {
+        env->ThrowNew(env->FindClass("java/lang/Exception"), "failed to init lib");
+        return 0;
+    }
+    DLSYM_OR_ELSE(libaudioclient, ZN7android11AudioSystem16getMasterBalanceEPf) {
+        env->ThrowNew(env->FindClass("java/lang/Exception"), "dlsym failed");
+        return 0;
+    }
+    float out;
+    int ret = ZN7android11AudioSystem16getMasterBalanceEPf(&out);
+    if (ret != 0) {
+        char buf[40];
+        snprintf(buf, sizeof(buf), "getMasterBalance failed: %d", ret);
+        env->ThrowNew(env->FindClass("java/lang/Exception"), buf);
+        return 0;
+    }
+    return out;
+}
+
+extern "C"
+JNIEXPORT jboolean JNICALL
+Java_org_nift4_gramophone_hificore_AudioSystemHiddenApi_getMasterMonoInternal(JNIEnv *env,
+                                                                                 jobject thiz) {
+    if (!initLib(env)) {
+        env->ThrowNew(env->FindClass("java/lang/Exception"), "failed to init lib");
+        return 0;
+    }
+    DLSYM_OR_ELSE(libaudioclient, ZN7android11AudioSystem13getMasterMonoEPb) {
+        env->ThrowNew(env->FindClass("java/lang/Exception"), "dlsym failed");
+        return 0;
+    }
+    bool out;
+    int ret = ZN7android11AudioSystem13getMasterMonoEPb(&out);
+    if (ret != 0) {
+        char buf[40];
+        snprintf(buf, sizeof(buf), "getMasterMono failed: %d", ret);
+        env->ThrowNew(env->FindClass("java/lang/Exception"), buf);
+        return 0;
+    }
+    return out;
+}
+
+#define EFFECT_STRING_LEN_MAX 64
+
+typedef struct audio_uuid {
+    uint32_t timeLow;
+    uint16_t timeMid;
+    uint16_t timeHiAndVersion;
+    uint16_t clockSeq;
+    uint8_t node[6];
+} effect_uuid_t;
+
+void uuid_from_msb_lsb(int64_t msb, int64_t lsb, effect_uuid_t *u)
+{
+    u->timeLow = msb >> 32;
+    u->timeMid = msb >> 16;
+    u->timeHiAndVersion = msb;
+    u->clockSeq = lsb >> 48;
+    u->node[0] = lsb >> 40;
+    u->node[1] = lsb >> 32;
+    u->node[2] = lsb >> 24;
+    u->node[3] = lsb >> 16;
+    u->node[4] = lsb >> 8;
+    u->node[5] = lsb;
+}
+
+typedef struct {
+    effect_uuid_t type;     // UUID of to the OpenSL ES interface implemented by this effect
+    effect_uuid_t uuid;     // UUID for this particular implementation
+    int32_t apiVersion;    // Version of the effect control API implemented
+    int32_t flags;         // effect engine capabilities/requirements flags (see below)
+    int16_t cpuLoad;       // CPU load indication (see below)
+    int16_t memoryUsage;   // Data Memory usage (see below)
+    char    name[EFFECT_STRING_LEN_MAX];   // human readable effect name
+    char    implementor[EFFECT_STRING_LEN_MAX];    // human readable effect implementor name
+} effect_descriptor_t;
+
+extern "C"
+JNIEXPORT jint JNICALL
+Java_org_nift4_gramophone_hificore_ReflectionAudioEffect_00024Companion_getFlagsInternal(
+        JNIEnv *env, jobject thiz, jlong typeMsb, jlong typeLsb, jlong uuidMsb, jlong uuidLsb, jint pf, jintArray arr) {
+    if (!initLib(env))
+        return -1235;
+    effect_uuid_t type, uuid;
+    uuid_from_msb_lsb(typeMsb, typeLsb, &type);
+    uuid_from_msb_lsb(uuidMsb, uuidLsb, &uuid);
+    effect_descriptor_t out = {};
+    DLSYM_OR_ELSE(libaudioclient, ZN7android11AudioEffect19getEffectDescriptorEPK12audio_uuid_sS3_jP19effect_descriptor_s) {
+        DLSYM_OR_RETURN(libaudioclient, ZN7android11AudioEffect19getEffectDescriptorEPK12audio_uuid_sP19effect_descriptor_s, -1235)
+    }
+    int ret;
+    if (ZN7android11AudioEffect19getEffectDescriptorEPK12audio_uuid_sP19effect_descriptor_s) {
+        ret = ZN7android11AudioEffect19getEffectDescriptorEPK12audio_uuid_sP19effect_descriptor_s(
+                &uuid, &out);
+    } else {
+        ret = ZN7android11AudioEffect19getEffectDescriptorEPK12audio_uuid_sS3_jP19effect_descriptor_s(
+                &uuid, &type, pf, &out);
+    }
+    if (ret < 0) {
+        return ret;
+    }
+    int cpu = out.cpuLoad;
+    int mem = out.memoryUsage;
+    env->SetIntArrayRegion(arr, 0, 1, &out.apiVersion);
+    env->SetIntArrayRegion(arr, 1, 1, &out.flags);
+    env->SetIntArrayRegion(arr, 2, 1, &cpu);
+    env->SetIntArrayRegion(arr, 3, 1, &mem);
+    return 0;
 }

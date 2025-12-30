@@ -3,6 +3,7 @@ package org.akanework.gramophone.logic.utils.exoplayer
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
+import androidx.core.util.Supplier
 import androidx.media3.common.Format
 import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.audio.AudioProcessor
@@ -121,13 +122,12 @@ class GramophoneRenderFactory(context: Context,
                 return 0
             }
         })
-        val root = builder.setEnableAudioTrackPlaybackParams(enableAudioTrackPlaybackParams).build()
+        var postAmpAudioSink: PostAmpAudioSink? = null
+        val root = builder.setEnableAudioTrackPlaybackParams(enableAudioTrackPlaybackParams)
+            .setCanReuse { postAmpAudioSink!!.canReuse() }.build()
         audioSinkListener(root)
-        return MyForwardingAudioSink(
-	        //PostAmpAudioSink( TODO(ASAP)
-		        root//, rgAp, context
-			//)
-        )
+        postAmpAudioSink = PostAmpAudioSink(root, rgAp, context)
+        return MyForwardingAudioSink(postAmpAudioSink)
     }
 
     inner class MyForwardingAudioSink(sink: AudioSink) : ForwardingAudioSink(sink) {

@@ -65,10 +65,10 @@ class ReplayGainAudioProcessor : BaseAudioProcessor() {
 			)
 		}
 		// TODO(ASAP): if setMode and setNonRgGain required reconfiguration, we could be a lot lazier.
-		if ((tags?.trackGain == null && tags?.albumGain == null)
+		if (((tags?.trackGain == null && tags?.albumGain == null)
 			|| (tags?.trackGain != null && tags?.trackGain != 1f)
-			|| (tags?.albumGain != null && tags?.albumGain != 1f)) {
-			//return inputAudioFormat TODO(ASAP)
+			|| (tags?.albumGain != null && tags?.albumGain != 1f)) && !Flags.TEST_RG_OFFLOAD) {
+			return inputAudioFormat
 		}
 		// if there's RG metadata but it says we don't need to do anything, we can skip all work.
 		return AudioProcessor.AudioFormat.NOT_SET

@@ -290,7 +290,7 @@ object AudioSystemHiddenApi {
     }
     @Throws(IllegalStateException::class, IllegalArgumentException::class)
     fun removeVolumeCallback(context: Context, cb: VolumeChangeListener) {
-        val adapter = adapterCache[cb] ?: throw IllegalArgumentException("never registered $cb")
+        val adapter = adapterCache.remove(cb) ?: throw IllegalArgumentException("never registered $cb")
         try {
             if (Build.VERSION.SDK_INT >= 36) {
                 removeAudioVolumeGroupCallbackFn.invoke(null, adapter)
@@ -306,7 +306,67 @@ object AudioSystemHiddenApi {
         fun onVolumeChanged(groupId: Int, flags: Int)
     }
 
-    // TODO: getMasterVolume, getMasterBalance for PostAmpAudioSink headroom calculation
+    fun getStreamVolume(stream: Int, output: Int): Float? {
+        if (!libLoaded)
+            return null
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.BAKLAVA)
+            return null // removed
+        try {
+            Log.d(TRACE_TAG, "calling native getStreamVolumeInternal")
+            return getStreamVolumeInternal(stream, output)
+                .also { Log.d(TRACE_TAG, "native getStreamVolumeInternal is done: $it") }
+        } catch (t: Throwable) {
+            if (Build.VERSION.SDK_INT == Build.VERSION_CODES.VANILLA_ICE_CREAM &&
+                t is Exception && t.message == "dlsym failed")
+                Log.i(TAG, "dlsym failed, assuming 15 QPR1 or later")
+            else
+                Log.e(TAG, Log.getThrowableString(t)!!)
+            return null
+        }
+    }
+    private external fun getStreamVolumeInternal(stream: Int, output: Int): Float
+
+    fun getMasterVolume(): Float? {
+        if (!libLoaded)
+            return null
+        try {
+            Log.d(TRACE_TAG, "calling native getMasterVolumeInternal")
+            return getMasterVolumeInternal()
+                .also { Log.d(TRACE_TAG, "native getMasterVolumeInternal is done: $it") }
+        } catch (t: Throwable) {
+            Log.e(TAG, Log.getThrowableString(t)!!)
+            return null
+        }
+    }
+    private external fun getMasterVolumeInternal(): Float
+
+    fun getMasterBalance(): Float? {
+        if (!libLoaded)
+            return null
+        try {
+            Log.d(TRACE_TAG, "calling native getMasterBalanceInternal")
+            return getMasterBalanceInternal()
+                .also { Log.d(TRACE_TAG, "native getMasterBalanceInternal is done: $it") }
+        } catch (t: Throwable) {
+            Log.e(TAG, Log.getThrowableString(t)!!)
+            return null
+        }
+    }
+    private external fun getMasterBalanceInternal(): Float
+
+    fun getMasterMono(): Boolean? {
+        if (!libLoaded)
+            return null
+        try {
+            Log.d(TRACE_TAG, "calling native getMasterMonoInternal")
+            return getMasterMonoInternal()
+                .also { Log.d(TRACE_TAG, "native getMasterMonoInternal is done: $it") }
+        } catch (t: Throwable) {
+            Log.e(TAG, Log.getThrowableString(t)!!)
+            return null
+        }
+    }
+    private external fun getMasterMonoInternal(): Boolean
+
     // TODO: addErrorCallback, removeErrorCallback for audioflinger crash detect out of curiosity
-    // TODO: getMasterMono for offload detect
 }
