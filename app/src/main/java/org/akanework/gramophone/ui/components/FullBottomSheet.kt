@@ -793,9 +793,13 @@ class FullBottomSheet
             SpatialFormat.DOLBY_AC3,
             SpatialFormat.DOLBY_EAC3,
             SpatialFormat.DOLBY_EAC3_JOC,
-            SpatialFormat.DOLBY_AC4 -> R.drawable.ic_dolby
+            SpatialFormat.DOLBY_AC4,
+            SpatialFormat.DOLBY_TRUEHD -> R.drawable.ic_dolby
 
-            // TODO dts icon
+            SpatialFormat.DTS,
+            SpatialFormat.DTS_EXPRESS,
+            SpatialFormat.DTS_HD,
+            SpatialFormat.DTS_UHD -> R.drawable.ic_dts
 
             else -> when (info.quality) {
                 AudioQuality.HIRES -> R.drawable.ic_high_res

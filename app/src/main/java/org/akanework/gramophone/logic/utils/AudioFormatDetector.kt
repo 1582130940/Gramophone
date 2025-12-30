@@ -276,6 +276,7 @@ object AudioFormatDetector {
         DTS_EXPRESS,    // DTS Express
         DTS_HD,         // DTS-HD
         DTS_UHD,        // DTS-UHD Profile 2
+        // TODO: MPEG-H 3D / 360 Reality Audio
         OTHER
     }
 
