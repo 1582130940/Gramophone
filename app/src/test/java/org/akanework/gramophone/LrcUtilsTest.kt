@@ -66,7 +66,8 @@ class LrcUtilsTest {
 									"${it.charRange.first}..${it.charRange.last}, " +
 									"isRtl = ${it.isRtl})" }})"
 						} ?: "null"}, speaker = ${i.speaker?.name?.let { "SpeakerEntity.$it" } ?:
-						"null"}, end = ${i.end}uL, isTranslated = ${i.isTranslated}),")
+						"null"}, end = ${i.end}uL, isTranslated = ${i.isTranslated}, " +
+                        "endIsImplicit = ${i.endIsImplicit}),")
 			}
 			str.appendLine(")")
 		}
