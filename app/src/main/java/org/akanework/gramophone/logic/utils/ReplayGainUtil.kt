@@ -688,7 +688,7 @@ sealed class ReplayGainUtil {
                     }
 
                     is SoundCheck -> listOf(
-                        RgInfo.TrackGain(max(it.gainL, it.gainR)),
+                        RgInfo.TrackGain((it.gainL + it.gainR) / 2),
                         RgInfo.TrackPeak(max(it.peakL, it.peakR))
                     )
 
