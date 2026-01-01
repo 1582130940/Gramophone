@@ -52,7 +52,7 @@
         app:iconSpaceReserved="false">
 
 	<Minus15SeekBarPreference
-		android:defaultValue="15"
+		android:defaultValue="19"
 		android:icon="@drawable/outline_volume_up_24"
 		android:key="rg_rg_gain"
 		android:layout="@layout/preference_seekbar"

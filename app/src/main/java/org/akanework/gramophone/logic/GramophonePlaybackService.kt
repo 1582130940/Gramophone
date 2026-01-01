@@ -720,7 +720,7 @@ class GramophonePlaybackService : MediaLibraryService(), MediaSessionService.Lis
             rgAp.setReduceGain(!drc)
         }
         if (key == null || key == "rg_rg_gain") {
-            val rgGain = prefs.getIntStrict("rg_rg_gain", 15)
+            val rgGain = prefs.getIntStrict("rg_rg_gain", 19)
             rgAp.setRgGain(rgGain - 15)
         }
         if (key == null || key == "rg_no_rg_gain" || key == "rg_boost_gain") {
