@@ -220,22 +220,30 @@ class PostAmpAudioSink(
         super.configure(inputFormat, specifiedBufferSize, outputChannels)
     }
 
+    // Both ReplayGainAudioProcessor and DPE logic relies on flush() when tags change in a way that
+    // changes the audio.
     fun canReuse(): Boolean {
         val mode: Mode
+        val rgGain: Int
+        val reduceGain: Boolean
         synchronized(rgAp) {
             mode = rgAp.mode
+            rgGain = rgAp.rgGain
+            reduceGain = rgAp.reduceGain
         }
-        if (mode == Mode.Track && ((pendingTags?.trackGain ?: 0f) != (tags?.trackGain ?: 0f)
-                    || (pendingTags?.trackPeak ?: 1f) != (tags?.trackPeak ?: 1f))) {
-            Log.i(TAG, "can't reuse: track - $pendingTags vs $tags")
-            return false
-        }
-        if (mode == Mode.Album && ((pendingTags?.albumGain ?: 0f) != (tags?.albumGain ?: 0f)
-                    || (pendingTags?.albumPeak ?: 1f) != (tags?.albumPeak ?: 1f))) {
-            Log.i(TAG, "can't reuse: album - $pendingTags vs $tags")
-            return false
-        }
-        return true
+        val isOffload = Flags.TEST_RG_OFFLOAD ||
+                format?.let { it.sampleMimeType != MimeTypes.AUDIO_RAW } == true
+        val calcGainBefore = ReplayGainUtil.calculateGain(
+            tags, mode, rgGain, reduceGain || !(!isOffload || hasDpe),
+            if (!isOffload || hasDpe) ReplayGainUtil.RATIO else null
+        )
+        val nextIsOffload = Flags.TEST_RG_OFFLOAD ||
+                pendingFormat?.let { it.sampleMimeType != MimeTypes.AUDIO_RAW } == true
+        val calcGainAfter = ReplayGainUtil.calculateGain(
+            pendingTags, mode, rgGain, reduceGain || !(!nextIsOffload || hasDpe),
+            if (!nextIsOffload || hasDpe) ReplayGainUtil.RATIO else null
+        )
+        return calcGainBefore == calcGainAfter
     }
 
     override fun setVolume(volume: Float) {
