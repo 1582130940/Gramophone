@@ -713,7 +713,7 @@ class GramophonePlaybackService : MediaLibraryService(), MediaSessionService.Lis
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String?) {
         if (key == null || key == "rg_mode") {
             rgMode = prefs.getStringStrict("rg_mode", "0")!!.toInt()
-            computeRgMode()
+            computeRgMode(true)
         }
         if (key == null || key == "rg_drc") {
             val drc = prefs.getBooleanStrict("rg_drc", true)
@@ -731,7 +731,7 @@ class GramophonePlaybackService : MediaLibraryService(), MediaSessionService.Lis
         }
     }
 
-    private fun computeRgMode() {
+    private fun computeRgMode(force: Boolean) {
         rgAp.setMode(when (rgMode) {
             0 -> ReplayGainUtil.Mode.None
             1 -> ReplayGainUtil.Mode.Track
@@ -750,7 +750,7 @@ class GramophonePlaybackService : MediaLibraryService(), MediaSessionService.Lis
                 else ReplayGainUtil.Mode.Track
             }
             else -> throw IllegalArgumentException("invalid rg mode $rgMode")
-        })
+        }, !force)
     }
 
     override fun onAudioSessionIdChanged(audioSessionId: Int) {
@@ -1202,7 +1202,7 @@ class GramophonePlaybackService : MediaLibraryService(), MediaSessionService.Lis
     override fun onTimelineChanged(timeline: Timeline, reason: @Player.TimelineChangeReason Int) {
         if (reason == Player.TIMELINE_CHANGE_REASON_PLAYLIST_CHANGED) {
             refreshMediaButtonCustomLayout()
-            computeRgMode()
+            computeRgMode(false)
         }
         pendingDownstreamFormat.toSet().forEach {
             if (timeline.getIndexOfPeriod(it.first) == C.INDEX_UNSET) {

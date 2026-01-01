@@ -137,6 +137,11 @@ class PostAmpAudioSink(
             ContextCompat.RECEIVER_NOT_EXPORTED
         )
         synchronized(rgAp) {
+            rgAp.settingsChangedListener = {
+                handler?.post { // if null, there are no effects that need to be notified anyway
+                    calculateGain()
+                }
+            }
             rgAp.boostGainChangedListener = {
                 handler?.post { // if null, there are no effects that need to be notified anyway
                     if (hasDpe) {
