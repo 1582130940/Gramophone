@@ -56,6 +56,9 @@ import androidx.media3.common.PlaybackException
 import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.Player
 import androidx.media3.common.Player.EVENT_SHUFFLE_MODE_ENABLED_CHANGED
+import androidx.media3.common.Player.MEDIA_ITEM_TRANSITION_REASON_AUTO
+import androidx.media3.common.Player.MEDIA_ITEM_TRANSITION_REASON_SEEK
+import androidx.media3.common.Player.REPEAT_MODE_ALL
 import androidx.media3.common.Rating
 import androidx.media3.common.Timeline
 import androidx.media3.common.TrackSelectionParameters
@@ -1153,6 +1156,23 @@ class GramophonePlaybackService : MediaLibraryService(), MediaSessionService.Lis
         }
         lyrics = null
         scheduleSendingLyrics(true)
+
+        // reshuffle queue when shuffle AND repeat all are enabled
+        val player = endedWorkaroundPlayer
+        if (player != null && player.currentMediaItemIndex == player.exoPlayer.shuffleOrder.lastIndex &&
+            (reason == MEDIA_ITEM_TRANSITION_REASON_AUTO || reason == MEDIA_ITEM_TRANSITION_REASON_SEEK) &&
+            player.shuffleModeEnabled && player.repeatMode == REPEAT_MODE_ALL
+        ) {
+            player.exoPlayer.setShuffleOrder(
+                CircularShuffleOrder(
+                    player,
+                    player.exoPlayer.shuffleOrder.lastIndex,
+                    player.exoPlayer.mediaItemCount,
+                    Random.nextLong()
+                )
+            )
+        }
+
         lastPlayedManager.save()
     }
 
