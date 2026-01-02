@@ -45,16 +45,35 @@ class LyricWidgetProvider : AppWidgetProvider() {
             val views =
                 RemoteViews(context.packageName, R.layout.lyric_widget).apply {
                     setPendingIntentTemplate(R.id.list_view, seekPi)
-                        setRemoteAdapter( // TODO deprecated
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                        val factory = LyricRemoteViewsFactory(context, appWidgetId)
+                        setRemoteAdapter(R.id.list_view,
+                            RemoteViews.RemoteCollectionItems.Builder()
+                                .setViewTypeCount(factory.viewTypeCount)
+                                .setHasStableIds(factory.hasStableIds())
+                                .apply {
+                                    for (i in 0..<factory.count) {
+                                        addItem(factory.getItemId(i),
+                                            factory.getViewAt(i)!!)
+                                    }
+                                }
+                                .build())
+                    } else {
+                        @Suppress("Deprecation")
+                        setRemoteAdapter(
                             R.id.list_view,
-                            Intent(context, LyricWidgetService::class.java).apply<Intent> {
+                            Intent(context, LyricWidgetService::class.java).apply {
                                 this.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
                                 // Intents are compared using filterEquals() which ignores extras, so encode extras
                                 // in data to enforce comparison noticing the difference between different Intents.
                                 this.data = toUri(Intent.URI_INTENT_SCHEME).toUri()
                             }
                         )
+                    }
                     setEmptyView(R.id.list_view, R.id.empty_view)
+                    val li = service?.getCurrentLyricIndex(true)
+                    if (li != null)
+                        setScrollPosition(R.id.list_view, li)
                 }
             // setting null first fixes outdated data related bugs but causes flicker. hence we
             // sparingly update the entire adapter.
@@ -81,11 +100,16 @@ class LyricWidgetProvider : AppWidgetProvider() {
         }
 
         fun adapterUpdate(context: Context) {
-            CoroutineScope(Dispatchers.Default).launch {
-                val awm = AppWidgetManager.getInstance(context)
-                if (awm != null) {
-                    for (appWidgetId in awm.appWidgetIds(context)) {
-                        awm.notifyAppWidgetViewDataChanged(appWidgetId, R.id.list_view)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                update(context)
+            } else {
+                CoroutineScope(Dispatchers.Default).launch {
+                    val awm = AppWidgetManager.getInstance(context)
+                    if (awm != null) {
+                        for (appWidgetId in awm.appWidgetIds(context)) {
+                            @Suppress("deprecation")
+                            awm.notifyAppWidgetViewDataChanged(appWidgetId, R.id.list_view)
+                        }
                     }
                 }
             }
@@ -107,7 +131,7 @@ class LyricWidgetProvider : AppWidgetProvider() {
 }
 
 class LyricWidgetService : RemoteViewsService() {
-    override fun onGetViewFactory(intent: Intent): RemoteViewsFactory? {
+    override fun onGetViewFactory(intent: Intent): RemoteViewsFactory {
         if (!intent.hasExtra(AppWidgetManager.EXTRA_APPWIDGET_ID))
             throw IllegalStateException("where is EXTRA_APPWIDGET_ID?")
         /*val size = if (intent.hasExtra("width") || intent.hasExtra("height")) {
@@ -158,7 +182,7 @@ private class LyricRemoteViewsFactory(private val context: Context, private val 
 
     override fun getViewAt(position: Int): RemoteViews? {
         val cPos = runBlocking {
-            withContext(Dispatchers.Main) {
+            withContext(Dispatchers.Main.immediate) {
                 service?.endedWorkaroundPlayer?.contentPosition
             }
         }
@@ -190,7 +214,7 @@ private class LyricRemoteViewsFactory(private val context: Context, private val 
         ).apply {
             val sb = SpannableString(item?.text ?: itemUnsynced!!.first)
             if (isActive) {
-                val hlChar = if (item?.words != null) item.words.findLast { it.timeRange.start <=
+                val hlChar = if (item?.words != null) item.words.findLast { it.timeRange.first <=
                         cPos!!.toULong() }?.charRange?.last?.plus(1) ?: 0 else sb.length
                 if (hlChar > 0)
                     sb.setSpan(span, 0, hlChar, Spanned.SPAN_INCLUSIVE_INCLUSIVE)
@@ -210,7 +234,7 @@ private class LyricRemoteViewsFactory(private val context: Context, private val 
     }
 
     override fun getViewTypeCount(): Int {
-        return 6
+        return 12
     }
     override fun getItemId(position: Int): Long {
         val item = service?.syncedLyrics?.text?.getOrNull(position)
