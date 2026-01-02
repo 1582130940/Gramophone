@@ -43,6 +43,10 @@ class AlbumAdapter(
     isSubFragment = isSubFragment
 ) {
 
+    init {
+        lateInit()
+    }
+
     fun getAlbumList() = list?.second ?: emptyList()
 
     fun getActivity() = mainActivity

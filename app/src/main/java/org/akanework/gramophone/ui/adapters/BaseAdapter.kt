@@ -77,9 +77,9 @@ abstract class BaseAdapter<T : Any>(
     liveData: Flow<List<T>?>,
     sortHelper: Sorter.Helper<T>,
     naturalOrderHelper: Sorter.NaturalOrderHelper<T>?,
-    initialSortType: Sorter.Type,
+    private val initialSortType: Sorter.Type,
     private val pluralStr: Int,
-    defaultLayoutType: LayoutType,
+    private val defaultLayoutType: LayoutType,
     val isSubFragment: Int? = null,
     rawOrderExposed: Sorter.Type? = null,
     private val allowDiffUtils: Boolean = false,
@@ -113,29 +113,6 @@ abstract class BaseAdapter<T : Any>(
 
     private val prefs = PreferenceManager.getDefaultSharedPreferences(context.applicationContext)
 
-    private val prefSortType: Sorter.Type by lazy {
-        if (canSort) try {
-            Sorter.Type.valueOf(
-                prefs.getStringStrict(
-                    "S" + getAdapterType(this).toString(),
-                    Sorter.Type.None.toString()
-                )!!
-            )
-        } catch (_: IllegalArgumentException) { Sorter.Type.None }
-        else Sorter.Type.None
-    }
-
-    private val prefLayoutType: LayoutType by lazy {
-        try {
-            LayoutType.valueOf(
-                prefs.getStringStrict(
-                    "L" + getAdapterType(this).toString(),
-                    LayoutType.NONE.toString()
-                )!!
-            )
-        } catch (_: IllegalArgumentException) { LayoutType.NONE }
-    }
-
     override var layoutType: LayoutType? = null
         @SuppressLint("NotifyDataSetChanged")
         set(value) {
@@ -145,36 +122,39 @@ abstract class BaseAdapter<T : Any>(
             lockedInGridSize = false
             notifyDataSetChanged() // we change view type for all items
         }
-    override val sortType: MutableStateFlow<Sorter.Type> = MutableStateFlow(
-        // TODO(ASAP): leaking this in prefSortType leads to uninitialized read in getAdapterType(),
-        //  which is why folder adapter cannot read saved sort values.
-        if (prefSortType != Sorter.Type.None && sortTypes.contains(prefSortType))
-            prefSortType
-        else
-            initialSortType
-    )
+    override lateinit var sortType: MutableStateFlow<Sorter.Type>
     @OptIn(ExperimentalCoroutinesApi::class)
-    private val flow = liveDataAgent.flatMapLatest { it }
-        .sharePauseableIn(CoroutineScope(Dispatchers.Default),
-            SharingStarted.WhileSubscribed(), replay = 0)
-        .combine(sortType) { it, st ->
-        val l = it ?: emptyList()
-        l to ArrayList(l).apply {
-            val (cmp, reverseFirst) = sorter.getComparator(st)
-            if (reverseFirst) reverse()
-            if (cmp != null) {
-                sortWith { o1, o2 ->
-                    if (isPinned(o1) && !isPinned(o2)) -1
-                    else if (!isPinned(o1) && isPinned(o2)) 1
-                    else cmp.compare(o1, o2)
-                }
-            }
-        }.toList()
-    }.sharePauseableIn(CoroutineScope(Dispatchers.Default), SharingStarted.WhileSubscribed(5000), replay = 1)
+    private val flow by lazy {
+        liveDataAgent.flatMapLatest { it }
+            .sharePauseableIn(
+                CoroutineScope(Dispatchers.Default),
+                SharingStarted.WhileSubscribed(), replay = 0
+            )
+            .combine(sortType) { it, st ->
+                val l = it ?: emptyList()
+                l to ArrayList(l).apply {
+                    val (cmp, reverseFirst) = sorter.getComparator(st)
+                    if (reverseFirst) reverse()
+                    if (cmp != null) {
+                        sortWith { o1, o2 ->
+                            if (isPinned(o1) && !isPinned(o2)) -1
+                            else if (!isPinned(o1) && isPinned(o2)) 1
+                            else cmp.compare(o1, o2)
+                        }
+                    }
+                }.toList()
+            }.sharePauseableIn(
+                CoroutineScope(Dispatchers.Default),
+                SharingStarted.WhileSubscribed(5000),
+                replay = 1
+            )
+    }
     override val sortTypes: Set<Sorter.Type>
         get() = if (canSort) sorter.getSupportedTypes() else setOf(Sorter.Type.None)
 
-    init {
+    // Subclasses must call this. This isn't an init block to avoid leaking this to getAdapterType()
+    // TODO: maybe refactor getAdapterType() at some point instead?
+    protected fun lateInit() {
         val mayBlock = isSubFragment != null
         var blockMutex = if (mayBlock) Mutex() else null
         var onListLoadedCompleter = if (mayBlock)
@@ -210,7 +190,7 @@ abstract class BaseAdapter<T : Any>(
                         val deferred2 = onListLoadedCompleter
                         if (deferred2 != null) {
                             deferred2.complete(it to (diff to sizeChanged))
-                            onListLoadedCompleter = null
+                            onListLoadedCompleter = null // TODO: how is this never read? makes no sense to me
                         } else {
                             withContext(Dispatchers.Main + NonCancellable) {
                                 onListLoaded(it, diff, sizeChanged)
@@ -242,13 +222,36 @@ abstract class BaseAdapter<T : Any>(
                 }
             }
         }
-        // TODO(ASAP): leaking this in prefLayoutType leads to uninitialized read in getAdapterType(),
-        //  which is why folder adapter cannot read saved layout values.
+        val prefLayoutType: LayoutType =
+            try {
+                LayoutType.valueOf(
+                    prefs.getStringStrict(
+                        "L" + getAdapterType(this).toString(),
+                        LayoutType.NONE.toString()
+                    )!!
+                )
+            } catch (_: IllegalArgumentException) { LayoutType.NONE }
         layoutType =
             if (prefLayoutType != LayoutType.NONE && prefLayoutType != defaultLayoutType)
                 prefLayoutType
             else
                 defaultLayoutType
+        val prefSortType: Sorter.Type =
+            if (canSort) try {
+                Sorter.Type.valueOf(
+                    prefs.getStringStrict(
+                        "S" + getAdapterType(this).toString(),
+                        Sorter.Type.None.toString()
+                    )!!
+                )
+            } catch (_: IllegalArgumentException) { Sorter.Type.None }
+            else Sorter.Type.None
+        sortType = MutableStateFlow(
+            if (prefSortType != Sorter.Type.None && sortTypes.contains(prefSortType))
+                prefSortType
+            else
+                initialSortType
+        )
     }
 
     protected open val defaultCover: Int = R.drawable.ic_default_cover

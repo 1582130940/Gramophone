@@ -42,6 +42,10 @@ class DateAdapter(
     defaultLayoutType = LayoutType.LIST
 ) {
 
+    init {
+        lateInit()
+    }
+
     override val defaultCover = R.drawable.ic_default_cover_date
 
     override fun virtualTitleOf(item: Date): String {

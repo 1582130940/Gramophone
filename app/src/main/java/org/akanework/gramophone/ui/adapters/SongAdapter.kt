@@ -83,6 +83,10 @@ class SongAdapter(
     allowDiffUtils = allowDiffUtils
 ) {
 
+    init {
+        lateInit()
+    }
+
     fun getSongList() = list?.second ?: emptyList()
 
     fun getActivity() = mainActivity

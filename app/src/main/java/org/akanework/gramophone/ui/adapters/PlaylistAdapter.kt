@@ -75,6 +75,11 @@ class PlaylistAdapter(
     pluralStr = R.plurals.items,
     defaultLayoutType = LayoutType.LIST
 ), AdapterFragment.RequestAdapter {
+
+    init {
+        lateInit()
+    }
+
     override val defaultCover = R.drawable.ic_default_cover_playlist
     private val ioScope = CoroutineScope(Dispatchers.IO)
 

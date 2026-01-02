@@ -48,6 +48,10 @@ class ArtistAdapter(
     defaultLayoutType = LayoutType.LIST
 ) {
 
+    init {
+        lateInit()
+    }
+
     override fun virtualTitleOf(item: Artist): String {
         return context.getString(R.string.unknown_artist)
     }

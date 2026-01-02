@@ -43,6 +43,10 @@ class GenreAdapter(
     defaultLayoutType = LayoutType.LIST
 ) {
 
+    init {
+        lateInit()
+    }
+
     override val defaultCover = R.drawable.ic_default_cover_genre
 
     override fun virtualTitleOf(item: Genre): String {
