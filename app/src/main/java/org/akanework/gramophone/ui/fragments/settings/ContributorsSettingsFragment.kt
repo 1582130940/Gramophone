@@ -9,18 +9,20 @@ import android.widget.Toast
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -61,31 +63,18 @@ import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import coil3.compose.AsyncImage
 import org.akanework.gramophone.R
-import org.akanework.gramophone.logic.ui.BaseActivity
 import org.akanework.gramophone.logic.utils.data.Contributors
 import org.akanework.gramophone.logic.utils.data.GitHubUser
+import org.akanework.gramophone.ui.BaseComposeActivity
+import org.akanework.gramophone.ui.GramophoneTheme
 
-class ContributorsSettingsActivity : BaseActivity() {
+class ContributorsSettingsActivity : BaseComposeActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            MaterialTheme(
-                colorScheme = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    // TODO(ASAP) dedupe with other compose frags and add amoled theme
-                    if (isSystemInDarkTheme())
-                        dynamicDarkColorScheme(applicationContext)
-                    else
-                        dynamicLightColorScheme(applicationContext)
-                } else {
-                    if (isSystemInDarkTheme()) {
-                        darkColorScheme()
-                    } else {
-                        lightColorScheme()
-                    }
-                }
-            ) {
+            GramophoneTheme {
                 Scaffold(
                     topBar = {
                         TopAppBar(
@@ -97,11 +86,14 @@ class ContributorsSettingsActivity : BaseActivity() {
                             },
                             colors = TopAppBarDefaults.topAppBarColors(
                                 containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                                scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer)
+                                scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer),
+                            modifier = Modifier.padding(WindowInsets
+                                .safeDrawing.only(WindowInsetsSides.Horizontal).asPaddingValues())
                         )
                     },
                     content = { paddingValues ->
-                        ContributorsSettingsScreen(paddingValues)
+                        ContributorsSettingsScreen(paddingValues + WindowInsets
+                            .safeDrawing.only(WindowInsetsSides.Horizontal).asPaddingValues())
                     },
                     containerColor = MaterialTheme.colorScheme.surfaceContainer
                 )
@@ -183,16 +175,8 @@ class ContributorsSettingsActivity : BaseActivity() {
 
     @Composable
     fun ContributorsSettingsScreen(contentPaddingValues: PaddingValues) {
-        val configuration = LocalConfiguration.current
-        val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-
-        val cutoutInsets = WindowInsets.displayCutout.asPaddingValues()
-
         LazyColumn(
-            contentPadding = if (isLandscape)
-                PaddingValues(horizontal = 16.dp, vertical = 2.dp) + contentPaddingValues + cutoutInsets
-            else
-                PaddingValues(horizontal = 16.dp, vertical = 2.dp) + contentPaddingValues
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 2.dp) + contentPaddingValues
         ) {
             itemsIndexed(Contributors.LIST) { i, contributor ->
                 val top = if (i == 0) CornerSize(16.dp) else

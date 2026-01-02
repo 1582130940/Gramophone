@@ -8,7 +8,7 @@ import androidx.preference.PreferenceManager
 import org.akanework.gramophone.R
 import org.akanework.gramophone.logic.getBooleanStrict
 
-open class BaseActivity : AppCompatActivity() {
+open class BaseActivity() : AppCompatActivity() {
 	private lateinit var prefs: SharedPreferences
 	private val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
 		if (key == "pureDark" && (resources.configuration.uiMode and
