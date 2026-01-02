@@ -155,6 +155,36 @@ abstract class BaseAdapter<T : Any>(
     // Subclasses must call this. This isn't an init block to avoid leaking this to getAdapterType()
     // TODO: maybe refactor getAdapterType() at some point instead?
     protected fun lateInit() {
+        val prefLayoutType: LayoutType =
+            try {
+                LayoutType.valueOf(
+                    prefs.getStringStrict(
+                        "L" + getAdapterType(this).toString(),
+                        LayoutType.NONE.toString()
+                    )!!
+                )
+            } catch (_: IllegalArgumentException) { LayoutType.NONE }
+        layoutType =
+            if (prefLayoutType != LayoutType.NONE && prefLayoutType != defaultLayoutType)
+                prefLayoutType
+            else
+                defaultLayoutType
+        val prefSortType: Sorter.Type =
+            if (canSort) try {
+                Sorter.Type.valueOf(
+                    prefs.getStringStrict(
+                        "S" + getAdapterType(this).toString(),
+                        Sorter.Type.None.toString()
+                    )!!
+                )
+            } catch (_: IllegalArgumentException) { Sorter.Type.None }
+            else Sorter.Type.None
+        sortType = MutableStateFlow(
+            if (prefSortType != Sorter.Type.None && sortTypes.contains(prefSortType))
+                prefSortType
+            else
+                initialSortType
+        )
         val mayBlock = isSubFragment != null
         var blockMutex = if (mayBlock) Mutex() else null
         var onListLoadedCompleter = if (mayBlock)
@@ -222,36 +252,6 @@ abstract class BaseAdapter<T : Any>(
                 }
             }
         }
-        val prefLayoutType: LayoutType =
-            try {
-                LayoutType.valueOf(
-                    prefs.getStringStrict(
-                        "L" + getAdapterType(this).toString(),
-                        LayoutType.NONE.toString()
-                    )!!
-                )
-            } catch (_: IllegalArgumentException) { LayoutType.NONE }
-        layoutType =
-            if (prefLayoutType != LayoutType.NONE && prefLayoutType != defaultLayoutType)
-                prefLayoutType
-            else
-                defaultLayoutType
-        val prefSortType: Sorter.Type =
-            if (canSort) try {
-                Sorter.Type.valueOf(
-                    prefs.getStringStrict(
-                        "S" + getAdapterType(this).toString(),
-                        Sorter.Type.None.toString()
-                    )!!
-                )
-            } catch (_: IllegalArgumentException) { Sorter.Type.None }
-            else Sorter.Type.None
-        sortType = MutableStateFlow(
-            if (prefSortType != Sorter.Type.None && sortTypes.contains(prefSortType))
-                prefSortType
-            else
-                initialSortType
-        )
     }
 
     protected open val defaultCover: Int = R.drawable.ic_default_cover
