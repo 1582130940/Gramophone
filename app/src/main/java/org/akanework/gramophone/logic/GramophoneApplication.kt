@@ -143,12 +143,6 @@ class GramophoneApplication : Application(), SingletonImageLoader.Factory,
                             it.detectImplicitDirectBoot()
                         } else it
                     }
-                    .let {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                            it.detectNonSdkApiUsage()
-                        } else it
-                    }
-                    .permitNonSdkApiUsage()
                     .penaltyLog()
                     .penaltyDeath()
                     .build()
