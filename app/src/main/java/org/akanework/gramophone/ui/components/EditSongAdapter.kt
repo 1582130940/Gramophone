@@ -1,5 +1,6 @@
 package org.akanework.gramophone.ui.components
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.MotionEvent
@@ -65,6 +66,7 @@ abstract class EditSongAdapter(
                 onClick(pos)
             }
         }
+        @SuppressLint("ClickableViewAccessibility")
         holder.dragHandle.setOnTouchListener { _, ev ->
             if (ev.action == MotionEvent.ACTION_DOWN)
                 startDrag(holder)

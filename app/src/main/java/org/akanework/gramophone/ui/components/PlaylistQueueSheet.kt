@@ -183,6 +183,7 @@ class PlaylistQueueSheet(
             playlist.second.add(to1, movedItem)
             mediaController?.moveMediaItem(from1, to1)
             notifyItemMoved(from, to)
+            updateList() // TODO: this could be more efficient
         }
 
         override fun removeItem(pos: Int) {
@@ -192,7 +193,7 @@ class PlaylistQueueSheet(
             instance?.removeMediaItem(idx)
             playlist.second.removeAt(idx)
             notifyItemRemoved(pos)
-            updateList()
+            updateList() // TODO: this could be more efficient
         }
 
         override fun getItem(pos: Int) = playlist.second[playlist.first[pos]]
