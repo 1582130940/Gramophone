@@ -459,7 +459,6 @@
     <string name="settings_replaygain_drc_desc">Koristi „Dynamic Range Compression“ (komprimiranje dinamičkog raspona) kao zaštitu od odsjecanja (clippinga), (preporučeno). Ako je isključeno, glasnoća će se smanjiti (glasnoća neće biti na istoj razini, što uništava efekt normalizacije).</string>
     <string name="smart">Pametno</string>
     <string name="scroll_to_playing">Pomakni se do pjesme koja se izvodi</string>
-    <string name="duration_queue">%s h</string>
     <string name="settings_crash_application">Preki rada aplikacije</string>
     <string name="mix_port_flag_raw">Raw</string>
     <string name="what_were_you_doing">Što su bile tvoje zadnje radnje kada je aplikacije Gramophone prekinula raditi? Dodaj što više detalja kako bi se problem mogao riješiti.\n\nNapomena: Po mogućnosti koristi engleski za prijavu grešaka, inače ću pokušati koristiti strojni prijevod ako pošalješ prijavu greške na jednom drugom jeziku.</string>

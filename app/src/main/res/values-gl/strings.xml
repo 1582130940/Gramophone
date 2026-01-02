@@ -457,7 +457,6 @@
     <string name="album_gain">Manter a dinámica do álbum</string>
     <string name="smart">Intelixente</string>
     <string name="scroll_to_playing">Desprazarse á canción en reprodución</string>
-    <string name="duration_queue">%s horas</string>
     <string name="playback_speed">Velocidade de reprodución</string>
     <string name="tempo">Tempo</string>
     <string name="pitch">Tono</string>
