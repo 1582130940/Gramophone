@@ -73,7 +73,7 @@ class ReplayGainAudioProcessor : BaseAudioProcessor() {
                                 inputBuffer.position(inputBuffer.position() + 3)
                             }
                             C.ENCODING_PCM_32BIT, C.ENCODING_PCM_32BIT_BIG_ENDIAN ->
-                                outputBuffer.putInt((inputBuffer.get() * gain).toInt())
+                                outputBuffer.putInt((inputBuffer.getInt() * gain).toInt())
                             C.ENCODING_PCM_FLOAT -> outputBuffer.putFloat(
                                 inputBuffer.getFloat() * gain)
                             C.ENCODING_PCM_DOUBLE -> outputBuffer.putDouble(
