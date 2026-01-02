@@ -10,6 +10,7 @@
         <item name="alertDialogTheme">@style/AppTheme.AlertDialog</item>
         <item name="system_app_widget_background_radius">28dp</item>
         <item name="system_app_widget_inner_radius">20dp</item>
+        <item name="previewPlayerElevation">1dp</item>
     </style>
 
     <style name="PreV31.Theme.Gramophone" parent="Base.Theme.Gramophone">
@@ -71,6 +72,7 @@
         <item name="colorSurfaceContainer">@android:color/black</item>
         <item name="colorSurfaceContainerHigh">@android:color/black</item>
         <item name="colorSurfaceContainerHighest">@android:color/black</item>
+        <item name="previewPlayerElevation">0dp</item>
     </style>
     <style name="ThemeOverlay.PureDark" parent="">
         <item name="android:colorBackground">@android:color/black</item>
@@ -81,6 +83,7 @@
         <item name="colorSurfaceContainer">@android:color/black</item>
         <item name="colorSurfaceContainerHigh">@android:color/black</item>
         <item name="colorSurfaceContainerHighest">@android:color/black</item>
+        <item name="previewPlayerElevation">0dp</item>
     </style>
 
     <style name="TextAppearance.App.BodyLarge" parent="TextAppearance.Material3.BodyLarge">

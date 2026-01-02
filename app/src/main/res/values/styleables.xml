@@ -14,4 +14,7 @@
 		<attr name="hasFixedSize" format="boolean"/>
 		<attr name="useGridPaddingDecoration" format="boolean"/>
 	</declare-styleable>
+    <declare-styleable name="ThemeAttrs">
+        <attr name="previewPlayerElevation" format="dimension"/>
+    </declare-styleable>
 </resources>

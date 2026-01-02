@@ -149,6 +149,7 @@ class GramophoneApplication : Application(), SingletonImageLoader.Factory,
                         } else it
                     }
                     .permitNonSdkApiUsage()
+                    .penaltyLog()
                     .penaltyDeath()
                     .build()
             )
