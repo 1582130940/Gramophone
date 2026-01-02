@@ -83,7 +83,8 @@ class DetailedFolderAdapter(
             )!!
         )
     } catch (_: IllegalArgumentException) { Sorter.Type.None }
-    override val sortTypes = setOf(Sorter.Type.ByFilePathAscending, Sorter.Type.BySizeDescending)
+    override val sortTypes = setOf(Sorter.Type.ByFilePathAscending, Sorter.Type.BySizeDescending,
+        Sorter.Type.ByAddDateDescending, Sorter.Type.ByModifiedDateDescending)
     override val sortType = MutableStateFlow(
         if (prefSortType != Sorter.Type.None && sortTypes.contains(prefSortType))
         prefSortType
@@ -119,13 +120,22 @@ class DetailedFolderAdapter(
         emit(item)
     }.sharePauseableIn(CoroutineScope(Dispatchers.Default), WhileSubscribed(), replay = 1)
     private val folderFlow = dataFlow.combine(sortType) { item, sortType ->
-        if (sortType == Sorter.Type.BySizeDescending)
-            item.folderList.values.sortedByDescending { it.folderList.size + it.songList.size }
-        else
-            item.folderList.values.sortedWith(
+        when (sortType) {
+            Sorter.Type.BySizeDescending -> item.folderList.values.sortedByDescending {
+                it.folderList.size + it.songList.size
+            }
+            Sorter.Type.ByAddDateDescending -> item.folderList.values.sortedByDescending {
+                it.addDate ?: Long.MIN_VALUE
+            }
+            Sorter.Type.ByModifiedDateDescending -> item.folderList.values.sortedByDescending {
+                it.modifiedDate ?: Long.MIN_VALUE
+            }
+            else -> item.folderList.values.sortedWith(
                 SupportComparator.createAlphanumericComparator(cnv = {
                     it.folderName
-                }))
+                })
+            )
+        }
     }
     private var folderList: ImmutableList<FileNode> = persistentListOf()
     private var scope: CoroutineScope? = null
