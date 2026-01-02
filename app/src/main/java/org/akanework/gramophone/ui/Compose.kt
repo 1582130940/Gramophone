@@ -64,29 +64,29 @@ fun GramophoneTheme(
     content: @Composable () -> Unit
 ) {
     MaterialTheme(
-        colorScheme = (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            if (useDarkTheme)
+        colorScheme = (if (useDarkTheme) {
+            (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
                 dynamicDarkColorScheme(LocalContext.current)
             else
-                dynamicLightColorScheme(LocalContext.current)
+                darkColorScheme()).let {
+                if (pureDark) {
+                    it.copy(
+                        background = Color.Black,
+                        surface = Color.Black,
+                        surfaceVariant = Color.Black,
+                        surfaceContainerLowest = Color.Black,
+                        surfaceContainerLow = Color.Black,
+                        surfaceContainer = Color.Black,
+                        surfaceContainerHigh = Color.Black,
+                        surfaceContainerHighest = Color.Black,
+                    )
+                } else it
+            }
         } else {
-            if (useDarkTheme)
-                darkColorScheme()
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
+                dynamicLightColorScheme(LocalContext.current)
             else
                 lightColorScheme()
-        }).let {
-            if (pureDark) {
-                it.copy(
-                    background = Color.Black,
-                    surface = Color.Black,
-                    surfaceVariant = Color.Black,
-                    surfaceContainerLowest = Color.Black,
-                    surfaceContainerLow = Color.Black,
-                    surfaceContainer = Color.Black,
-                    surfaceContainerHigh = Color.Black,
-                    surfaceContainerHighest = Color.Black,
-                )
-            } else it
-        }, content = content
+        }), content = content
     )
 }
