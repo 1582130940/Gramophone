@@ -99,6 +99,7 @@ import uk.akane.libphonograph.items.artistId
 import uk.akane.libphonograph.manipulator.ItemManipulator
 import kotlin.math.min
 import androidx.core.content.edit
+import androidx.core.widget.NestedScrollView
 import androidx.media3.common.PlaybackParameters
 import com.google.android.material.checkbox.MaterialCheckBox
 
@@ -650,7 +651,7 @@ class FullBottomSheet
 
         MaterialAlertDialogBuilder(context)
             .setTitle(R.string.playback_speed)
-            .setView(container)
+            .setView(NestedScrollView(context).apply { addView(container) })
             .setPositiveButton(android.R.string.ok) { _, _ ->
                 prefs.edit {
                     putBoolean("playback_tempo_pitch_locked", lockCheckbox.isChecked)
