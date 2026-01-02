@@ -115,8 +115,10 @@ class SearchFragment : BaseFragment(true) {
 
     override fun onResume() {
         super.onResume()
-        if (!isHidden) {
+        if (!isHidden && !mainActivity.playerBottomSheet.visibleAndExpanded) {
             requireActivity().showKeyboard(editText)
+        } else {
+            editText.clearFocus()
         }
     }
 

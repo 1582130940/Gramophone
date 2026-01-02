@@ -119,6 +119,8 @@ class PlayerBottomSheet private constructor(
         }
     val actuallyVisible: Boolean
         get() = standardBottomSheetBehavior?.state != BottomSheetBehavior.STATE_HIDDEN
+    val visibleAndExpanded: Boolean
+        get() = standardBottomSheetBehavior?.state == BottomSheetBehavior.STATE_EXPANDED
 
     init {
         inflate(context, R.layout.bottom_sheet, this)
