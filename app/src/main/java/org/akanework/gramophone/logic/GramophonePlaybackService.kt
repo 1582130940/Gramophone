@@ -549,15 +549,20 @@ class GramophonePlaybackService : MediaLibraryService(), MediaSessionService.Lis
                             items.mediaItems, items.startIndex, items.startPositionMs
                         )
                     } catch (e: IllegalSeekPositionException) {
-                        // invalid data, whatever...
-                        Log.e(TAG, "failed to restore: " + Log.getThrowableString(e)!!)
-                        endedWorkaroundPlayer?.nextShuffleOrder = null
+                        try {
+                            mediaSession?.player?.setMediaItems(items.mediaItems)
+                            Log.w(TAG, "failed to restore index", e)
+                        } catch (_: IllegalSeekPositionException) {
+                            Log.e(TAG, "failed to restore", e)
+                            // invalid data, whatever...
+                            endedWorkaroundPlayer?.nextShuffleOrder = null
+                        }
                     }
                     if (endedWorkaroundPlayer?.nextShuffleOrder != null)
                         throw IllegalStateException("shuffleFactory was not consumed during restore")
                     if (mediaSession?.connectedControllers?.find { it.connectionHints
                         .getBoolean("PrepareWhenReady", false) } != null) {
-                        handler.post { controller?.prepare() }
+                        handler.post { mediaSession?.player?.prepare() }
                     }
                 }
                 lastPlayedManager.allowSavingState = true
