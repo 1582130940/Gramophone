@@ -93,6 +93,7 @@ class Sorter<T>(
     enum class Type {
         ByTitleDescending, ByTitleAscending,
         ByArtistDescending, ByArtistAscending,
+        ByArtistYearDescending, ByArtistYearAscending,
         ByAlbumTitleDescending, ByAlbumTitleAscending,
         ByAlbumArtistDescending, ByAlbumArtistAscending,
         ByAlbumArtistYearDescending, ByAlbumArtistYearAscending,
@@ -112,6 +113,8 @@ class Sorter<T>(
 	            ByTitleAscending -> ByTitleDescending
 	            ByArtistDescending -> ByArtistAscending
 	            ByArtistAscending -> ByArtistDescending
+                ByArtistYearDescending -> ByArtistYearAscending
+                ByArtistYearAscending -> ByArtistYearDescending
 	            ByAlbumTitleDescending -> ByAlbumTitleAscending
 	            ByAlbumTitleAscending -> ByAlbumTitleDescending
 	            ByAlbumArtistDescending -> ByAlbumArtistAscending
@@ -190,6 +193,26 @@ class Sorter<T>(
                         sortingHelper.getArtist(it)
                     },
                     getComparatorNoReverse(Type.ByTitleAscending)
+                )
+            }
+
+            Type.ByArtistYearDescending -> {
+                SupportComparator.createAlphanumericComparator(
+                    true, {
+                        sortingHelper.getArtist(it)
+                    }, getComparatorNoReverse(
+                        Type.ByReleaseDateAscending
+                    )
+                )
+            }
+
+            Type.ByArtistYearAscending -> {
+                SupportComparator.createAlphanumericComparator(
+                    false,
+                    {
+                        sortingHelper.getArtist(it)
+                    },
+                    getComparatorNoReverse(Type.ByReleaseDateDescending)
                 )
             }
 
@@ -337,6 +360,10 @@ class Sorter<T>(
             }
 
             Type.ByArtistDescending, Type.ByArtistAscending -> {
+                sortingHelper.getArtist(item)?.firstOrNull()?.toString()
+            }
+
+            Type.ByArtistYearDescending, Type.ByArtistYearAscending -> {
                 sortingHelper.getArtist(item)?.firstOrNull()?.toString()
             }
 

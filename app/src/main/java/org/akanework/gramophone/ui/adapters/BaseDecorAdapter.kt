@@ -72,6 +72,7 @@ open class BaseDecorAdapter<T : AdapterFragment.BaseInterface<*>>(
                 Pair(R.id.natural, Sorter.Type.NaturalOrder),
                 Pair(R.id.name, Sorter.Type.ByTitleAscending),
                 Pair(R.id.artist, Sorter.Type.ByArtistAscending),
+                Pair(R.id.artist_year, Sorter.Type.ByArtistYearAscending),
                 Pair(R.id.album, Sorter.Type.ByAlbumTitleAscending),
                 Pair(R.id.album_artist, Sorter.Type.ByAlbumArtistAscending),
                 Pair(R.id.album_artist_year, Sorter.Type.ByAlbumArtistYearAscending),

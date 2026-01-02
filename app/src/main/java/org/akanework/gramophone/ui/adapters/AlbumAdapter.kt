@@ -100,6 +100,7 @@ class AlbumAdapter(
         setOf(
             Sorter.Type.ByTitleDescending, Sorter.Type.ByTitleAscending,
             Sorter.Type.ByArtistDescending, Sorter.Type.ByArtistAscending,
+            Sorter.Type.ByArtistYearDescending, Sorter.Type.ByArtistYearAscending,
             Sorter.Type.BySizeDescending, Sorter.Type.BySizeAscending,
             Sorter.Type.ByReleaseDateAscending, Sorter.Type.ByReleaseDateDescending,
             Sorter.Type.ByAddDateAscending, Sorter.Type.ByAddDateDescending,
