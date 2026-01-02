@@ -1,9 +1,10 @@
 package org.akanework.gramophone.ui.components
 
 import android.content.Context
+import android.os.SystemClock
 import android.view.View
 import android.widget.Button
-import android.widget.TextView
+import android.widget.Chronometer
 import androidx.core.graphics.Insets
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -30,12 +31,13 @@ class PlaylistQueueSheet(
         get() = activity.getPlayer()
     private val playlistAdapter: PlaylistCardAdapter
     private val touchHelper: ItemTouchHelper
-    private val durationView: TextView
+    private val durationView: Chronometer
 
     init {
         setContentView(R.layout.playlist_bottom_sheet)
         behavior.state = BottomSheetBehavior.STATE_EXPANDED
         durationView = findViewById(R.id.duration)!!
+        durationView.isCountDown = true
         val recyclerView = findViewById<MyRecyclerView>(R.id.recyclerview)!!
         ViewCompat.setOnApplyWindowInsetsListener(recyclerView) { v, ic ->
             val i = ic.getInsets(
@@ -71,6 +73,10 @@ class PlaylistQueueSheet(
         }, // quick UX hack to show there's more songs above (well, if there is).
             (context.resources.getDimensionPixelOffset(R.dimen.list_height) * 0.5f).toInt())
         recyclerView.fastScroll(null, null)
+        findViewById<Button>(R.id.clearQueue)!!.setOnClickListener {
+            dismiss()
+            instance?.clearMediaItems()
+        }
         findViewById<Button>(R.id.scrollToPlaying)!!.setOnClickListener {
             recyclerView.smoothScrollToPosition(playlistAdapter.playlist.first.indexOfFirst { i ->
                 i == (instance?.currentMediaItemIndex ?: 0)
@@ -92,6 +98,14 @@ class PlaylistQueueSheet(
         playlistAdapter.currentMediaItem = mediaItem?.mediaId
     }
 
+    override fun onPositionDiscontinuity(
+        oldPosition: Player.PositionInfo,
+        newPosition: Player.PositionInfo,
+        reason: @Player.DiscontinuityReason Int
+    ) {
+        playlistAdapter.updateTimer()
+    }
+
     override fun onIsPlayingChanged(isPlaying: Boolean) {
         playlistAdapter.currentIsPlaying = isPlaying
     }
@@ -102,6 +116,10 @@ class PlaylistQueueSheet(
 
         init {
             updateList()
+            durationView.start()
+            setOnDismissListener {
+                durationView.stop()
+            }
         }
         var currentMediaItem: String? = null
             set(value) {
@@ -124,6 +142,7 @@ class PlaylistQueueSheet(
             set(value) {
                 if (field != value) {
                     field = value
+                    updateTimer()
                     if (value != null && currentMediaItem != null) {
                         idToPosMap?.get(currentMediaItem)?.let {
                             notifyItemChanged(it, false)
@@ -219,10 +238,26 @@ class PlaylistQueueSheet(
 
         private fun updateList() {
             idToPosMap = hashMapOf()
-            playlist.second.forEachIndexed { i, item -> idToPosMap!![item.mediaId] = playlist.first.indexOf(i) }
-            durationView.text = context.getString(R.string.duration_queue,
-                (playlist.second.sumOf { it.mediaMetadata.durationMs ?: 0L } / 60)
-                .convertDurationToTimeStamp())
+            playlist.second.forEachIndexed { i, item ->
+                idToPosMap!![item.mediaId] = playlist.first.indexOf(i)
+            }
+            updateTimer()
+        }
+
+        fun updateTimer() {
+            val current = (instance?.currentMediaItemIndex ?: 0)
+            val elapsedCurrentMs = (instance?.currentPosition ?: 0)
+            durationView.format = context.getString(R.string.duration_queue,
+                "%s", playlist.second.sumOf { it.mediaMetadata.durationMs ?: 0L }
+                    .convertDurationToTimeStamp(true))
+            if (instance?.isPlaying == true) {
+                durationView.start()
+            } else {
+                durationView.stop()
+            }
+            durationView.base = SystemClock.elapsedRealtime() +
+                    playlist.second.subList(current, playlist.second.size)
+                    .sumOf { it.mediaMetadata.durationMs ?: 0L } - elapsedCurrentMs + 1000
         }
     }
 }

@@ -19,6 +19,7 @@ package org.akanework.gramophone.logic.utils
 
 import androidx.annotation.ColorInt
 import androidx.annotation.IntRange
+import java.text.Format
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -37,13 +38,14 @@ object CalculationUtils {
      * @param duration
      * @return
      */
-    fun convertDurationToTimeStamp(duration: Long): String {
-        val minutes = duration / 1000 / 60
-        val seconds = duration / 1000 - minutes * 60
-        if (seconds < 10) {
-            return "$minutes:0$seconds"
+    fun convertDurationToTimeStamp(duration: Long, zero: Boolean = false): String {
+        val hours = duration / 1000 / 60 / 60
+        val minutes = duration / 1000 / 60 % 60
+        val seconds = duration / 1000 % 60
+        if (hours > 0) {
+            return String.format("%d:%02d:%02d", hours, minutes, seconds)
         }
-        return "$minutes:$seconds"
+        return String.format(if (zero) "%02d:%02d" else "%d:%02d", minutes, seconds)
     }
 
     /**
@@ -98,4 +100,4 @@ object CalculationUtils {
 
 }
 
-fun Long.convertDurationToTimeStamp() = CalculationUtils.convertDurationToTimeStamp(this)
+fun Long.convertDurationToTimeStamp(zero: Boolean = false) = CalculationUtils.convertDurationToTimeStamp(this, zero)
