@@ -391,13 +391,6 @@ class GramophonePlaybackService : MediaLibraryService(), MediaSessionService.Lis
                 .setPlaybackLooper(internalPlaybackThread.looper)
                 .build()
         )
-        player.exoPlayer.addListener(object : Player.Listener {
-            override fun onAudioSessionIdChanged(audioSessionId: Int) {
-                // https://github.com/androidx/media/issues/2739
-                // TODO(ASAP) wasn't that bug supposed to be fixed?!
-                this@GramophonePlaybackService.onAudioSessionIdChanged(audioSessionId)
-            }
-        })
         player.exoPlayer.addAnalyticsListener(EventLogger())
         player.exoPlayer.addAnalyticsListener(afFormatTracker)
         player.exoPlayer.addAnalyticsListener(this)
@@ -515,6 +508,9 @@ class GramophonePlaybackService : MediaLibraryService(), MediaSessionService.Lis
         addSession(mediaSession!!)
         controller = MediaBrowser.Builder(this, mediaSession!!.token).buildAsync().get()
         controller!!.addListener(this)
+        if (controller!!.audioSessionId != C.AUDIO_SESSION_ID_UNSET) {
+            onAudioSessionIdChanged(controller!!.audioSessionId)
+        }
         prefs.registerOnSharedPreferenceChangeListener(this)
         onSharedPreferenceChanged(prefs, null) // read initial values
         ContextCompat.registerReceiver(
