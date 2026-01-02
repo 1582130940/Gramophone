@@ -220,8 +220,6 @@ class PostAmpAudioSink(
         super.configure(inputFormat, specifiedBufferSize, outputChannels)
     }
 
-    // Both ReplayGainAudioProcessor and DPE logic relies on flush() when tags change in a way that
-    // changes the audio.
     fun canReuse(): Boolean {
         val mode: Mode
         val rgGain: Int
@@ -231,19 +229,29 @@ class PostAmpAudioSink(
             rgGain = rgAp.rgGain
             reduceGain = rgAp.reduceGain
         }
+        // we won't be called if offload state changes, one can't reuse audio track in that case
         val isOffload = Flags.TEST_RG_OFFLOAD ||
-                format?.let { it.sampleMimeType != MimeTypes.AUDIO_RAW } == true
-        val calcGainBefore = ReplayGainUtil.calculateGain(
-            tags, mode, rgGain, reduceGain || !(!isOffload || hasDpe),
-            if (!isOffload || hasDpe) ReplayGainUtil.RATIO else null
-        )
-        val nextIsOffload = Flags.TEST_RG_OFFLOAD ||
+                format?.let { it.sampleMimeType != MimeTypes.AUDIO_RAW } == true ||
                 pendingFormat?.let { it.sampleMimeType != MimeTypes.AUDIO_RAW } == true
-        val calcGainAfter = ReplayGainUtil.calculateGain(
-            pendingTags, mode, rgGain, reduceGain || !(!nextIsOffload || hasDpe),
-            if (!nextIsOffload || hasDpe) ReplayGainUtil.RATIO else null
-        )
-        return calcGainBefore == calcGainAfter
+        if (isOffload) {
+            val calcGainBefore = ReplayGainUtil.calculateGain(
+                tags, mode, rgGain, reduceGain || !hasDpe,
+                if (hasDpe) ReplayGainUtil.RATIO else null
+            )
+            val calcGainAfter = ReplayGainUtil.calculateGain(
+                pendingTags, mode, rgGain, reduceGain || !hasDpe,
+                if (!hasDpe) ReplayGainUtil.RATIO else null
+            )
+            // DPE logic relies on flush() when tags change in a way that changes the audio.
+            return calcGainBefore == calcGainAfter
+        } else {
+            // ReplayGainAudioProcessor must be re-configured when compressor state changes.
+            val compressorOnBefore = ReplayGainUtil.calculateGain(
+                tags, mode, rgGain, reduceGain, ReplayGainUtil.RATIO)?.second != null
+            val compressorOnAfter = ReplayGainUtil.calculateGain(
+                pendingTags, mode, rgGain, reduceGain, ReplayGainUtil.RATIO)?.second != null
+            return compressorOnBefore == compressorOnAfter
+        }
     }
 
     override fun setVolume(volume: Float) {
@@ -293,8 +301,6 @@ class PostAmpAudioSink(
             tags = pendingTags
             pendingFormat = null
             pendingTags = null
-        } else {
-            Log.w(TAG, "pending format is null, did the previous AudioTrack die?")
         }
         calculateGain() // parse new tags and apply to DPE/setVolume()
     }

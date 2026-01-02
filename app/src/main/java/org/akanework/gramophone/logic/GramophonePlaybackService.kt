@@ -707,28 +707,33 @@ class GramophonePlaybackService : MediaLibraryService(), MediaSessionService.Lis
     }
 
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String?) {
+        var restart = false
         if (key == null || key == "rg_mode") {
             rgMode = prefs.getStringStrict("rg_mode", "0")!!.toInt()
-            computeRgMode(true)
+            restart = !computeRgMode(true)
         }
         if (key == null || key == "rg_drc") {
             val drc = prefs.getBooleanStrict("rg_drc", true)
-            rgAp.setReduceGain(!drc)
+            restart = restart || !rgAp.setReduceGain(!drc)
         }
         if (key == null || key == "rg_rg_gain") {
             val rgGain = prefs.getIntStrict("rg_rg_gain", 19)
-            rgAp.setRgGain(rgGain - 15)
+            restart = restart || !rgAp.setRgGain(rgGain - 15)
         }
         if (key == null || key == "rg_no_rg_gain" || key == "rg_boost_gain") {
             val nonRgGain = prefs.getIntStrict("rg_no_rg_gain", 0)
             val boostGain = prefs.getIntStrict("rg_boost_gain", 0)
-            rgAp.setNonRgGain(-nonRgGain - boostGain)
-	        rgAp.setBoostGain(boostGain)
+            restart = restart || !rgAp.setNonRgGain(-nonRgGain - boostGain)
+            restart = restart || !rgAp.setBoostGain(boostGain)
+        }
+        if (restart) {
+            controller?.stop()
+            controller?.prepare()
         }
     }
 
-    private fun computeRgMode(force: Boolean) {
-        rgAp.setMode(when (rgMode) {
+    private fun computeRgMode(force: Boolean): Boolean {
+        return rgAp.setMode(when (rgMode) {
             0 -> ReplayGainUtil.Mode.None
             1 -> ReplayGainUtil.Mode.Track
             2 -> ReplayGainUtil.Mode.Album
@@ -1198,7 +1203,8 @@ class GramophonePlaybackService : MediaLibraryService(), MediaSessionService.Lis
     override fun onTimelineChanged(timeline: Timeline, reason: @Player.TimelineChangeReason Int) {
         if (reason == Player.TIMELINE_CHANGE_REASON_PLAYLIST_CHANGED) {
             refreshMediaButtonCustomLayout()
-            computeRgMode(false)
+            if (!computeRgMode(false))
+                throw IllegalStateException("unreachable, mode failed with force=false")
         }
         pendingDownstreamFormat.toSet().forEach {
             if (timeline.getIndexOfPeriod(it.first) == C.INDEX_UNSET) {
