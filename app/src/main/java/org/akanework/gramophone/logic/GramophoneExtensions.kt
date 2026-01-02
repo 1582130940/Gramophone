@@ -92,7 +92,10 @@ import kotlin.math.max
 
 fun Player.playOrPause() {
     if (playWhenReady) {
-        pause()
+        if (playbackState == Player.STATE_ENDED)
+            seekToDefaultPosition()
+        else
+            pause()
     } else {
         play()
     }
