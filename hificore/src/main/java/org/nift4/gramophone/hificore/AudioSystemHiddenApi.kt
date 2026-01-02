@@ -207,9 +207,13 @@ object AudioSystemHiddenApi {
                 try {
                     if (port.javaClass.canonicalName != "android.media.AudioMixPort") continue
                     val mixPort = getMixPort(port)
-                    // TODO: support android below T where flags is null
-                    if (mixPort.flags != null && (mixPort.flags and 2 /* AUDIO_OUTPUT_FLAG_PRIMARY */) != 0)
-                        return mixPort
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        if (mixPort.flags != null && (mixPort.flags and 2 /* AUDIO_OUTPUT_FLAG_PRIMARY */) != 0)
+                            return mixPort
+                    } else {
+                        if (mixPort.name?.contains("primary", ignoreCase = true) == true)
+                            return mixPort // I know it's cheap, but what can I do...
+                    }
                 } catch (t: Throwable) {
                     Log.e(TAG, Log.getThrowableString(t)!!)
                 }

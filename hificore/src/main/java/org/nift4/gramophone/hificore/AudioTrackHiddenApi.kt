@@ -20,9 +20,6 @@ package org.nift4.gramophone.hificore
 import android.annotation.SuppressLint
 import android.media.AudioTrack
 import android.os.Build
-import android.os.IBinder
-import android.os.Parcel
-import androidx.annotation.RequiresApi
 import androidx.media3.common.util.Log
 
 object AudioTrackHiddenApi {
