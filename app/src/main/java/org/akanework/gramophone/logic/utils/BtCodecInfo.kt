@@ -86,14 +86,14 @@ data class BtCodecInfo(val codec: String?, val sampleRateHz: Int?, val channelCo
                                     (@SuppressLint("NewApi") codecConfig.bitsPerSample)); null
                         }
                     }, (@SuppressLint("NewApi") if (codec == "LDAC") when {
-                        codecConfig.codecSpecific1 == 1000L || codecConfig.codecSpecific1 == 0L -> "Auto"
+                        codecConfig.codecSpecific1 == 1003L || codecConfig.codecSpecific1 == 0L -> "Auto"
                         codecConfig.codecSpecific1 == 1002L && ((sr ?: 1) % 48000) == 0 -> "330kbps"
                         codecConfig.codecSpecific1 == 1001L && ((sr ?: 1) % 48000) == 0 -> "660kbps"
-                        codecConfig.codecSpecific1 == 1003L && ((sr ?: 1) % 48000) == 0 -> "990kbps"
+                        codecConfig.codecSpecific1 == 1000L && ((sr ?: 1) % 48000) == 0 -> "990kbps"
                         codecConfig.codecSpecific1 == 1002L && ((sr ?: 1) % 44100) == 0 -> "303kbps"
                         codecConfig.codecSpecific1 == 1001L && ((sr ?: 1) % 44100) == 0 -> "606kbps"
-                        codecConfig.codecSpecific1 == 1003L && ((sr ?: 1) % 44100) == 0 -> "909kbps"
-                        else -> "ERROR (${codecConfig.codecSpecific1})"
+                        codecConfig.codecSpecific1 == 1000L && ((sr ?: 1) % 44100) == 0 -> "909kbps"
+                        else -> "ERROR (${codecConfig.codecSpecific1}; sr)"
                     } else null)
                 )
             } catch (t: Throwable) {
