@@ -2,23 +2,17 @@ package org.akanework.gramophone.ui.fragments.settings
 
 import android.content.ActivityNotFoundException
 import android.content.Intent
-import android.content.res.Configuration
-import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
-import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
@@ -43,10 +37,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
-import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -54,7 +44,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -69,41 +58,21 @@ import org.akanework.gramophone.ui.BaseComposeActivity
 import org.akanework.gramophone.ui.GramophoneTheme
 
 class ContributorsSettingsActivity : BaseComposeActivity() {
-    @OptIn(ExperimentalMaterial3Api::class)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         setContent {
             GramophoneTheme {
-                Scaffold(
-                    topBar = {
-                        TopAppBar(
-                            title = { Text(stringResource(R.string.settings_contributors)) },
-                            navigationIcon = {
-                                IconButton(onClick = { finish() }) {
-                                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
-                                }
-                            },
-                            colors = TopAppBarDefaults.topAppBarColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                                scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer),
-                            modifier = Modifier.padding(WindowInsets
-                                .safeDrawing.only(WindowInsetsSides.Horizontal).asPaddingValues())
-                        )
-                    },
-                    content = { paddingValues ->
-                        ContributorsSettingsScreen(paddingValues + WindowInsets
-                            .safeDrawing.only(WindowInsetsSides.Horizontal).asPaddingValues())
-                    },
-                    containerColor = MaterialTheme.colorScheme.surfaceContainer
-                )
+                ContributorsSettingsScreen()
             }
         }
     }
 
     @Composable
-    fun SimpleCard(shape: Shape, url: String, icon: @Composable () -> Unit,
-                   name: String?, login: String?, subtitle: String) {
+    fun SimpleCard(
+        shape: Shape, url: String, icon: @Composable () -> Unit,
+        name: String?, login: String?, subtitle: String
+    ) {
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -173,35 +142,67 @@ class ContributorsSettingsActivity : BaseComposeActivity() {
         )
     }
 
+    @OptIn(ExperimentalMaterial3Api::class)
     @Composable
-    fun ContributorsSettingsScreen(contentPaddingValues: PaddingValues) {
-        LazyColumn(
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 2.dp) + contentPaddingValues
-        ) {
-            itemsIndexed(Contributors.LIST) { i, contributor ->
-                val top = if (i == 0) CornerSize(16.dp) else
-                    CornerSize(8.dp)
-                val bottom = CornerSize(8.dp)
-                ContributorCard(RoundedCornerShape(
-                    top, top, bottom, bottom
-                ), contributor)
-            }
-            item {
-                val top = CornerSize(8.dp)
-                val bottom = CornerSize(16.dp)
-                SimpleCard(RoundedCornerShape(
-                    top, top, bottom, bottom
-                ), "https://hosted.weblate.org/engage/gramophone/", icon = {
-                    AsyncImage(
-                        model = R.drawable.outline_translate_24,
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .size(36.dp)
-                            .padding(6.dp)
+    fun ContributorsSettingsScreen() {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text(stringResource(R.string.settings_contributors)) },
+                    navigationIcon = {
+                        IconButton(onClick = { finish() }) {
+                            Icon(
+                                Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = stringResource(R.string.back)
+                            )
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                        scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer
+                    ),
+                    windowInsets = WindowInsets.safeDrawing.only(
+                        sides = WindowInsetsSides.Top + WindowInsetsSides.Horizontal
                     )
-                }, name = stringResource(R.string.translators), login = null,
-                    subtitle = remember { Contributors.TRANSLATORS.joinToString() })
+                )
+            },
+            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+            contentWindowInsets = WindowInsets.safeDrawing
+        ) { paddingValues ->
+            LazyColumn(
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 2.dp) + paddingValues
+            ) {
+                itemsIndexed(Contributors.LIST) { i, contributor ->
+                    val top = if (i == 0) CornerSize(16.dp) else CornerSize(8.dp)
+                    val bottom = CornerSize(8.dp)
+                    ContributorCard(
+                        RoundedCornerShape(
+                            top, top, bottom, bottom
+                        ), contributor
+                    )
+                }
+                item {
+                    val top = CornerSize(8.dp)
+                    val bottom = CornerSize(16.dp)
+                    SimpleCard(
+                        shape = RoundedCornerShape(
+                            top, top, bottom, bottom
+                        ),
+                        url = "https://hosted.weblate.org/engage/gramophone/",
+                        icon = {
+                            AsyncImage(
+                                model = R.drawable.outline_translate_24,
+                                contentDescription = null,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .padding(6.dp)
+                            )
+                        },
+                        name = stringResource(R.string.translators),
+                        login = null,
+                        subtitle = remember { Contributors.TRANSLATORS.joinToString() })
+                }
             }
         }
     }
@@ -214,5 +215,4 @@ class ContributorsSettingsActivity : BaseComposeActivity() {
             bottom = this.calculateBottomPadding() + other.calculateBottomPadding()
         )
     }
-
 }

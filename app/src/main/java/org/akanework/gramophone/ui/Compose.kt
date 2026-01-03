@@ -4,13 +4,13 @@ import android.content.SharedPreferences
 import android.os.Build
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.runtime.Composable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
@@ -22,10 +22,10 @@ import kotlinx.coroutines.channels.trySendBlocking
 import kotlinx.coroutines.flow.SharingStarted.Companion.WhileSubscribed
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.stateIn
+import org.akanework.gramophone.logic.enableEdgeToEdgeProperly
 import org.akanework.gramophone.logic.getBooleanStrict
 
-
-abstract class BaseComposeActivity() : AppCompatActivity() {
+abstract class BaseComposeActivity : AppCompatActivity() {
     private lateinit var prefs: SharedPreferences
     val pureDarkFlow by lazy {
         callbackFlow {
@@ -45,6 +45,7 @@ abstract class BaseComposeActivity() : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         prefs = PreferenceManager.getDefaultSharedPreferences(applicationContext)
         super.onCreate(savedInstanceState)
+        enableEdgeToEdgeProperly()
     }
 }
 
