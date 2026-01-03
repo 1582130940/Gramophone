@@ -1028,24 +1028,11 @@ class FullBottomSheet
             bottomSheetFullQualityDetails.setTextColor(
                 colorOnSurfaceVariant
             )
-            // TODO test/tweak walaoke colors
             bottomSheetFullLyricView.updateTextColor(
                 androidx.core.graphics.ColorUtils.compositeColors(
                     androidx.core.graphics.ColorUtils.setAlphaComponent(colorPrimary, 77),
                     fullPlayerFinalColor),
-                colorPrimary,
-                androidx.core.graphics.ColorUtils.compositeColors(
-                    androidx.core.graphics.ColorUtils.setAlphaComponent(Color.BLUE, 77),
-                    fullPlayerFinalColor),
-                Color.BLUE,
-                androidx.core.graphics.ColorUtils.compositeColors(
-                    androidx.core.graphics.ColorUtils.setAlphaComponent(Color.RED, 77),
-                    fullPlayerFinalColor),
-                Color.RED,
-                androidx.core.graphics.ColorUtils.compositeColors(
-                    androidx.core.graphics.ColorUtils.setAlphaComponent(Color.MAGENTA, 77),
-                    fullPlayerFinalColor),
-                Color.MAGENTA
+                colorPrimary
             )
 
             bottomSheetTimerButton.iconTint =

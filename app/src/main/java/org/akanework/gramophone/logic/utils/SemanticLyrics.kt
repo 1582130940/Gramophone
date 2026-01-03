@@ -44,23 +44,19 @@ private const val TAG = "SemanticLyrics"
  *      reading of otherwise discarded lyrics, all the lines between sync point A and B are read as
  *      lyric text of A
  *  - Extended LRC (ref Wikipedia) ex: [00:11.22] <00:11.22> hello <00:12.85> i am <00:13.23> lyric
- *  - Walaoke gender extension (ref Wikipedia)
  *  - iTunes dual speaker extension (v1: / v2: / [bg: ])
  *  - [offset:] tag in header (ref Wikipedia)
  * We completely ignore all ID3 tags from the header as MediaStore is our source of truth.
  */
 
 @Parcelize
-enum class SpeakerEntity(val isWalaoke: Boolean, val isVoice2: Boolean = false, val isGroup: Boolean = false, val isBackground: Boolean = false) : Parcelable {
-    Male(true), // Walaoke
-    Female(true), // Walaoke
-    Duet(true), // Walaoke
-    Voice1(false), // iTunes
-    Background(false, isBackground = true), // iTunes
-    Voice2(false, isVoice2 = true), // iTunes
-    Voice2Background(false, isVoice2 = true, isBackground = true), // iTunes
-    Group(false, isGroup = true),
-    GroupBackground(false, isGroup = true, isBackground = true)
+enum class SpeakerEntity(val isVoice2: Boolean = false, val isGroup: Boolean = false, val isBackground: Boolean = false) : Parcelable {
+    Voice1,
+    Background(isBackground = true),
+    Voice2(isVoice2 = true),
+    Voice2Background(isVoice2 = true, isBackground = true),
+    Group(isGroup = true),
+    GroupBackground(isGroup = true, isBackground = true)
 }
 
 /*
@@ -76,7 +72,6 @@ enum class SpeakerEntity(val isWalaoke: Boolean, val isVoice2: Boolean = false, 
  *      lyric text of A
  *  - Extended LRC (ref Wikipedia) ex: [00:11.22] <00:11.22> hello <00:12.85> i am <00:13.23> lyric
  *  - Extended LRC without sync points ex: <00:11.22> hello <00:12.85> i am <00:13.23> lyric
- *  - Walaoke gender extension (ref Wikipedia)
  *  - iTunes dual speaker extension (v1: / v2: / [bg: ])
  *  - Metadata tags in header (ref Wikipedia)
  */
@@ -175,21 +170,6 @@ private sealed class SyntacticLrc {
                         pos += 3
                         continue
                     }
-                    if (pos + 1 < text.length && text.regionMatches(pos, "F:", 0, 2)) {
-                        out.add(SpeakerTag(SpeakerEntity.Female))
-                        pos += 2
-                        continue
-                    }
-                    if (pos + 1 < text.length && text.regionMatches(pos, "M:", 0, 2)) {
-                        out.add(SpeakerTag(SpeakerEntity.Male))
-                        pos += 2
-                        continue
-                    }
-                    if (pos + 1 < text.length && text.regionMatches(pos, "D:", 0, 2)) {
-                        out.add(SpeakerTag(SpeakerEntity.Duet))
-                        pos += 2
-                        continue
-                    }
                     if (pos + 3 < text.length && text.regionMatches(pos, " v1:", 0, 4)) {
                         out.add(SpeakerTag(SpeakerEntity.Voice1))
                         pos += 4
@@ -203,21 +183,6 @@ private sealed class SyntacticLrc {
                     if (pos + 3 < text.length && text.regionMatches(pos, " v3:", 0, 4)) {
                         out.add(SpeakerTag(SpeakerEntity.Group))
                         pos += 4
-                        continue
-                    }
-                    if (pos + 2 < text.length && text.regionMatches(pos, " F:", 0, 3)) {
-                        out.add(SpeakerTag(SpeakerEntity.Female))
-                        pos += 3
-                        continue
-                    }
-                    if (pos + 2 < text.length && text.regionMatches(pos, " M:", 0, 3)) {
-                        out.add(SpeakerTag(SpeakerEntity.Male))
-                        pos += 3
-                        continue
-                    }
-                    if (pos + 2 < text.length && text.regionMatches(pos, " D:", 0, 3)) {
-                        out.add(SpeakerTag(SpeakerEntity.Duet))
-                        pos += 3
                         continue
                     }
                 }
@@ -456,7 +421,6 @@ fun findBidirectionalBarriers(text: CharSequence): List<Pair<Int, Boolean>> {
  *  - Translations, type 2 (ex: translated line directly under previous non-translated line)
  *  - Extended LRC (ref Wikipedia) ex: [00:11.22] <00:11.22> hello <00:12.85> i am <00:13.23> lyric
  *  - Extended LRC without sync points ex: <00:11.22> hello <00:12.85> i am <00:13.23> lyric
- *  - Walaoke gender extension (ref Wikipedia)
  *  - iTunes dual speaker extension (v1: / v2: / [bg: ])
  *  - [offset:] tag in header (ref Wikipedia)
  * We completely ignore all ID3 tags from the header as MediaStore is our source of truth.
@@ -529,23 +493,16 @@ fun parseLrc(lyricText: String, trimEnabled: Boolean, multiLineEnabled: Boolean)
                 }
                 is SyntacticLrc.InvalidText -> {
                     out += element.text to lastSpeakerTag
-                    if (lastSpeakerTag?.isWalaoke != true)
-                        lastSpeakerTag = null
+                    lastSpeakerTag = null
                 }
                 else -> throw IllegalStateException("unexpected type ${element.javaClass.name}")
             }
         }
-        val defaultIsWalaokeM = out.find { it.second?.isWalaoke == true } != null &&
-                out.find { it.second?.isWalaoke == false } == null
         while (out.firstOrNull()?.first?.isBlank() == true)
             out.removeAt(0)
         //while (out.lastOrNull()?.first?.isBlank() == true)
         //    out.removeAt(out.lastIndex) TODO this breaks unit tests, but blank lines are useless
-        return UnsyncedLyrics(out.map { lyric ->
-            if (defaultIsWalaokeM && lyric.second == null)
-                lyric.copy(second = SpeakerEntity.Male)
-            else lyric
-        })
+        return UnsyncedLyrics(out)
     }
     // Synced lyrics processing state machine starts here
     val out = mutableListOf<LyricLine>()
@@ -706,10 +663,7 @@ fun parseLrc(lyricText: String, trimEnabled: Boolean, multiLineEnabled: Boolean)
                 lastSyncPoint = null
                 lastWordSyncPoint = null
                 hadWordSyncSinceNewLine = false
-                // Walaoke extension speakers stick around unless another speaker is
-                // specified. (The default speaker - before one is chosen - is male.)
-                if (speaker?.isWalaoke != true)
-                    speaker = null
+                speaker = null
                 hadLyricSinceWordSync = true
             }
 
@@ -718,11 +672,7 @@ fun parseLrc(lyricText: String, trimEnabled: Boolean, multiLineEnabled: Boolean)
     }
     out.sortBy { it.start }
     var previousLyric: LyricLine? = null
-    val defaultIsWalaokeM = out.find { it.speaker?.isWalaoke == true } != null &&
-            out.find { it.speaker?.isWalaoke == false } == null
     out.forEach { lyric ->
-        if (defaultIsWalaokeM && lyric.speaker == null)
-            lyric.speaker = SpeakerEntity.Male
         val mainEnd = if (lyric.start == previousLyric?.start) out.firstOrNull {
             it.start == lyric.start && !it.endIsImplicit }?.end else null
         if (lyric.endIsImplicit) {

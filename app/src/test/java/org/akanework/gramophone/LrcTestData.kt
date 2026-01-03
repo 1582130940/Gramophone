@@ -892,23 +892,6 @@ object LrcTestData {
 		LyricLine(start = 247550uL, text = """Can't give, can't give up""", words = mutableListOf(SemanticLyrics.Word(timeRange = 247550uL..248218uL, charRange = 0..4, isRtl = false), SemanticLyrics.Word(timeRange = 248219uL..248834uL, charRange = 6..10, isRtl = false), SemanticLyrics.Word(timeRange = 248835uL..249453uL, charRange = 12..16, isRtl = false), SemanticLyrics.Word(timeRange = 249454uL..250186uL, charRange = 18..21, isRtl = false), SemanticLyrics.Word(timeRange = 250187uL..251449uL, charRange = 23..24, isRtl = false)), speaker = SpeakerEntity.Voice2, end = 251449uL, isTranslated = false, endIsImplicit = false),
 		LyricLine(start = 252864uL, text = """Can't give up""", words = mutableListOf(SemanticLyrics.Word(timeRange = 252864uL..253489uL, charRange = 0..4, isRtl = false), SemanticLyrics.Word(timeRange = 253490uL..254039uL, charRange = 6..9, isRtl = false), SemanticLyrics.Word(timeRange = 254040uL..255285uL, charRange = 11..12, isRtl = false)), speaker = SpeakerEntity.Voice2, end = 255285uL, isTranslated = false, endIsImplicit = false),
 	)
-	// from wikipedia
-	val WALAOKE_TEST = """
-		[00:12.00]Line 1 lyrics
-		[00:17.20]F: Line 2 lyrics
-		[00:21.10]M: Line 3 lyrics
-		[00:24.00]Line 4 lyrics
-		[00:28.25]D: Line 5 lyrics
-		[00:29.02]Line 6 lyrics
-	""".trimIndent()
-	val WALAOKE_TEST_PARSED = listOf(
-		LyricLine(start = 12000uL, text = """Line 1 lyrics""", words = null, speaker = SpeakerEntity.Male, end = 17199uL, isTranslated = false, endIsImplicit = true),
-		LyricLine(start = 17200uL, text = """Line 2 lyrics""", words = null, speaker = SpeakerEntity.Female, end = 21099uL, isTranslated = false, endIsImplicit = true),
-		LyricLine(start = 21100uL, text = """Line 3 lyrics""", words = null, speaker = SpeakerEntity.Male, end = 23999uL, isTranslated = false, endIsImplicit = true),
-		LyricLine(start = 24000uL, text = """Line 4 lyrics""", words = null, speaker = SpeakerEntity.Male, end = 28249uL, isTranslated = false, endIsImplicit = true),
-		LyricLine(start = 28250uL, text = """Line 5 lyrics""", words = null, speaker = SpeakerEntity.Duet, end = 29019uL, isTranslated = false, endIsImplicit = true),
-		LyricLine(start = 29020uL, text = """Line 6 lyrics""", words = null, speaker = SpeakerEntity.Duet, end = 9223372036854775807uL, isTranslated = false, endIsImplicit = true),
-	)
 	// wonder what happened to the formatting
 	val TTML_DEATH_BED = """
 		<tt xmlns="http://www.w3.org/ns/ttml" xmlns:itunes="http://music.apple.com/lyric-ttml-internal" xmlns:ttm="http://www.w3.org/ns/ttml#metadata" itunes:timing="Word" xml:lang="en"

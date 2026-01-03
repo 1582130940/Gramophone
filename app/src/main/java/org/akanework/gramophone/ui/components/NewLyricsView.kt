@@ -65,16 +65,8 @@ class NewLyricsView(context: Context, attrs: AttributeSet?) : ScrollingView2(con
     private var currentScrollTarget: Int? = null
     private var isCallbackQueued = false
     private val invalidateCallback = Runnable { isCallbackQueued = false; invalidate() }
-
-    // -/M/F/D insanity starts here
     private var defaultTextColor = 0
     private var highlightTextColor = 0
-    private var defaultTextColorM = 0
-    private var highlightTextColorM = 0
-    private var defaultTextColorF = 0
-    private var highlightTextColorF = 0
-    private var defaultTextColorD = 0
-    private var highlightTextColorD = 0
     private val defaultTextPaint = TextPaint().apply {
         color = Color.RED
         isElegantTextHeight = this@NewLyricsView.isElegantTextHeight
@@ -90,64 +82,10 @@ class NewLyricsView(context: Context, attrs: AttributeSet?) : ScrollingView2(con
         isElegantTextHeight = this@NewLyricsView.isElegantTextHeight
         textSize = translationBackgroundTextSize
     }
-    private val defaultTextPaintM = lazy {
-        TextPaint().apply {
-            color = defaultTextColorM
-            isElegantTextHeight = this@NewLyricsView.isElegantTextHeight
-            textSize = defaultTextSize; typeface = this@NewLyricsView.typeface
-        }
-    }
-    private val translationTextPaintM = lazy {
-        TextPaint().apply {
-            color = defaultTextColorM
-            isElegantTextHeight = this@NewLyricsView.isElegantTextHeight
-            textSize = translationTextSize; typeface = this@NewLyricsView.typeface
-        }
-    }
-    private val defaultTextPaintF = lazy {
-        TextPaint().apply {
-            color = defaultTextColorF
-            isElegantTextHeight = this@NewLyricsView.isElegantTextHeight
-            textSize = defaultTextSize; typeface = this@NewLyricsView.typeface
-        }
-    }
-    private val translationTextPaintF = lazy {
-        TextPaint().apply {
-            color = defaultTextColorF
-            isElegantTextHeight = this@NewLyricsView.isElegantTextHeight
-            textSize = translationTextSize; typeface = this@NewLyricsView.typeface
-        }
-    }
-    private val defaultTextPaintD = lazy {
-        TextPaint().apply {
-            color = defaultTextColorD
-            isElegantTextHeight = this@NewLyricsView.isElegantTextHeight
-            textSize = defaultTextSize; typeface = this@NewLyricsView.typeface
-        }
-    }
-    private val translationTextPaintD = lazy {
-        TextPaint().apply {
-            color = defaultTextColorD
-            isElegantTextHeight = this@NewLyricsView.isElegantTextHeight
-            textSize = translationTextSize; typeface = this@NewLyricsView.typeface
-        }
-    }
     private var wordActiveSpan = MyForegroundColorSpan(Color.CYAN)
-    private var wordActiveSpanM = lazy { MyForegroundColorSpan(highlightTextColorM) }
-    private var wordActiveSpanF = lazy { MyForegroundColorSpan(highlightTextColorF) }
-    private var wordActiveSpanD = lazy { MyForegroundColorSpan(highlightTextColorD) }
     private var gradientSpanPool = mutableListOf<MyGradientSpan>()
-    private var gradientSpanPoolM = lazy { mutableListOf<MyGradientSpan>() }
-    private var gradientSpanPoolF = lazy { mutableListOf<MyGradientSpan>() }
-    private var gradientSpanPoolD = lazy { mutableListOf<MyGradientSpan>() }
     private fun makeGradientSpan() =
         MyGradientSpan(grdWidth, defaultTextColor, highlightTextColor)
-    private fun makeGradientSpanM() =
-        MyGradientSpan(grdWidth, defaultTextColorM, highlightTextColorM)
-    private fun makeGradientSpanF() =
-        MyGradientSpan(grdWidth, defaultTextColorF, highlightTextColorF)
-    private fun makeGradientSpanD() =
-        MyGradientSpan(grdWidth, defaultTextColorD, highlightTextColorD)
 
     init {
         applyTypefaces()
@@ -162,14 +100,9 @@ class NewLyricsView(context: Context, attrs: AttributeSet?) : ScrollingView2(con
     }
 
     fun updateTextColor(
-        newColor: Int, newHighlightColor: Int, newColorM: Int,
-        newHighlightColorM: Int, newColorF: Int, newHighlightColorF: Int,
-        newColorD: Int, newHighlightColorD: Int
+        newColor: Int, newHighlightColor: Int
     ) {
         var changed = false
-        var changedM = false
-        var changedF = false
-        var changedD = false
         if (defaultTextColor != newColor) {
             defaultTextColor = newColor
             defaultTextPaint.color = defaultTextColor
@@ -177,82 +110,14 @@ class NewLyricsView(context: Context, attrs: AttributeSet?) : ScrollingView2(con
             translationBackgroundTextPaint.color = defaultTextColor
             changed = true
         }
-        if (defaultTextColorM != newColorM) {
-            defaultTextColorM = newColorM
-            if (defaultTextPaintM.isInitialized()) {
-                defaultTextPaintM.value.color = defaultTextColorM
-                changedM = true
-            }
-            if (translationTextPaintM.isInitialized()) {
-                translationTextPaintM.value.color = defaultTextColorM
-                changedM = true
-            }
-        }
-        if (defaultTextColorF != newColorF) {
-            defaultTextColorF = newColorF
-            if (defaultTextPaintF.isInitialized()) {
-                defaultTextPaintF.value.color = defaultTextColorF
-                changedF = true
-            }
-            if (translationTextPaintF.isInitialized()) {
-                translationTextPaintF.value.color = defaultTextColorF
-                changedF = true
-            }
-        }
-        if (defaultTextColorD != newColorD) {
-            defaultTextColorD = newColorD
-            if (defaultTextPaintD.isInitialized()) {
-                defaultTextPaintD.value.color = defaultTextColorD
-                changedD = true
-            }
-            if (translationTextPaintD.isInitialized()) {
-                translationTextPaintD.value.color = defaultTextColorD
-                changedD = true
-            }
-        }
         if (highlightTextColor != newHighlightColor) {
             highlightTextColor = newHighlightColor
             wordActiveSpan.color = highlightTextColor
             changed = true
         }
-        if (highlightTextColorM != newHighlightColorM) {
-            highlightTextColorM = newHighlightColorM
-            if (wordActiveSpanM.isInitialized()) {
-                wordActiveSpanM.value.color = highlightTextColorM
-                changedM = true
-            }
-        }
-        if (highlightTextColorF != newHighlightColorF) {
-            highlightTextColorF = newHighlightColorF
-            if (wordActiveSpanF.isInitialized()) {
-                wordActiveSpanF.value.color = highlightTextColorF
-                changedF = true
-            }
-        }
-        if (highlightTextColorD != newHighlightColorD) {
-            highlightTextColorD = newHighlightColorD
-            if (wordActiveSpanD.isInitialized()) {
-                wordActiveSpanD.value.color = highlightTextColorD
-                changedD = true
-            }
-        }
         if (changed) {
             gradientSpanPool.clear()
             repeat(3) { gradientSpanPool.add(makeGradientSpan()) }
-        }
-        if (changedM && gradientSpanPoolM.isInitialized()) {
-            gradientSpanPoolM.value.clear()
-            repeat(3) { gradientSpanPoolM.value.add(makeGradientSpanM()) }
-        }
-        if (changedF && gradientSpanPoolF.isInitialized()) {
-            gradientSpanPoolF.value.clear()
-            repeat(3) { gradientSpanPoolF.value.add(makeGradientSpanF()) }
-        }
-        if (changedD && gradientSpanPoolD.isInitialized()) {
-            gradientSpanPoolD.value.clear()
-            repeat(3) { gradientSpanPoolD.value.add(makeGradientSpanD()) }
-        }
-        if (changed || changedM || changedF || changedD) {
             spForRender?.second?.forEach {
                 it.text.getSpans<MyGradientSpan>()
                     .forEach { s -> it.text.removeSpan(s) }
@@ -298,18 +163,6 @@ class NewLyricsView(context: Context, attrs: AttributeSet?) : ScrollingView2(con
         defaultTextPaint.typeface = typeface
         translationTextPaint.typeface = typeface
         translationBackgroundTextPaint.typeface = typeface
-        if (defaultTextPaintM.isInitialized())
-            defaultTextPaintM.value.typeface = typeface
-        if (translationTextPaintM.isInitialized())
-            translationTextPaintM.value.typeface = typeface
-        if (defaultTextPaintF.isInitialized())
-            defaultTextPaintF.value.typeface = typeface
-        if (translationTextPaintF.isInitialized())
-            translationTextPaintF.value.typeface = typeface
-        if (defaultTextPaintD.isInitialized())
-            defaultTextPaintD.value.typeface = typeface
-        if (translationTextPaintD.isInitialized())
-            translationTextPaintD.value.typeface = typeface
     }
 
     override fun onDrawForChild(canvas: Canvas) {
@@ -488,45 +341,27 @@ class NewLyricsView(context: Context, attrs: AttributeSet?) : ScrollingView2(con
                     Float.NEGATIVE_INFINITY) || scaleOutProgress in 0f..1f
             var colorSpan = it.text.getSpans<MyForegroundColorSpan>().firstOrNull()
             val cachedEnd = colorSpan?.let { j -> it.text.getSpanEnd(j) } ?: -1
-            val wordActiveSpanForLine = when (it.speaker) {
-                SpeakerEntity.Male -> wordActiveSpanM.value
-                SpeakerEntity.Female -> wordActiveSpanF.value
-                SpeakerEntity.Duet -> wordActiveSpanD.value
-                else -> wordActiveSpan
-            }
             val col = if (!culled) {
-                val defaultColorForLine = when (it.speaker) {
-                    SpeakerEntity.Male -> defaultTextColorM
-                    SpeakerEntity.Female -> defaultTextColorF
-                    SpeakerEntity.Duet -> defaultTextColorD
-                    else -> defaultTextColor
-                }
-                val highlightColorForLine = when (it.speaker) {
-                    SpeakerEntity.Male -> highlightTextColorM
-                    SpeakerEntity.Female -> highlightTextColorF
-                    SpeakerEntity.Duet -> highlightTextColorD
-                    else -> highlightTextColor
-                }
                 if (inColorAnim) ColorUtils.blendARGB(
-                    if (scaleOutProgress in 0f..1f) highlightColorForLine else
-                        defaultColorForLine,
+                    if (scaleOutProgress in 0f..1f) highlightTextColor else
+                        defaultTextColor,
                     if (scaleInProgress in 0f..1f && gradientProgress == Float
-                            .NEGATIVE_INFINITY) highlightColorForLine
-                    else defaultColorForLine,
+                            .NEGATIVE_INFINITY) highlightTextColor
+                    else defaultTextColor,
                     scaleColorInterpolator.getInterpolation(
                         if (scaleOutProgress in 0f..1f
                         ) scaleOutProgress else scaleInProgress
                     )
                 ) else Color.GREEN
             } else Color.RED
-            if (cachedEnd != spanEndWithoutGradient || inColorAnim != (colorSpan != wordActiveSpanForLine)) {
+            if (cachedEnd != spanEndWithoutGradient || inColorAnim != (colorSpan != wordActiveSpan)) {
                 if (cachedEnd != -1) {
                     it.text.removeSpan(colorSpan!!)
-                    if (colorSpan != wordActiveSpanForLine && (!inColorAnim || spanEndWithoutGradient == -1)) {
+                    if (colorSpan != wordActiveSpan && (!inColorAnim || spanEndWithoutGradient == -1)) {
                         if (colorSpanPool.size < 10)
                             colorSpanPool.add(colorSpan)
                         colorSpan = null
-                    } else if (inColorAnim && colorSpan == wordActiveSpanForLine)
+                    } else if (inColorAnim && colorSpan == wordActiveSpan)
                         colorSpan = null
                 }
                 if (spanEndWithoutGradient != -1) {
@@ -534,7 +369,7 @@ class NewLyricsView(context: Context, attrs: AttributeSet?) : ScrollingView2(con
                         colorSpan = colorSpanPool.removeFirstOrNull()
                             ?: @SuppressLint("DrawAllocation") MyForegroundColorSpan(col)
                     else if (!inColorAnim)
-                        colorSpan = wordActiveSpanForLine
+                        colorSpan = wordActiveSpan
                     it.text.setSpan(
                         colorSpan, 0, spanEndWithoutGradient,
                         Spanned.SPAN_INCLUSIVE_INCLUSIVE
@@ -542,7 +377,7 @@ class NewLyricsView(context: Context, attrs: AttributeSet?) : ScrollingView2(con
                 }
             }
             if (inColorAnim && spanEndWithoutGradient != -1) {
-                if (colorSpan!! == wordActiveSpanForLine)
+                if (colorSpan!! == wordActiveSpan)
                     throw IllegalStateException("colorSpan == wordActiveSpan")
                 colorSpan.color = col
             }
@@ -550,29 +385,18 @@ class NewLyricsView(context: Context, attrs: AttributeSet?) : ScrollingView2(con
             val gradientSpanStart = gradientSpan?.let { j -> it.text.getSpanStart(j) } ?: -1
             val gradientSpanEnd = gradientSpan?.let { j -> it.text.getSpanEnd(j) } ?: -1
             if (gradientSpanStart != realGradientStart || gradientSpanEnd != realGradientEnd) {
-                val gradientSpanPoolForLine = when (it.speaker) {
-                    SpeakerEntity.Male -> gradientSpanPoolM.value
-                    SpeakerEntity.Female -> gradientSpanPoolF.value
-                    SpeakerEntity.Duet -> gradientSpanPoolD.value
-                    else -> gradientSpanPool
-                }
                 if (gradientSpanStart != -1) {
                     it.text.removeSpan(gradientSpan!!)
                     if (realGradientStart == -1) {
-                        if (gradientSpanPoolForLine.size < 10)
-                            gradientSpanPoolForLine.add(gradientSpan)
+                        if (gradientSpanPool.size < 10)
+                            gradientSpanPool.add(gradientSpan)
                         gradientSpan = null
                     }
                 }
                 if (realGradientStart != -1) {
                     if (gradientSpan == null)
-                        gradientSpan = gradientSpanPoolForLine.removeFirstOrNull() ?:
-                            when (it.speaker) {
-                                SpeakerEntity.Male -> makeGradientSpanM()
-                                SpeakerEntity.Female -> makeGradientSpanF()
-                                SpeakerEntity.Duet -> makeGradientSpanD()
-                                else -> makeGradientSpan()
-                            }
+                        gradientSpan = gradientSpanPool.removeFirstOrNull() ?:
+                            makeGradientSpan()
                     it.text.setSpan(
                         gradientSpan, realGradientStart, realGradientEnd,
                         Spanned.SPAN_INCLUSIVE_INCLUSIVE
@@ -674,12 +498,6 @@ class NewLyricsView(context: Context, attrs: AttributeSet?) : ScrollingView2(con
             ) 2 else 18
             val layout = StaticLayoutBuilderCompat.obtain(
                 sb, when {
-                    speaker == SpeakerEntity.Male && tl -> translationTextPaintM.value
-                    speaker == SpeakerEntity.Male -> defaultTextPaintM.value
-                    speaker == SpeakerEntity.Female && tl -> translationTextPaintF.value
-                    speaker == SpeakerEntity.Female -> defaultTextPaintF.value
-                    speaker == SpeakerEntity.Duet && tl -> translationTextPaintD.value
-                    speaker == SpeakerEntity.Duet -> defaultTextPaintD.value
                     tl && bg -> translationBackgroundTextPaint
                     tl || bg -> translationTextPaint
                     else -> defaultTextPaint

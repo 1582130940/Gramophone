@@ -23,12 +23,6 @@ class LyricsView(context: Context, attrs: AttributeSet?) : FrameLayout(context, 
         get() = recyclerView?.adapter as LegacyLyricsAdapter?
     private var defaultTextColor = 0
     private var highlightTextColor = 0
-    private var defaultTextColorM = 0
-    private var highlightTextColorM = 0
-    private var defaultTextColorF = 0
-    private var highlightTextColorF = 0
-    private var defaultTextColorD = 0
-    private var highlightTextColorD = 0
     private var lyrics: SemanticLyrics? = null
 
     init {
@@ -68,9 +62,7 @@ class LyricsView(context: Context, attrs: AttributeSet?) : FrameLayout(context, 
             newView!!.setPadding(oldPaddingLeft, oldPaddingTop, oldPaddingRight, oldPaddingBottom)
             newView!!.instance = cb
             newView!!.updateTextColor(
-                defaultTextColor, highlightTextColor, defaultTextColorM,
-                highlightTextColorM, defaultTextColorF, highlightTextColorF, defaultTextColorD,
-                highlightTextColorD
+                defaultTextColor, highlightTextColor
             )
             newView!!.updateLyrics(lyrics)
         } else {
@@ -124,23 +116,13 @@ class LyricsView(context: Context, attrs: AttributeSet?) : FrameLayout(context, 
     }
 
     fun updateTextColor(
-        newColor: Int, newHighlightColor: Int, newColorM: Int,
-        newHighlightColorM: Int, newColorF: Int, newHighlightColorF: Int,
-        newColorD: Int, newHighlightColorD: Int
+        newColor: Int, newHighlightColor: Int
     ) {
         defaultTextColor = newColor
         highlightTextColor = newHighlightColor
-        defaultTextColorM = newColorM
-        highlightTextColorM = newHighlightColorM
-        defaultTextColorF = newColorF
-        highlightTextColorF = newHighlightColorF
-        defaultTextColorD = newColorD
-        highlightTextColorD = newHighlightColorD
         adapter?.updateTextColor(defaultTextColor, highlightTextColor)
         newView?.updateTextColor(
-            defaultTextColor, highlightTextColor, defaultTextColorM,
-            highlightTextColorM, defaultTextColorF, highlightTextColorF, defaultTextColorD,
-            highlightTextColorD
+            defaultTextColor, highlightTextColor
         )
     }
 }

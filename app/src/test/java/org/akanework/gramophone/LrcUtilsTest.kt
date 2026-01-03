@@ -297,13 +297,6 @@ class LrcUtilsTest {
 	}
 
 	@Test
-	fun testTemplateLrcWalaoke() {
-		val lrc = parseSynced(LrcTestData.WALAOKE_TEST, trim = true)
-		assertNotNull(lrc)
-		assertEquals(LrcTestData.WALAOKE_TEST_PARSED, lrc)
-	}
-
-	@Test
 	fun testCompressedWordScaling() {
 		val lrc = parseSynced("[00:00.100][00:10.100]hello<00:00.200>world<00:01.00>lol")
 		assertNotNull(lrc)
