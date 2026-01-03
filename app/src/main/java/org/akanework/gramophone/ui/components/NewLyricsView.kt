@@ -443,16 +443,21 @@ class NewLyricsView(context: Context, attrs: AttributeSet?) : ScrollingView2(con
                                 gradientStartTime, gradientEndTime,
                                 posForRender.toFloat()
                             )
-                            if (gradientProgress in 0f..1f) {
+                            val wordEndLine = it.layout.getLineForOffset(word.charRange.last)
+                            val lastCharOnEndLineExcl = it.layout.getLineEnd(wordEndLine)
+                            val lastWordOnLine = spanEnd >= lastCharOnEndLineExcl
+                            // if we're here, this is the last active word on this line, but it may
+                            // not be the last word on this line. if it isn't, keep rendering the
+                            // gradient at 100% even after it ended (but only until next word is
+                            // the last active word) to avoid kerning jumps due to switching to
+                            // color span for parts of a line that should be in the same span.
+                            if (gradientProgress >= 0f && (gradientProgress <= 1f || !lastWordOnLine)) {
                                 spanStartGradient = word.charRange.first
                                 // be greedy and eat as much as the line as can be eaten (text that is
                                 // same line + is in same text direction). improves font rendering for
                                 // japanese if font rendering renders whole text in one pass
                                 val wordStartLine = it.layout.getLineForOffset(word.charRange.first)
-                                val wordEndLine =
-                                    it.layout.getLineForOffset(word.charRange.last)
                                 val firstCharOnStartLine = it.layout.getLineStart(wordStartLine)
-                                val lastCharOnEndLineExcl = it.layout.getLineEnd(wordEndLine)
                                 realGradientStart = it.theWords.lastOrNull {
                                     it.charRange.first >= firstCharOnStartLine && it.charRange.last <
                                             word.charRange.first && it.isRtl != word.isRtl
@@ -583,7 +588,7 @@ class NewLyricsView(context: Context, attrs: AttributeSet?) : ScrollingView2(con
                     // We get called once per run + one additional time per run if run direction isn't
                     // same as paragraph direction.
                     gradientSpan.runToLineMappings = it.rlm!!
-                    gradientSpan.progress = gradientProgress
+                    gradientSpan.progress = gradientProgress.coerceAtMost(1f)
                 }
                 it.layout.draw(canvas)
                 if (highlight || !alignmentNormal)
@@ -703,6 +708,14 @@ class NewLyricsView(context: Context, attrs: AttributeSet?) : ScrollingView2(con
                         || (l.getParagraphDirection(0) == Layout.DIR_RIGHT_TO_LEFT) != it.isRtl) {
                         // Use StaticLayout instead of Paint.measureText() for V+ useBoundsForWidth
                         // TODO is this working since moving to getPrimaryHorizontal() again?
+                        /*
+                         * TODO replace this code with something that does not need a new layout whenever possible.
+                         * some ideas:
+                         * https://developer.android.com/reference/android/text/Layout#fillCharacterBounds(int,%20int,%20float[],%20int) (API >=34)
+                         * https://developer.android.com/reference/android/text/Layout#getSelectionPath(int,%20int,%20android.graphics.Path) (API >=26 or >=34 for path parsing)
+                         * https://developer.android.com/reference/android/graphics/Paint#getRunCharacterAdvance(char[],%20int,%20int,%20int,%20int,%20boolean,%20int,%20float[],%20int) (API >=34)
+                         * https://developer.android.com/reference/android/graphics/Paint#getRunAdvance(char[],%20int,%20int,%20int,%20int,%20boolean,%20int) (API >=23)
+                         */
                         l = StaticLayoutBuilderCompat
                             .obtain(layout.text, layout.paint, Int.MAX_VALUE)
                             .setAlignment(
