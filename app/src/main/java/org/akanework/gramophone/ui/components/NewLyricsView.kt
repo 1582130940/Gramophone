@@ -67,6 +67,7 @@ class NewLyricsView(context: Context, attrs: AttributeSet?) : ScrollingView2(con
     private val invalidateCallback = Runnable { isCallbackQueued = false; invalidate() }
     private var defaultTextColor = 0
     private var highlightTextColor = 0
+    private var highlightTlTextColor = 0
     private val defaultTextPaint = TextPaint().apply {
         color = Color.RED
         isElegantTextHeight = this@NewLyricsView.isElegantTextHeight
@@ -83,9 +84,13 @@ class NewLyricsView(context: Context, attrs: AttributeSet?) : ScrollingView2(con
         textSize = translationBackgroundTextSize
     }
     private var wordActiveSpan = MyForegroundColorSpan(Color.CYAN)
+    private var wordActiveTlSpan = MyForegroundColorSpan(Color.CYAN)
     private var gradientSpanPool = mutableListOf<MyGradientSpan>()
+    private var gradientTlSpanPool = mutableListOf<MyGradientSpan>()
     private fun makeGradientSpan() =
         MyGradientSpan(grdWidth, defaultTextColor, highlightTextColor)
+    private fun makeGradientTlSpan() =
+        MyGradientSpan(grdWidth, defaultTextColor, highlightTlTextColor)
 
     init {
         applyTypefaces()
@@ -100,9 +105,10 @@ class NewLyricsView(context: Context, attrs: AttributeSet?) : ScrollingView2(con
     }
 
     fun updateTextColor(
-        newColor: Int, newHighlightColor: Int
+        newColor: Int, newHighlightColor: Int, newHighlightTlColor: Int
     ) {
         var changed = false
+        var changedTl = false
         if (defaultTextColor != newColor) {
             defaultTextColor = newColor
             defaultTextPaint.color = defaultTextColor
@@ -115,9 +121,20 @@ class NewLyricsView(context: Context, attrs: AttributeSet?) : ScrollingView2(con
             wordActiveSpan.color = highlightTextColor
             changed = true
         }
+        if (highlightTlTextColor != newHighlightTlColor) {
+            highlightTlTextColor = newHighlightTlColor
+            wordActiveTlSpan.color = highlightTlTextColor
+            changedTl = true
+        }
         if (changed) {
             gradientSpanPool.clear()
             repeat(3) { gradientSpanPool.add(makeGradientSpan()) }
+        }
+        if (changedTl) {
+            gradientTlSpanPool.clear()
+            repeat(2) { gradientTlSpanPool.add(makeGradientTlSpan()) }
+        }
+        if (changed || changedTl) {
             spForRender?.second?.forEach {
                 it.text.getSpans<MyGradientSpan>()
                     .forEach { s -> it.text.removeSpan(s) }
@@ -341,12 +358,16 @@ class NewLyricsView(context: Context, attrs: AttributeSet?) : ScrollingView2(con
                     Float.NEGATIVE_INFINITY) || scaleOutProgress in 0f..1f
             var colorSpan = it.text.getSpans<MyForegroundColorSpan>().firstOrNull()
             val cachedEnd = colorSpan?.let { j -> it.text.getSpanEnd(j) } ?: -1
+            val wordActiveSpanForLine = if (it.line?.isTranslated == true)
+                wordActiveTlSpan else wordActiveSpan
             val col = if (!culled) {
+                val highlightColorForLine = if (it.line?.isTranslated == true)
+                    highlightTlTextColor else highlightTextColor
                 if (inColorAnim) ColorUtils.blendARGB(
-                    if (scaleOutProgress in 0f..1f) highlightTextColor else
+                    if (scaleOutProgress in 0f..1f) highlightColorForLine else
                         defaultTextColor,
                     if (scaleInProgress in 0f..1f && gradientProgress == Float
-                            .NEGATIVE_INFINITY) highlightTextColor
+                            .NEGATIVE_INFINITY) highlightColorForLine
                     else defaultTextColor,
                     scaleColorInterpolator.getInterpolation(
                         if (scaleOutProgress in 0f..1f
@@ -354,14 +375,14 @@ class NewLyricsView(context: Context, attrs: AttributeSet?) : ScrollingView2(con
                     )
                 ) else Color.GREEN
             } else Color.RED
-            if (cachedEnd != spanEndWithoutGradient || inColorAnim != (colorSpan != wordActiveSpan)) {
+            if (cachedEnd != spanEndWithoutGradient || inColorAnim != (colorSpan != wordActiveSpanForLine)) {
                 if (cachedEnd != -1) {
                     it.text.removeSpan(colorSpan!!)
-                    if (colorSpan != wordActiveSpan && (!inColorAnim || spanEndWithoutGradient == -1)) {
+                    if (colorSpan != wordActiveSpanForLine && (!inColorAnim || spanEndWithoutGradient == -1)) {
                         if (colorSpanPool.size < 10)
                             colorSpanPool.add(colorSpan)
                         colorSpan = null
-                    } else if (inColorAnim && colorSpan == wordActiveSpan)
+                    } else if (inColorAnim && colorSpan == wordActiveSpanForLine)
                         colorSpan = null
                 }
                 if (spanEndWithoutGradient != -1) {
@@ -369,7 +390,7 @@ class NewLyricsView(context: Context, attrs: AttributeSet?) : ScrollingView2(con
                         colorSpan = colorSpanPool.removeFirstOrNull()
                             ?: @SuppressLint("DrawAllocation") MyForegroundColorSpan(col)
                     else if (!inColorAnim)
-                        colorSpan = wordActiveSpan
+                        colorSpan = wordActiveSpanForLine
                     it.text.setSpan(
                         colorSpan, 0, spanEndWithoutGradient,
                         Spanned.SPAN_INCLUSIVE_INCLUSIVE
@@ -377,7 +398,7 @@ class NewLyricsView(context: Context, attrs: AttributeSet?) : ScrollingView2(con
                 }
             }
             if (inColorAnim && spanEndWithoutGradient != -1) {
-                if (colorSpan!! == wordActiveSpan)
+                if (colorSpan!! == wordActiveSpanForLine)
                     throw IllegalStateException("colorSpan == wordActiveSpan")
                 colorSpan.color = col
             }
@@ -385,18 +406,21 @@ class NewLyricsView(context: Context, attrs: AttributeSet?) : ScrollingView2(con
             val gradientSpanStart = gradientSpan?.let { j -> it.text.getSpanStart(j) } ?: -1
             val gradientSpanEnd = gradientSpan?.let { j -> it.text.getSpanEnd(j) } ?: -1
             if (gradientSpanStart != realGradientStart || gradientSpanEnd != realGradientEnd) {
+                val gradientSpanPoolForLine = if (it.line?.isTranslated == true)
+                    gradientTlSpanPool else gradientSpanPool
                 if (gradientSpanStart != -1) {
                     it.text.removeSpan(gradientSpan!!)
                     if (realGradientStart == -1) {
-                        if (gradientSpanPool.size < 10)
-                            gradientSpanPool.add(gradientSpan)
+                        if (gradientSpanPoolForLine.size < 10)
+                            gradientSpanPoolForLine.add(gradientSpan)
                         gradientSpan = null
                     }
                 }
                 if (realGradientStart != -1) {
                     if (gradientSpan == null)
-                        gradientSpan = gradientSpanPool.removeFirstOrNull() ?:
-                            makeGradientSpan()
+                        gradientSpan = gradientSpanPoolForLine.removeFirstOrNull() ?:
+                                if (it.line?.isTranslated == true) makeGradientTlSpan()
+                                else makeGradientSpan()
                     it.text.setSpan(
                         gradientSpan, realGradientStart, realGradientEnd,
                         Spanned.SPAN_INCLUSIVE_INCLUSIVE

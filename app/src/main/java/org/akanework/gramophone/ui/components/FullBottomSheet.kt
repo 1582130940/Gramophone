@@ -1032,7 +1032,10 @@ class FullBottomSheet
                 androidx.core.graphics.ColorUtils.compositeColors(
                     androidx.core.graphics.ColorUtils.setAlphaComponent(colorPrimary, 77),
                     fullPlayerFinalColor),
-                colorPrimary
+                colorPrimary,
+                androidx.core.graphics.ColorUtils.compositeColors(
+                    androidx.core.graphics.ColorUtils.setAlphaComponent(colorPrimary, 200),
+                    fullPlayerFinalColor),
             )
 
             bottomSheetTimerButton.iconTint =
