@@ -28,7 +28,6 @@ import android.provider.MediaStore
 import androidx.media3.common.util.Log
 import android.view.View
 import android.view.ViewGroup
-import android.view.WindowInsets
 import android.widget.Toast
 import androidx.activity.result.IntentSenderRequest
 import androidx.appcompat.app.AlertDialog
@@ -47,14 +46,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.akanework.gramophone.R
-import org.akanework.gramophone.logic.dpToPx
 import org.akanework.gramophone.logic.utils.Flags
 import org.akanework.gramophone.ui.MainActivity
 import org.akanework.gramophone.ui.fragments.AdapterFragment
 import org.akanework.gramophone.ui.fragments.GeneralSubFragment
 import uk.akane.libphonograph.dynamicitem.Favorite
 import uk.akane.libphonograph.dynamicitem.RecentlyAdded
-import uk.akane.libphonograph.items.Date
 import uk.akane.libphonograph.items.Playlist
 import uk.akane.libphonograph.manipulator.ItemManipulator
 import uk.akane.libphonograph.manipulator.ItemManipulator.DeleteFailedPleaseTryDeleteRequestException
@@ -105,7 +102,7 @@ class PlaylistAdapter(
                 }.toString()).build()
     }
 
-    override fun onClick(item: Playlist) {
+    override fun onClick(item: Playlist, position: Int?) {
         mainActivity.startFragment(GeneralSubFragment()) {
             putString("Class", item.javaClass.name) // TODO kinda stupid
             putString("Id", item.id?.toString())

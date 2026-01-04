@@ -81,7 +81,7 @@ abstract class BaseAdapter<T : Any>(
     private val pluralStr: Int,
     private val defaultLayoutType: LayoutType,
     val isSubFragment: Int? = null,
-    rawOrderExposed: Sorter.Type? = null,
+    private val rawOrderExposed: Sorter.Type? = null,
     private val allowDiffUtils: Boolean = false,
     private val canSort: Boolean = true
 ) : AdapterFragment.BaseInterface<BaseAdapter.ViewHolder>(), PopupTextProvider, ItemHeightHelper {
@@ -339,7 +339,10 @@ abstract class BaseAdapter<T : Any>(
             crossfade(true)
             error(defaultCover)
         }
-        holder.itemView.setOnClickListener { onClick(item) }
+        holder.itemView.setOnClickListener {
+            onClick(item, if (sortType.value == rawOrderExposed ||
+                sortType.value == Sorter.Type.None) holder.bindingAdapterPosition else null)
+        }
         holder.moreButton?.setOnClickListener {
             val popupMenu = PopupMenu(it.context, it)
             onMenu(item, popupMenu)
@@ -448,7 +451,7 @@ abstract class BaseAdapter<T : Any>(
         return sorter.sortingHelper.getCover(item)
     }
 
-    protected abstract fun onClick(item: T)
+    protected abstract fun onClick(item: T, position: Int? = null)
     protected abstract fun onMenu(item: T, popupMenu: PopupMenu)
     private fun isPinned(item: T): Boolean {
         return titleOf(item) == null

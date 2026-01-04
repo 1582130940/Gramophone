@@ -19,8 +19,6 @@ package org.akanework.gramophone.ui.adapters
 
 import androidx.appcompat.widget.PopupMenu
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.MutableLiveData
-import androidx.media3.common.MediaItem
 import org.akanework.gramophone.R
 import org.akanework.gramophone.ui.MainActivity
 import org.akanework.gramophone.ui.fragments.GeneralSubFragment
@@ -52,7 +50,7 @@ class DateAdapter(
         return context.getString(R.string.unknown_year)
     }
 
-    override fun onClick(item: Date) {
+    override fun onClick(item: Date, position: Int?) {
         mainActivity.startFragment(GeneralSubFragment()) {
             putString("Id", item.id?.toString())
             putInt("Item", R.id.date)

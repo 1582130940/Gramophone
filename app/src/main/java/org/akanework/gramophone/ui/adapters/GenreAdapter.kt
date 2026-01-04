@@ -19,12 +19,9 @@ package org.akanework.gramophone.ui.adapters
 
 import androidx.appcompat.widget.PopupMenu
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.MutableLiveData
-import androidx.media3.common.MediaItem
 import org.akanework.gramophone.R
 import org.akanework.gramophone.ui.MainActivity
 import org.akanework.gramophone.ui.fragments.GeneralSubFragment
-import uk.akane.libphonograph.items.Date
 import uk.akane.libphonograph.items.Genre
 
 /**
@@ -53,7 +50,7 @@ class GenreAdapter(
         return context.getString(R.string.unknown_genre)
     }
 
-    override fun onClick(item: Genre) {
+    override fun onClick(item: Genre, position: Int?) {
         mainActivity.startFragment(GeneralSubFragment()) {
             putString("Id", item.id?.toString())
             putInt("Item", R.id.genre)

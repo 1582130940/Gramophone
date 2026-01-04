@@ -173,11 +173,12 @@ class SongAdapter(
         return if (folder) item.getFile()?.name else super.titleOf(item)
     }
 
-    override fun onClick(item: MediaItem) {
+    override fun onClick(item: MediaItem, position: Int?) {
         val mediaController = mainActivity.getPlayer()
         mediaController?.apply {
             val songList = getSongList()
-            setMediaItems(songList, songList.indexOf(item), C.TIME_UNSET)
+            setMediaItems(songList, position ?: songList.indexOf(item),
+                C.TIME_UNSET)
             prepare()
             play()
         }
