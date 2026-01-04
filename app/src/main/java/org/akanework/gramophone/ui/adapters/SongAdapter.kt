@@ -92,7 +92,7 @@ class SongAdapter(
     fun getActivity() = mainActivity
 
     private val mediaControllerViewModel: MediaControllerViewModel by fragment.activityViewModels()
-    private var idToPosMap: HashMap<String, Int>? = null
+    private var idToPosMap: HashMap<String, List<Int?>>? = null
     private var currentMediaItem: String? = null
         set(value) {
             if (field != value) {
@@ -101,11 +101,15 @@ class SongAdapter(
                 if (idToPosMap != null) {
                     val oldPos = idToPosMap!![oldValue]
                     val newPos = idToPosMap!![value]
-                    if (oldPos != null) {
-                        notifyItemChanged(oldPos, true)
+                    oldPos?.forEach {
+                        it?.let {
+                            notifyItemChanged(it, true)
+                        }
                     }
-                    if (newPos != null) {
-                        notifyItemChanged(newPos, true)
+                    newPos?.forEach {
+                        it?.let {
+                            notifyItemChanged(it, true)
+                        }
                     }
                 }
             }
@@ -115,8 +119,10 @@ class SongAdapter(
             if (field != value) {
                 field = value
                 if (value != null && currentMediaItem != null) {
-                    idToPosMap?.get(currentMediaItem)?.let {
-                        notifyItemChanged(it, false)
+                    idToPosMap?.get(currentMediaItem)?.forEach {
+                        it?.let {
+                            notifyItemChanged(it, false)
+                        }
                     }
                 }
             }
@@ -154,7 +160,9 @@ class SongAdapter(
     override fun onListUpdated() {
         // TODO run this method on a different thread / in advance
         idToPosMap = hashMapOf()
-        list!!.second.forEachIndexed { i, item -> idToPosMap!![item.mediaId] = i }
+        list!!.second.forEachIndexed { i, item ->
+            idToPosMap!![item.mediaId] = (idToPosMap!![item.mediaId]?: emptyList()).plus(listOf(i))
+        }
     }
 
     override fun virtualTitleOf(item: MediaItem): String {

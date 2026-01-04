@@ -95,7 +95,7 @@ class PlaylistQueueSheet(
         mediaItem: MediaItem?,
         reason: @Player.MediaItemTransitionReason Int
     ) {
-        playlistAdapter.currentMediaItem = mediaItem?.mediaId
+        playlistAdapter.currentMediaItemIndex = instance?.currentMediaItemIndex
     }
 
     override fun onPositionDiscontinuity(
@@ -112,7 +112,6 @@ class PlaylistQueueSheet(
 
     private inner class PlaylistCardAdapter : EditSongAdapter(activity) {
         var playlist: Pair<MutableList<Int>, MutableList<MediaItem>> = dumpPlaylist()
-        private var idToPosMap: HashMap<String, Int>? = null
 
         init {
             updateList()
@@ -121,20 +120,17 @@ class PlaylistQueueSheet(
                 durationView.stop()
             }
         }
-        var currentMediaItem: String? = null
+        var currentMediaItemIndex: Int? = null
             set(value) {
                 if (field != value) {
                     val oldValue = field
                     field = value
-                    if (idToPosMap != null) {
-                        val oldPos = idToPosMap!![oldValue]
-                        val newPos = idToPosMap!![value]
-                        if (oldPos != null) {
-                            notifyItemChanged(oldPos, true)
-                        }
-                        if (newPos != null) {
-                            notifyItemChanged(newPos, true)
-                        }
+
+                    if (oldValue != null) {
+                        notifyItemChanged(oldValue, true)
+                    }
+                    if (value != null) {
+                        notifyItemChanged(value, true)
                     }
                 }
             }
@@ -143,8 +139,8 @@ class PlaylistQueueSheet(
                 if (field != value) {
                     field = value
                     updateTimer()
-                    if (value != null && currentMediaItem != null) {
-                        idToPosMap?.get(currentMediaItem)?.let {
+                    if (value != null && currentMediaItemIndex != null) {
+                        currentMediaItemIndex?.let {
                             notifyItemChanged(it, false)
                         }
                     }
@@ -157,7 +153,7 @@ class PlaylistQueueSheet(
                     holder.nowPlaying.drawable?.level = if (currentIsPlaying == true) 1 else 0
                     return
                 }
-                if (currentMediaItem == null || playlist.second[playlist.first[position]].mediaId != currentMediaItem) {
+                if (currentMediaItemIndex == null || position != currentMediaItemIndex) {
                     (holder.nowPlaying.drawable as? NowPlayingDrawable?)?.level2Done = Runnable {
                         holder.nowPlaying.visibility = View.GONE
                         holder.nowPlaying.setImageDrawable(null)
@@ -167,7 +163,7 @@ class PlaylistQueueSheet(
                 }
             } else {
                 super.onBindViewHolder(holder, position, payloads)
-                if (currentMediaItem == null || playlist.second[playlist.first[position]].mediaId != currentMediaItem)
+                if (currentMediaItemIndex == null || position != currentMediaItemIndex)
                     return
             }
             holder.nowPlaying.setImageDrawable(
@@ -237,10 +233,6 @@ class PlaylistQueueSheet(
         }
 
         private fun updateList() {
-            idToPosMap = hashMapOf()
-            playlist.second.forEachIndexed { i, item ->
-                idToPosMap!![item.mediaId] = playlist.first.indexOf(i)
-            }
             updateTimer()
         }
 
