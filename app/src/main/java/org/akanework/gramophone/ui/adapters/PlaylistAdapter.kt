@@ -102,7 +102,7 @@ class PlaylistAdapter(
                 }.toString()).build()
     }
 
-    override fun onClick(item: Playlist, position: Int?) {
+    override fun onClick(item: Playlist, position: Int) {
         mainActivity.startFragment(GeneralSubFragment()) {
             putString("Class", item.javaClass.name) // TODO kinda stupid
             putString("Id", item.id?.toString())

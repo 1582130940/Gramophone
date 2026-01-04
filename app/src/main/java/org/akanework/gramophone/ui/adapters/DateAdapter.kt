@@ -50,7 +50,7 @@ class DateAdapter(
         return context.getString(R.string.unknown_year)
     }
 
-    override fun onClick(item: Date, position: Int?) {
+    override fun onClick(item: Date, position: Int) {
         mainActivity.startFragment(GeneralSubFragment()) {
             putString("Id", item.id?.toString())
             putInt("Item", R.id.date)

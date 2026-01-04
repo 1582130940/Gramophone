@@ -58,7 +58,7 @@ class ArtistAdapter(
 
     override val defaultCover = R.drawable.ic_default_cover_artist
 
-    override fun onClick(item: Artist, position: Int?) {
+    override fun onClick(item: Artist, position: Int) {
         mainActivity.startFragment(ArtistSubFragment()) {
             putString("Id", item.id?.toString())
             putInt(

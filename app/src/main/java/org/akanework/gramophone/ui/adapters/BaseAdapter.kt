@@ -340,8 +340,7 @@ abstract class BaseAdapter<T : Any>(
             error(defaultCover)
         }
         holder.itemView.setOnClickListener {
-            onClick(item, if (sortType.value == rawOrderExposed ||
-                sortType.value == Sorter.Type.None) holder.bindingAdapterPosition else null)
+            onClick(item, holder.bindingAdapterPosition)
         }
         holder.moreButton?.setOnClickListener {
             val popupMenu = PopupMenu(it.context, it)
@@ -451,7 +450,7 @@ abstract class BaseAdapter<T : Any>(
         return sorter.sortingHelper.getCover(item)
     }
 
-    protected abstract fun onClick(item: T, position: Int? = null)
+    protected abstract fun onClick(item: T, position: Int)
     protected abstract fun onMenu(item: T, popupMenu: PopupMenu)
     private fun isPinned(item: T): Boolean {
         return titleOf(item) == null

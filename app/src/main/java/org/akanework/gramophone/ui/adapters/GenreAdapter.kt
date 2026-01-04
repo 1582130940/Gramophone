@@ -50,7 +50,7 @@ class GenreAdapter(
         return context.getString(R.string.unknown_genre)
     }
 
-    override fun onClick(item: Genre, position: Int?) {
+    override fun onClick(item: Genre, position: Int) {
         mainActivity.startFragment(GeneralSubFragment()) {
             putString("Id", item.id?.toString())
             putInt("Item", R.id.genre)

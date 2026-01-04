@@ -55,7 +55,7 @@ class AlbumAdapter(
         return context.getString(R.string.unknown_album)
     }
 
-    override fun onClick(item: Album, position: Int?) {
+    override fun onClick(item: Album, position: Int) {
         mainActivity.startFragment(GeneralSubFragment()) {
             putString("Id", item.id?.toString())
             putInt("Item", R.id.album)
