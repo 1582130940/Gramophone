@@ -456,10 +456,16 @@ sealed class SemanticLyrics : Parcelable {
 
     @Parcelize
     data class Word(
-        var timeRange: @WriteWith<ULongRangeParceler>() ULongRange,
+        var begin: ULong,
+        var endInclusive: ULong?,
         var charRange: @WriteWith<IntRangeParceler>() IntRange,
         var isRtl: Boolean
-    ) : Parcelable
+    ) : Parcelable {
+        constructor(timeRange: ULongRange, charRange: IntRange, isRtl: Boolean)
+                : this(timeRange.first, timeRange.last, charRange, isRtl)
+        val timeRange
+            get() = begin..endInclusive!!
+    }
 
     object ULongRangeParceler : Parceler<ULongRange> {
         override fun create(parcel: Parcel) =
@@ -595,23 +601,12 @@ fun parseLrc(lyricText: String, trimEnabled: Boolean, multiLineEnabled: Boolean)
                             // If we have a dedicated sync point just for the last word,
                             // use it. Similar to dummy words but for the last word only
                             lastWordSyncPoint - 1uL // minus 1ms for consistency
-                        } else {
-                            // Estimate how long this word will take based on character
-                            // to time ratio. To avoid this estimation, add a last word
-                            // sync point to the line after the text :)
-                            current.first + (wout.map {
-                                it.timeRange.count() /
-                                        it.charRange.count().toFloat()
-                            }.average().let {
-                                if (it.isNaN()) 100.0 else it
-                            } *
-                                    textWithoutWhitespaces.length).toULong()
-                        }
-                        if (endInclusive > current.first)
+                        } else null /* filled later */
+                        if (endInclusive == null || endInclusive > current.first)
                         // isRtl is filled in later in splitBidirectionalWords
                             wout.add(
                                 Word(
-                                    current.first..endInclusive,
+                                    current.first, endInclusive,
                                     startIndex..<endIndex,
                                     isRtl = false
                                 )
@@ -642,22 +637,20 @@ fun parseLrc(lyricText: String, trimEnabled: Boolean, multiLineEnabled: Boolean)
                     else lastWordSyncPoint ?: lastSyncPoint!!
                     // if we had trailing word sync point after the last word was already ended,
                     // it's an explicit line end ts, so use it. otherwise, use the last word's sync
-                    // point (possibly estimated) as end time. otherwise we will fill it later based
-                    // on next (temporal, not file order) line.
+                    // point as end time. otherwise we will fill it later based on next (temporal,
+                    // not file order) line.
                     // TODO(ASAP): but, do we REALLY want to use that estimation? not next line start?
                     val lastWordSyncForEnd = lastWordSyncPoint?.let { it - 1uL }
-                    val lastWordForEnd = words?.lastOrNull()?.timeRange?.last
-                    val end = if (lastWordSyncForEnd != null && lastWordForEnd != null)
-                        max(lastWordForEnd, lastWordSyncForEnd)
-                    else lastWordSyncForEnd ?: lastWordForEnd
+                    val lastWordBegin = words?.lastOrNull()?.begin
+                    val end = if (lastWordSyncForEnd != null && lastWordBegin != null &&
+                        lastWordBegin < lastWordSyncForEnd) lastWordSyncForEnd else null
                     out.add(LyricLine(text, start, end ?: 0uL /* filled later */,
                         end == null, words, speaker, false /* filled later */))
                     compressed.forEach {
                         val diff = it - start
                         out.add(out.last().copy(start = it, words = words?.map {
-                            it.copy(
-                                timeRange = it.timeRange.first + diff..it.timeRange.last + diff
-                            )
+                            it.copy(begin = it.begin + diff,
+                                endInclusive = it.endInclusive?.plus(diff))
                         }?.toMutableList()))
                     }
                 }
@@ -678,13 +671,30 @@ fun parseLrc(lyricText: String, trimEnabled: Boolean, multiLineEnabled: Boolean)
     out.forEach { lyric ->
         val mainEnd = if (lyric.start == previousLyric?.start) out.firstOrNull {
             it.start == lyric.start && !it.endIsImplicit }?.end else null
+        val wordWithoutEnd = lyric.words?.lastOrNull()
+        if (wordWithoutEnd != null && wordWithoutEnd.endInclusive == null) {
+            wordWithoutEnd.endInclusive = mainEnd?.takeIf { it > wordWithoutEnd.begin }
+                ?: out.find { it.start > lyric.start }?.start?.minus(1uL)
+                    ?.takeIf { it > wordWithoutEnd.begin }
+                ?: run {
+                    // Estimate how long this word will take based on character
+                    // to time ratio. To avoid this estimation, add a last word
+                    // sync point to the line after the text :)
+                    wordWithoutEnd.begin + (lyric.words.subList(0, lyric.words.size - 1)
+                        .map { it.timeRange.count() / it.charRange.count().toFloat() }
+                        .average().let { if (it.isNaN()) 100.0 else it } *
+                            lyric.text.substring(wordWithoutEnd.charRange).length).toULong()
+                }
+        }
         if (lyric.endIsImplicit) {
             if (mainEnd != null) {
                 lyric.end = mainEnd
                 lyric.endIsImplicit = false
             } else {
-                lyric.end = out.find { it.start > lyric.start }?.start?.minus(1uL)
+                lyric.end = wordWithoutEnd?.endInclusive
+                    ?: out.find { it.start > lyric.start }?.start?.minus(1uL)
                     ?: Long.MAX_VALUE.toULong()
+                lyric.endIsImplicit = wordWithoutEnd == null // TODO: should this just stay true?
             }
         }
         lyric.isTranslated = lyric.start == previousLyric?.start &&
