@@ -109,6 +109,7 @@ class PostAmpAudioSink(
     private var tags: ReplayGainUtil.ReplayGainInfo? = null
     private var pendingFormat: Format? = null
     private var pendingTags: ReplayGainUtil.ReplayGainInfo? = null
+    private var lastAppliedGain: Pair<Float, Float?>? = null
     private var deviceType: Int? = null
     private var audioSessionId = 0
     private var lastOutput: Int? = null
@@ -234,16 +235,14 @@ class PostAmpAudioSink(
                 format?.let { it.sampleMimeType != MimeTypes.AUDIO_RAW } == true ||
                 pendingFormat?.let { it.sampleMimeType != MimeTypes.AUDIO_RAW } == true
         if (isOffload) {
-            val calcGainBefore = ReplayGainUtil.calculateGain(
-                tags, mode, rgGain, reduceGain || !hasDpe,
-                if (hasDpe) ReplayGainUtil.RATIO else null
-            )
             val calcGainAfter = ReplayGainUtil.calculateGain(
                 pendingTags, mode, rgGain, reduceGain || !hasDpe,
                 if (!hasDpe) ReplayGainUtil.RATIO else null
             )
             // DPE logic relies on flush() when tags change in a way that changes the audio.
-            return calcGainBefore == calcGainAfter
+            // (Use cached gain as mode may have changed without listener being modified, so a
+            // re-calculation would give wrong results.)
+            return lastAppliedGain == calcGainAfter
         } else {
             // ReplayGainAudioProcessor must be re-configured when compressor state changes.
             val compressorOnBefore = ReplayGainUtil.calculateGain(
@@ -341,6 +340,7 @@ class PostAmpAudioSink(
                 tags, mode, rgGain, reduceGain || !useDpe,
                 if (useDpe) ReplayGainUtil.RATIO else null
             )
+            lastAppliedGain = calcGain
             val gain = calcGain?.first ?: ReplayGainUtil.dbToAmpl(nonRgGain.toFloat())
             val kneeThresholdDb = calcGain?.second
             rgVolume = if (useDpe) 1f else min(gain, 1f)
@@ -371,6 +371,7 @@ class PostAmpAudioSink(
                     )
                 )
             }
+            lastAppliedGain = null
             rgVolume = 1f // ReplayGainAudioProcessor will apply volume for non-offload
         }
         if (lastRgVolume != rgVolume) {
