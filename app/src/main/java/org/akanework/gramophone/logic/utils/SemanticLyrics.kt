@@ -22,7 +22,6 @@ import org.xmlpull.v1.XmlPullParserException
 import java.io.StringReader
 import java.nio.charset.Charset
 import java.util.concurrent.atomic.AtomicReference
-import kotlin.math.max
 import kotlin.math.min
 
 private const val TAG = "SemanticLyrics"
@@ -467,16 +466,6 @@ sealed class SemanticLyrics : Parcelable {
             get() = begin..endInclusive!!
     }
 
-    object ULongRangeParceler : Parceler<ULongRange> {
-        override fun create(parcel: Parcel) =
-            parcel.readLong().toULong()..parcel.readLong().toULong()
-
-        override fun ULongRange.write(parcel: Parcel, flags: Int) {
-            parcel.writeLong(first.toLong())
-            parcel.writeLong(last.toLong())
-        }
-    }
-
     object IntRangeParceler : Parceler<IntRange> {
         override fun create(parcel: Parcel) = parcel.readInt()..parcel.readInt()
 
@@ -633,7 +622,8 @@ fun parseLrc(lyricText: String, trimEnabled: Boolean, multiLineEnabled: Boolean)
                                     .coerceAtMost(text.length - 1)
                         }
                     }
-                    val start = if (currentLine.isNotEmpty()) currentLine.first().first
+                    val start = if (currentLine.isNotEmpty()) lastSyncPoint
+                        ?: currentLine.first().first
                     else lastWordSyncPoint ?: lastSyncPoint!!
                     // if we had trailing word sync point after the last word was already ended,
                     // it's an explicit line end ts, so use it. otherwise, use the last word's sync
@@ -648,8 +638,9 @@ fun parseLrc(lyricText: String, trimEnabled: Boolean, multiLineEnabled: Boolean)
                         end == null, words, speaker, false /* filled later */))
                     compressed.forEach {
                         val diff = it - start
-                        out.add(out.last().copy(start = it, words = words?.map {
-                            it.copy(begin = it.begin + diff,
+                        out.add(out.last().copy(start = it,
+                            end = end?.plus(diff) ?: 0uL /* filled later */,
+                            words = words?.map { it.copy(begin = it.begin + diff,
                                 endInclusive = it.endInclusive?.plus(diff))
                         }?.toMutableList()))
                     }

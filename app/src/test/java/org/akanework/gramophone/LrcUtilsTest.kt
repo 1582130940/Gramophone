@@ -377,14 +377,20 @@ class LrcUtilsTest {
 
     @Test
     fun explicitEndFromWordRecognized() {
-        val lrc = parseSynced("[00:00.00]<00:01.00>hello<00:02.00><00:03.00>")
+        val lrc = parseSynced("[00:00.00][00:10.00]<00:01.00>hello<00:02.00><00:03.00>")
         assertNotNull(lrc)
-        assertEquals(1, lrc!!.size)
+        assertEquals(2, lrc!!.size)
         assertEquals("hello", lrc[0].text)
-        assertEquals(1000uL, lrc[0].start)
+        assertEquals(0uL, lrc[0].start)
         assertNotNull(lrc[0].words)
         assertEquals(1, lrc[0].words!!.size)
         assertEquals(1000uL..1999uL, lrc[0].words!![0].timeRange)
         assertEquals(2999uL, lrc[0].end)
+        assertEquals("hello", lrc[1].text)
+        assertEquals(10000uL, lrc[1].start)
+        assertNotNull(lrc[1].words)
+        assertEquals(1, lrc[1].words!!.size)
+        assertEquals(11000uL..11999uL, lrc[1].words!![0].timeRange)
+        assertEquals(12999uL, lrc[1].end)
     }
 }
