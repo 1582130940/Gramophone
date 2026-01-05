@@ -629,7 +629,6 @@ fun parseLrc(lyricText: String, trimEnabled: Boolean, multiLineEnabled: Boolean)
                     // it's an explicit line end ts, so use it. otherwise, use the last word's sync
                     // point as end time. otherwise we will fill it later based on next (temporal,
                     // not file order) line.
-                    // TODO(ASAP): but, do we REALLY want to use that estimation? not next line start?
                     val lastWordSyncForEnd = lastWordSyncPoint?.let { it - 1uL }
                     val lastWordBegin = words?.lastOrNull()?.begin
                     val end = if (lastWordSyncForEnd != null && lastWordBegin != null &&
@@ -899,23 +898,12 @@ fun UsltFrameDecoder.Result.Sylt.toSyncedLyrics(trimEnabled: Boolean): SyncedLyr
                 // If we have a next word (with sync point), use its sync
                 // point minus 1ms as end point of this word
                 next.timestamp - 1uL
-            } else {
-                // Estimate how long this word will take based on character
-                // to time ratio. To avoid this estimation, add a last word
-                // sync point to the line after the text :)
-                it.timestamp + (wout.map {
-                    it.timeRange.count() /
-                            it.charRange.count().toFloat()
-                }.average().let {
-                    if (it.isNaN()) 100.0 else it
-                } *
-                        textWithoutWhitespaces.length).toULong()
-            }
-            if (endInclusive > it.timestamp)
+            } else null
+            if (endInclusive == null || endInclusive > it.timestamp)
             // isRtl is filled in later in splitBidirectionalWords
                 wout.add(
                     Word(
-                        it.timestamp.toULong()..endInclusive,
+                        it.timestamp.toULong(), endInclusive,
                         startIndex..<endIndex,
                         isRtl = false
                     )
@@ -959,10 +947,9 @@ fun UsltFrameDecoder.Result.Sylt.toSyncedLyrics(trimEnabled: Boolean): SyncedLyr
         // if we had trailing sync point only with new line, it's explicit line end ts, use it.
         // if we have >1 segment, use it's last sync point (possibly estimated) as end time,
         // otherwise we will fill it later based on next line.
-        // TODO(ASAP): but, do we REALLY want to use that estimation? not next line start?
         val explicitEnd = if (i < j - 1 && text[j - 1].text.isBlank())
             text[j - 1].timestamp.toULong() - 1uL
-        else if (wout.size > 1) wout.last().timeRange.last else null
+        else if (wout.size > 1) wout.last().endInclusive else null
         out.add(
             LyricLine(
                 string, text[i].timestamp.toULong(), explicitEnd ?: 0uL
@@ -978,13 +965,30 @@ fun UsltFrameDecoder.Result.Sylt.toSyncedLyrics(trimEnabled: Boolean): SyncedLyr
     out.forEach { lyric ->
         val mainEnd = if (lyric.start == previousTimestamp) out.firstOrNull {
             it.start == lyric.start && !it.endIsImplicit }?.end else null
+        val wordWithoutEnd = lyric.words?.lastOrNull()
+        if (wordWithoutEnd != null && wordWithoutEnd.endInclusive == null) {
+            wordWithoutEnd.endInclusive = mainEnd?.takeIf { it > wordWithoutEnd.begin }
+                ?: out.find { it.start > lyric.start }?.start?.minus(1uL)
+                    ?.takeIf { it > wordWithoutEnd.begin }
+                        ?: run {
+                    // Estimate how long this word will take based on character
+                    // to time ratio. To avoid this estimation, add a last word
+                    // sync point to the line after the text :)
+                    wordWithoutEnd.begin + (lyric.words.subList(0, lyric.words.size - 1)
+                        .map { it.timeRange.count() / it.charRange.count().toFloat() }
+                        .average().let { if (it.isNaN()) 100.0 else it } *
+                            lyric.text.substring(wordWithoutEnd.charRange).length).toULong()
+                }
+        }
         if (lyric.endIsImplicit) {
             if (mainEnd != null) {
                 lyric.end = mainEnd
                 lyric.endIsImplicit = false
             } else {
-                lyric.end = out.find { it.start > lyric.start }?.start?.minus(1uL)
-                    ?: Long.MAX_VALUE.toULong()
+                lyric.end = wordWithoutEnd?.endInclusive
+                    ?: out.find { it.start > lyric.start }?.start?.minus(1uL)
+                            ?: Long.MAX_VALUE.toULong()
+                lyric.endIsImplicit = wordWithoutEnd == null // TODO: should this just stay true?
             }
         }
         lyric.isTranslated = lyric.start == previousTimestamp
