@@ -22,6 +22,7 @@ import org.xmlpull.v1.XmlPullParserException
 import java.io.StringReader
 import java.nio.charset.Charset
 import java.util.concurrent.atomic.AtomicReference
+import kotlin.math.max
 import kotlin.math.min
 
 private const val TAG = "SemanticLyrics"
@@ -639,14 +640,16 @@ fun parseLrc(lyricText: String, trimEnabled: Boolean, multiLineEnabled: Boolean)
                     }
                     val start = if (currentLine.isNotEmpty()) currentLine.first().first
                     else lastWordSyncPoint ?: lastSyncPoint!!
-                    // TODO the -1 does not really make sense, remove it (and change unit tests)
-                    val end = lastWordSyncPoint?.let { it - 1uL } ?:
-                        words?.lastOrNull()?.timeRange?.last?.let { it - 1uL }
-                    // if we had trailing sync point only with whitespace line, it's explicit line
-                    // end ts, use it.
-                    // if we have words, use it's last sync point (possibly estimated) as end time,
-                    // otherwise we will fill it later based on next line.
+                    // if we had trailing word sync point after the last word was already ended,
+                    // it's an explicit line end ts, so use it. otherwise, use the last word's sync
+                    // point (possibly estimated) as end time. otherwise we will fill it later based
+                    // on next (temporal, not file order) line.
                     // TODO(ASAP): but, do we REALLY want to use that estimation? not next line start?
+                    val lastWordSyncForEnd = lastWordSyncPoint?.let { it - 1uL }
+                    val lastWordForEnd = words?.lastOrNull()?.timeRange?.last
+                    val end = if (lastWordSyncForEnd != null && lastWordForEnd != null)
+                        max(lastWordForEnd, lastWordSyncForEnd)
+                    else lastWordSyncForEnd ?: lastWordForEnd
                     out.add(LyricLine(text, start, end ?: 0uL /* filled later */,
                         end == null, words, speaker, false /* filled later */))
                     compressed.forEach {

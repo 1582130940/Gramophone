@@ -3,7 +3,6 @@ package org.akanework.gramophone
 import androidx.media3.common.MimeTypes
 import org.akanework.gramophone.logic.utils.LrcUtils
 import org.akanework.gramophone.logic.utils.SemanticLyrics
-import org.akanework.gramophone.logic.utils.SemanticLyrics.LyricLine
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
@@ -62,10 +61,10 @@ class LrcUtilsTest {
 			for (i in lrc) {
 				str.appendLine("\tLyricLine(start = ${i.start}uL, text = " +
 						"\"\"\"${i.text}\"\"\", words = ${i.words?.let { "mutableListOf(${
-							it.joinToString { "SemanticLyrics.Word(timeRange = " +
-									"${it.timeRange.first}uL..${it.timeRange.last}uL, charRange = " +
-									"${it.charRange.first}..${it.charRange.last}, " +
-									"isRtl = ${it.isRtl})" }})"
+							it.joinToString { w -> "SemanticLyrics.Word(timeRange = " +
+									"${w.timeRange.first}uL..${w.timeRange.last}uL, charRange = " +
+									"${w.charRange.first}..${w.charRange.last}, " +
+									"isRtl = ${w.isRtl})" }})"
 						} ?: "null"}, speaker = ${i.speaker?.name?.let { "SpeakerEntity.$it" } ?:
 						"null"}, end = ${i.end}uL, isTranslated = ${i.isTranslated}, " +
                         "endIsImplicit = ${i.endIsImplicit}),")
@@ -280,6 +279,13 @@ class LrcUtilsTest {
 		assertEquals(20uL..<1000uL, lrc[0].words!![0].timeRange)
 	}
 
+    @Test
+    fun testTemplateLrcRenderBenchmark() {
+        val lrc = parseSynced(LrcTestData2.RENDER_BENCHMARK, trim = false)
+        assertNotNull(lrc)
+        assertEquals(LrcTestData2.RENDER_BENCHMARK_PARSED, lrc)
+    }
+
 	@Test
 	fun testTemplateLrcTranslationType1() {
 		val lrc = parseSynced(LrcTestData.ALL_STAR)
@@ -305,20 +311,20 @@ class LrcUtilsTest {
 		assertEquals(10100uL, lrc[1].start)
 		assertNotNull(lrc[0].words)
 		assertEquals(3, lrc[0].words!!.size)
-		assertEquals(100uL, lrc[0].words!![0].timeRange.start)
+		assertEquals(100uL, lrc[0].words!![0].timeRange.first)
 		assertEquals(200uL - 1uL, lrc[0].words!![0].timeRange.last)
-		assertEquals(200uL, lrc[0].words!![1].timeRange.start)
+		assertEquals(200uL, lrc[0].words!![1].timeRange.first)
 		assertEquals(1000uL - 1uL, lrc[0].words!![1].timeRange.last)
-		assertEquals(1000uL, lrc[0].words!![2].timeRange.start)
+		assertEquals(1000uL, lrc[0].words!![2].timeRange.first)
 		assertEquals(1270uL, lrc[0].words!![2].timeRange.last)
 		assertEquals(10100uL, lrc[1].start)
 		assertNotNull(lrc[1].words)
 		assertEquals(3, lrc[1].words!!.size)
-		assertEquals(10100uL, lrc[1].words!![0].timeRange.start)
+		assertEquals(10100uL, lrc[1].words!![0].timeRange.first)
 		assertEquals(10200uL - 1uL, lrc[1].words!![0].timeRange.last)
-		assertEquals(10200uL, lrc[1].words!![1].timeRange.start)
+		assertEquals(10200uL, lrc[1].words!![1].timeRange.first)
 		assertEquals(11000uL - 1uL, lrc[1].words!![1].timeRange.last)
-		assertEquals(11000uL, lrc[1].words!![2].timeRange.start)
+		assertEquals(11000uL, lrc[1].words!![2].timeRange.first)
 		assertEquals(11270uL, lrc[1].words!![2].timeRange.last)
 	}
 
@@ -366,4 +372,17 @@ class LrcUtilsTest {
 		assert(!lrc[0].isTranslated)
 		assert(!lrc[1].isTranslated)
 	}
+
+    @Test
+    fun explicitEndFromWordRecognized() {
+        val lrc = parseSynced("[00:00.00]<00:01.00>hello<00:02.00><00:03.00>")
+        assertNotNull(lrc)
+        assertEquals(1, lrc!!.size)
+        assertEquals("hello", lrc[0].text)
+        assertEquals(1000uL, lrc[0].start)
+        assertNotNull(lrc[0].words)
+        assertEquals(1, lrc[0].words!!.size)
+        assertEquals(1000uL..1999uL, lrc[0].words!![0].timeRange)
+        assertEquals(2999uL, lrc[0].end)
+    }
 }
