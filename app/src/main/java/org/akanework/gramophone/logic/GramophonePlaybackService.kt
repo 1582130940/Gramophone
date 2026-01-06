@@ -728,10 +728,12 @@ class GramophonePlaybackService : MediaLibraryService(), MediaSessionService.Lis
             val rgGain = prefs.getIntStrict("rg_rg_gain", 19)
             restart = restart || !rgAp.setRgGain(rgGain - 15)
         }
-        if (key == null || key == "rg_no_rg_gain" || key == "rg_boost_gain") {
+        if (key == null || key == "rg_no_rg_gain") {
             val nonRgGain = prefs.getIntStrict("rg_no_rg_gain", 0)
+            restart = restart || !rgAp.setNonRgGain(-nonRgGain)
+        }
+        if (key == null || key == "rg_boost_gain") {
             val boostGain = prefs.getIntStrict("rg_boost_gain", 0)
-            restart = restart || !rgAp.setNonRgGain(-nonRgGain - boostGain)
             restart = restart || !rgAp.setBoostGain(boostGain)
         }
         if (restart) {
