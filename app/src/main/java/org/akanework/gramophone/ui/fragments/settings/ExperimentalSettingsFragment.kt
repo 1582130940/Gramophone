@@ -20,12 +20,11 @@ package org.akanework.gramophone.ui.fragments.settings
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
-import androidx.media3.common.util.Log
 import androidx.core.content.FileProvider
+import androidx.media3.common.util.Log
 import androidx.preference.Preference
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runInterruptible
 import kotlinx.coroutines.withContext
@@ -37,7 +36,8 @@ import org.akanework.gramophone.ui.fragments.BaseSettingsActivity
 import java.io.File
 import java.nio.charset.Charset
 
-class ExperimentalSettingsActivity : BaseSettingsActivity(R.string.settings_experimental_settings,
+class ExperimentalSettingsActivity : BaseSettingsActivity(
+    R.string.settings_experimental_settings,
     { ExperimentalSettingsFragment() })
 
 class ExperimentalSettingsFragment : BasePreferenceFragment() {
@@ -76,18 +76,28 @@ class ExperimentalSettingsFragment : BasePreferenceFragment() {
                     p.waitFor()
                 }
                 val selfLogDir = File(requireContext().cacheDir, "SelfLog")
-                val f = File(selfLogDir.also { it.mkdirs() },
-                    "GramophoneLog${System.currentTimeMillis()}.txt")
-                f.writeText("SDK: ${Build.VERSION.SDK_INT}\nDevice: ${Build.BRAND} ${Build.DEVICE} " +
-                        "(${Build.MANUFACTURER} ${Build.PRODUCT} ${Build.MODEL})\nVersion: " +
-                        "${BuildConfig.MY_VERSION_NAME} ${BuildConfig.RELEASE_TYPE} (${context?.packageName})" +
-                        "\n$stdout\n$stderr")
+                val f = File(
+                    selfLogDir.also { it.mkdirs() },
+                    "GramophoneLog${System.currentTimeMillis()}.txt"
+                )
+                f.writeText(
+                    "SDK: ${Build.VERSION.SDK_INT}\nDevice: ${Build.BRAND} ${Build.DEVICE} " +
+                            "(${Build.MANUFACTURER} ${Build.PRODUCT} ${Build.MODEL})\nVersion: " +
+                            "${BuildConfig.MY_VERSION_NAME} ${BuildConfig.RELEASE_TYPE} (${context?.packageName})" +
+                            "\n$stdout\n$stderr"
+                )
                 withContext(Dispatchers.Main) {
                     val sendIntent = Intent().apply {
                         action = Intent.ACTION_SEND
                         putExtra(Intent.EXTRA_TITLE, "Gramophone Logs")
-                        putExtra(Intent.EXTRA_STREAM,
-                            FileProvider.getUriForFile(requireContext(), "${requireContext().packageName}.fileProvider", f))
+                        putExtra(
+                            Intent.EXTRA_STREAM,
+                            FileProvider.getUriForFile(
+                                requireContext(),
+                                "${requireContext().packageName}.fileProvider",
+                                f
+                            )
+                        )
                         type = "text/plain"
                     }
                     val shareIntent = Intent.createChooser(sendIntent, null)

@@ -23,7 +23,8 @@ import org.akanework.gramophone.R
 import org.akanework.gramophone.ui.fragments.BasePreferenceFragment
 import org.akanework.gramophone.ui.fragments.BaseSettingsActivity
 
-class MainSettingsActivity : BaseSettingsActivity(R.string.home_menu_settings,
+class MainSettingsActivity : BaseSettingsActivity(
+    R.string.home_menu_settings,
     { MainSettingsFragment() })
 
 class MainSettingsFragment : BasePreferenceFragment() {

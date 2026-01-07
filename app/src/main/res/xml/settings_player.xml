@@ -30,8 +30,7 @@
             android:max="28"
             android:summary="@string/settings_album_round_corner_summary"
             android:title="@string/settings_album_round_corner"
-            app:showSeekBarValue="true"
-            />
+            app:showSeekBarValue="true" />
 
         <SwitchPreferenceCompat
             android:defaultValue="true"
@@ -85,8 +84,7 @@
             android:layout="@layout/preference_switch"
             android:summary="@string/settings_cookie_summary"
             android:title="@string/settings_cookie_info"
-            android:widgetLayout="@layout/preference_switch_widget"
-            />
+            android:widgetLayout="@layout/preference_switch_widget" />
 
     </PreferenceCategory>
 

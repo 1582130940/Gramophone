@@ -109,35 +109,35 @@ class Sorter<T>(
 
         companion object {
             fun inverse(type: Type): Type? = when (type) {
-	            ByTitleDescending -> ByTitleAscending
-	            ByTitleAscending -> ByTitleDescending
-	            ByArtistDescending -> ByArtistAscending
-	            ByArtistAscending -> ByArtistDescending
+                ByTitleDescending -> ByTitleAscending
+                ByTitleAscending -> ByTitleDescending
+                ByArtistDescending -> ByArtistAscending
+                ByArtistAscending -> ByArtistDescending
                 ByArtistYearDescending -> ByArtistYearAscending
                 ByArtistYearAscending -> ByArtistYearDescending
-	            ByAlbumTitleDescending -> ByAlbumTitleAscending
-	            ByAlbumTitleAscending -> ByAlbumTitleDescending
-	            ByAlbumArtistDescending -> ByAlbumArtistAscending
-	            ByAlbumArtistAscending -> ByAlbumArtistDescending
+                ByAlbumTitleDescending -> ByAlbumTitleAscending
+                ByAlbumTitleAscending -> ByAlbumTitleDescending
+                ByAlbumArtistDescending -> ByAlbumArtistAscending
+                ByAlbumArtistAscending -> ByAlbumArtistDescending
                 ByAlbumArtistYearDescending -> ByAlbumArtistYearAscending
                 ByAlbumArtistYearAscending -> ByAlbumArtistYearDescending
                 ByAlbumYearDescending -> ByAlbumYearAscending
                 ByAlbumYearAscending -> ByAlbumYearDescending
-	            BySizeDescending -> BySizeAscending
-	            BySizeAscending -> BySizeDescending
-	            ByAlbumSizeDescending -> ByAlbumSizeAscending
-	            ByAlbumSizeAscending -> ByAlbumSizeDescending
-	            NaturalOrder -> null
-	            ByAddDateDescending -> ByAddDateAscending
-	            ByAddDateAscending -> ByAddDateDescending
-	            ByReleaseDateDescending -> ByReleaseDateAscending
-	            ByReleaseDateAscending -> ByReleaseDateDescending
-	            ByModifiedDateDescending -> ByModifiedDateAscending
-	            ByModifiedDateAscending -> ByModifiedDateDescending
-	            ByFilePathDescending -> ByFilePathAscending
-	            ByFilePathAscending -> ByFilePathDescending
-	            ByDiscAndTrack -> null
-	            None -> null
+                BySizeDescending -> BySizeAscending
+                BySizeAscending -> BySizeDescending
+                ByAlbumSizeDescending -> ByAlbumSizeAscending
+                ByAlbumSizeAscending -> ByAlbumSizeDescending
+                NaturalOrder -> null
+                ByAddDateDescending -> ByAddDateAscending
+                ByAddDateAscending -> ByAddDateDescending
+                ByReleaseDateDescending -> ByReleaseDateAscending
+                ByReleaseDateAscending -> ByReleaseDateDescending
+                ByModifiedDateDescending -> ByModifiedDateAscending
+                ByModifiedDateAscending -> ByModifiedDateDescending
+                ByFilePathDescending -> ByFilePathAscending
+                ByFilePathAscending -> ByFilePathDescending
+                ByDiscAndTrack -> null
+                None -> null
             }
         }
     }
@@ -163,7 +163,8 @@ class Sorter<T>(
         if (!getSupportedTypes().contains(type))
             throw IllegalArgumentException("Unsupported type ${type.name}")
         if (type == rawOrderExposed || type == Type.None) return null
-        return WrappingHintedComparator(type, when (type) {
+        return WrappingHintedComparator(
+            type, when (type) {
             Type.ByTitleDescending -> {
                 SupportComparator.createAlphanumericComparator(true, {
                     sortingHelper.getTitle(it)

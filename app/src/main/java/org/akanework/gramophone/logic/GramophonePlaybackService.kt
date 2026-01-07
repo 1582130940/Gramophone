@@ -37,7 +37,6 @@ import android.os.HandlerThread
 import android.os.Looper
 import android.os.Process
 import android.os.SystemClock
-import androidx.media3.common.util.Log
 import androidx.concurrent.futures.CallbackToFutureAdapter
 import androidx.core.app.NotificationChannelCompat
 import androidx.core.app.NotificationCompat
@@ -64,6 +63,7 @@ import androidx.media3.common.Timeline
 import androidx.media3.common.TrackSelectionParameters
 import androidx.media3.common.Tracks
 import androidx.media3.common.util.BitmapLoader
+import androidx.media3.common.util.Log
 import androidx.media3.common.util.Util.isBitmapFactorySupportedMimeType
 import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.exoplayer.DefaultRenderersFactory
@@ -157,7 +157,8 @@ class GramophonePlaybackService : MediaLibraryService(), MediaSessionService.Lis
     }
 
     private var lastSessionId = 0
-    private val internalPlaybackThread = HandlerThread("ExoPlayer:Playback", Process.THREAD_PRIORITY_AUDIO)
+    private val internalPlaybackThread =
+        HandlerThread("ExoPlayer:Playback", Process.THREAD_PRIORITY_AUDIO)
     private var mediaSession: MediaLibrarySession? = null
     val endedWorkaroundPlayer
         get() = mediaSession?.player as EndedWorkaroundPlayer?
@@ -186,6 +187,7 @@ class GramophonePlaybackService : MediaLibraryService(), MediaSessionService.Lis
     private var audioTrackInfo: AudioTrackInfo? = null
     private var audioTrackInfoCounter = 0
     private var audioTrackReleaseCounter = 0
+
     // only used for formats where this is significant for quality, but not in header (opus)
     private var bitrate: Int? = null
     private var btInfo: BtCodecInfo? = null
@@ -247,7 +249,9 @@ class GramophonePlaybackService : MediaLibraryService(), MediaSessionService.Lis
             ) {
                 btInfo = BtCodecInfo.fromCodecConfig(
                     @SuppressLint("NewApi") IntentCompat.getParcelableExtra(
-                        intent, "android.bluetooth.extra.CODEC_STATUS", BluetoothCodecStatus::class.java
+                        intent,
+                        "android.bluetooth.extra.CODEC_STATUS",
+                        BluetoothCodecStatus::class.java
                     )?.codecConfig
                 )
                 Log.d(TAG, "new bluetooth codec config $btInfo")
@@ -362,11 +366,14 @@ class GramophonePlaybackService : MediaLibraryService(), MediaSessionService.Lis
                     .setEnableDecoderFallback(true)
                     .setEnableAudioTrackPlaybackParams(true)
                     .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER),
-                GramophoneMediaSourceFactory(DefaultDataSource.Factory(this), GramophoneExtractorsFactory().also {
-                    it.setConstantBitrateSeekingEnabled(true)
-                    if (prefs.getBooleanStrict("mp3_index_seeking", false))
-                        it.setMp3ExtractorFlags(Mp3Extractor.FLAG_ENABLE_INDEX_SEEKING)
-                }))
+                GramophoneMediaSourceFactory(
+                    DefaultDataSource.Factory(this),
+                    GramophoneExtractorsFactory().also {
+                        it.setConstantBitrateSeekingEnabled(true)
+                        if (prefs.getBooleanStrict("mp3_index_seeking", false))
+                            it.setMp3ExtractorFlags(Mp3Extractor.FLAG_ENABLE_INDEX_SEEKING)
+                    })
+            )
                 .setWakeMode(C.WAKE_MODE_LOCAL)
                 .setAudioAttributes(
                     AudioAttributes
@@ -377,14 +384,16 @@ class GramophonePlaybackService : MediaLibraryService(), MediaSessionService.Lis
                 )
                 .setHandleAudioBecomingNoisy(true)
                 .setTrackSelector(DefaultTrackSelector(this).apply {
-                    setParameters(buildUponParameters()
+                    setParameters(
+                        buildUponParameters()
                         .setAllowInvalidateSelectionsOnRendererCapabilitiesChange(true)
                         .setAudioOffloadPreferences(
                             TrackSelectionParameters.AudioOffloadPreferences.Builder()
                                 .apply {
-                                    val config = prefs.getStringStrict("offload", "0")?.toIntOrNull()
+                                    val config =
+                                        prefs.getStringStrict("offload", "0")?.toIntOrNull()
                                     if (config != null && config > 0 && Flags.OFFLOAD) {
-	                                    rgAp.setOffloadEnabled(true)
+                                        rgAp.setOffloadEnabled(true)
                                         setAudioOffloadMode(TrackSelectionParameters.AudioOffloadPreferences.AUDIO_OFFLOAD_MODE_ENABLED)
                                         setIsGaplessSupportRequired(config == 2)
                                     }
@@ -563,8 +572,10 @@ class GramophonePlaybackService : MediaLibraryService(), MediaSessionService.Lis
                     }
                     if (endedWorkaroundPlayer?.nextShuffleOrder != null)
                         throw IllegalStateException("shuffleFactory was not consumed during restore")
-                    if (mediaSession?.connectedControllers?.find { it.connectionHints
-                        .getBoolean("PrepareWhenReady", false) } != null) {
+                    if (mediaSession?.connectedControllers?.find {
+                            it.connectionHints
+                                .getBoolean("PrepareWhenReady", false)
+                        } != null) {
                         handler.post { mediaSession?.player?.prepare() }
                     }
                 }
@@ -592,7 +603,7 @@ class GramophonePlaybackService : MediaLibraryService(), MediaSessionService.Lis
         // Deserialize all extras to be able to log them.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             extras = extras?.deepCopy()
-	    } else {
+        } else {
             if (extras != null) {
                 for (i in extras.keySet()) {
                     @Suppress("deprecation") extras.get(i)
@@ -600,7 +611,7 @@ class GramophonePlaybackService : MediaLibraryService(), MediaSessionService.Lis
             }
         }
         Log.i(TAG, "onStartCommand(): $intent, ${extras?.toString()}")
-	    return super.onStartCommand(intent, flags, startId)
+        return super.onStartCommand(intent, flags, startId)
     }
 
     override fun onSetRating(
@@ -686,7 +697,8 @@ class GramophonePlaybackService : MediaLibraryService(), MediaSessionService.Lis
             }
         }
         if (controller.connectionHints.getBoolean("PrepareWhenReady", false) &&
-            this.controller?.currentTimeline?.isEmpty == false) {
+            this.controller?.currentTimeline?.isEmpty == false
+        ) {
             handler.post { this.controller?.prepare() }
         }
         availableSessionCommands.add(SessionCommand(SERVICE_SET_TIMER, Bundle.EMPTY))
@@ -743,25 +755,29 @@ class GramophonePlaybackService : MediaLibraryService(), MediaSessionService.Lis
     }
 
     private fun computeRgMode(force: Boolean): Boolean {
-        return rgAp.setMode(when (rgMode) {
-            0 -> ReplayGainUtil.Mode.None
-            1 -> ReplayGainUtil.Mode.Track
-            2 -> ReplayGainUtil.Mode.Album
-            3 -> {
-                val item = controller?.currentMediaItem
-                val idx = controller?.currentMediaItemIndex ?: 0
-                val count = controller?.mediaItemCount
-                val next = if (idx + 1 >= (count ?: 0)) null else
-                    controller?.getMediaItemAt(idx + 1)
-                val prev = if (idx - 1 < 0 || (count ?: 0) == 0) null else
-                    controller?.getMediaItemAt(idx - 1)
-                if (item != null && (item.mediaMetadata.albumId == next?.mediaMetadata?.albumId ||
-                    item.mediaMetadata.albumId == prev?.mediaMetadata?.albumId))
-                    ReplayGainUtil.Mode.Album
-                else ReplayGainUtil.Mode.Track
-            }
-            else -> throw IllegalArgumentException("invalid rg mode $rgMode")
-        }, !force)
+        return rgAp.setMode(
+            when (rgMode) {
+                0 -> ReplayGainUtil.Mode.None
+                1 -> ReplayGainUtil.Mode.Track
+                2 -> ReplayGainUtil.Mode.Album
+                3 -> {
+                    val item = controller?.currentMediaItem
+                    val idx = controller?.currentMediaItemIndex ?: 0
+                    val count = controller?.mediaItemCount
+                    val next = if (idx + 1 >= (count ?: 0)) null else
+                        controller?.getMediaItemAt(idx + 1)
+                    val prev = if (idx - 1 < 0 || (count ?: 0) == 0) null else
+                        controller?.getMediaItemAt(idx - 1)
+                    if (item != null && (item.mediaMetadata.albumId == next?.mediaMetadata?.albumId ||
+                                item.mediaMetadata.albumId == prev?.mediaMetadata?.albumId)
+                    )
+                        ReplayGainUtil.Mode.Album
+                    else ReplayGainUtil.Mode.Track
+                }
+
+                else -> throw IllegalArgumentException("invalid rg mode $rgMode")
+            }, !force
+        )
     }
 
     override fun onAudioSessionIdChanged(audioSessionId: Int) {
@@ -774,7 +790,7 @@ class GramophonePlaybackService : MediaLibraryService(), MediaSessionService.Lis
 
     private fun broadcastAudioSession() {
         if (lastSessionId != 0) {
-			Log.i(TAG, "broadcast audio session open: $lastSessionId")
+            Log.i(TAG, "broadcast audio session open: $lastSessionId")
             sendBroadcast(Intent(AudioEffect.ACTION_OPEN_AUDIO_EFFECT_CONTROL_SESSION).apply {
                 putExtra(AudioEffect.EXTRA_PACKAGE_NAME, packageName)
                 putExtra(AudioEffect.EXTRA_AUDIO_SESSION, lastSessionId)
@@ -787,7 +803,7 @@ class GramophonePlaybackService : MediaLibraryService(), MediaSessionService.Lis
 
     private fun broadcastAudioSessionClose() {
         if (lastSessionId != 0) {
-	        Log.i(TAG, "broadcast audio session close: $lastSessionId")
+            Log.i(TAG, "broadcast audio session close: $lastSessionId")
             sendBroadcast(Intent(AudioEffect.ACTION_CLOSE_AUDIO_EFFECT_CONTROL_SESSION).apply {
                 putExtra(AudioEffect.EXTRA_PACKAGE_NAME, packageName)
                 putExtra(AudioEffect.EXTRA_AUDIO_SESSION, lastSessionId)
@@ -831,10 +847,15 @@ class GramophonePlaybackService : MediaLibraryService(), MediaSessionService.Lis
                 SERVICE_QUERY_TIMER -> {
                     SessionResult(SessionResult.RESULT_SUCCESS).also {
                         timerDuration?.let { td ->
-                            it.extras.putInt("duration", (td - SystemClock.elapsedRealtime()).toInt())
+                            it.extras.putInt(
+                                "duration",
+                                (td - SystemClock.elapsedRealtime()).toInt()
+                            )
                             it.extras.putBoolean("pauseOnEnd", timerPauseOnEnd)
-                        } ?: it.extras.putBoolean("pauseOnEnd",
-                            this.endedWorkaroundPlayer!!.exoPlayer.pauseAtEndOfMediaItems)
+                        } ?: it.extras.putBoolean(
+                            "pauseOnEnd",
+                            this.endedWorkaroundPlayer!!.exoPlayer.pauseAtEndOfMediaItems
+                        )
                     }
                 }
 
@@ -843,18 +864,22 @@ class GramophonePlaybackService : MediaLibraryService(), MediaSessionService.Lis
                         if (downstreamFormat.isNotEmpty()) {
                             res.extras.putParcelableArrayList(
                                 "file_format",
-                                ArrayList(downstreamFormat.map { Bundle().apply {
-                                    putInt("type", it.second.first)
-                                    val bitrate = bitrate
-                                    // TODO: should this be done here? this will create a new format object every query
-                                    val format = if (it.second.first == C.TRACK_TYPE_AUDIO &&
-                                        bitrate != null &&
-                                        it.second.second.sampleMimeType == MimeTypes.AUDIO_OPUS) {
-                                        it.second.second.buildUpon().setAverageBitrate(bitrate).build()
-                                    } else it.second.second
-                                    putBundle("format", format.toBundle())
-                                    putBundle("rg", ReplayGainUtil.parse(format).toBundle())
-                                } })
+                                ArrayList(downstreamFormat.map {
+                                    Bundle().apply {
+                                        putInt("type", it.second.first)
+                                        val bitrate = bitrate
+                                        // TODO: should this be done here? this will create a new format object every query
+                                        val format = if (it.second.first == C.TRACK_TYPE_AUDIO &&
+                                            bitrate != null &&
+                                            it.second.second.sampleMimeType == MimeTypes.AUDIO_OPUS
+                                        ) {
+                                            it.second.second.buildUpon().setAverageBitrate(bitrate)
+                                                .build()
+                                        } else it.second.second
+                                        putBundle("format", format.toBundle())
+                                        putBundle("rg", ReplayGainUtil.parse(format).toBundle())
+                                    }
+                                })
                             )
                         }
                         res.extras.putBundle("sink_format", audioSinkInputFormat?.toBundle())
@@ -928,9 +953,11 @@ class GramophonePlaybackService : MediaLibraryService(), MediaSessionService.Lis
                         var theItem = items.mediaItems[items.startIndex]
                         if (theItem.mediaMetadata.durationMs != null &&
                             theItem.mediaMetadata.durationMs!! > 0 &&
-                            items.startPositionMs != C.TIME_UNSET) {
+                            items.startPositionMs != C.TIME_UNSET
+                        ) {
                             theItem = theItem.buildUpon()
-                                .setMediaMetadata(theItem.mediaMetadata.buildUpon()
+                                .setMediaMetadata(
+                                    theItem.mediaMetadata.buildUpon()
                                     .setExtras(Bundle(theItem.mediaMetadata.extras).apply {
                                         if (items.startPositionMs == 0L) {
                                             putInt(
@@ -954,10 +981,15 @@ class GramophonePlaybackService : MediaLibraryService(), MediaSessionService.Lis
                                                 MediaConstants.EXTRAS_VALUE_COMPLETION_STATUS_FULLY_PLAYED
                                             )
                                         }
-                                    }).build()).build()
-	                    }
-                        settable.set(MediaItemsWithStartPosition(listOf(theItem),
-                            0, items.startPositionMs))
+                                    }).build()
+                                ).build()
+                        }
+                        settable.set(
+                            MediaItemsWithStartPosition(
+                                listOf(theItem),
+                                0, items.startPositionMs
+                            )
+                        )
                     } else {
                         settable.set(items)
                     }
@@ -1010,8 +1042,10 @@ class GramophonePlaybackService : MediaLibraryService(), MediaSessionService.Lis
             val format = tracks.getFirstSelectedTrackFormatByType(C.TRACK_TYPE_AUDIO)
             var lrc: SemanticLyrics? = null
             if (format != null) {
-                lrc = loadAndParseLyricsFile(mediaItem?.getFile(),
-                    format.sampleMimeType, options)
+                lrc = loadAndParseLyricsFile(
+                    mediaItem?.getFile(),
+                    format.sampleMimeType, options
+                )
                 if (lrc == null) {
                     // note: wav files can have null metadata
                     val trackMetadata = format.metadata
@@ -1072,8 +1106,10 @@ class GramophonePlaybackService : MediaLibraryService(), MediaSessionService.Lis
             Log.e(TAG, "mediaPeriodId is NULL in onDownstreamFormatChanged()!!")
             return
         }
-        val currentPeriod = controller?.currentPeriodIndex?.takeIf { it != C.INDEX_UNSET &&
-                (controller?.currentTimeline?.periodCount ?: 0) > it }
+        val currentPeriod = controller?.currentPeriodIndex?.takeIf {
+            it != C.INDEX_UNSET &&
+                    (controller?.currentTimeline?.periodCount ?: 0) > it
+        }
             ?.let { controller!!.currentTimeline.getUidOfPeriod(it) }
         val item = eventTime.mediaPeriodId!!.periodUid to
                 (mediaLoadData.trackType to mediaLoadData.trackFormat!!)
@@ -1252,9 +1288,12 @@ class GramophonePlaybackService : MediaLibraryService(), MediaSessionService.Lis
         mediaSession!!.connectedControllers.forEach {
             if (mediaSession!!.isMediaNotificationController(it)
                 || mediaSession!!.isAutoCompanionController(it)
-                || mediaSession!!.isAutomotiveController(it)) {
-                mediaSession!!.setCustomLayout(it, if (isEmpty) emptyList() else
-                    ImmutableList.of(getRepeatCommand(), getShufflingCommand()))
+                || mediaSession!!.isAutomotiveController(it)
+            ) {
+                mediaSession!!.setCustomLayout(
+                    it, if (isEmpty) emptyList() else
+                        ImmutableList.of(getRepeatCommand(), getShufflingCommand())
+                )
             }
         }
     }
@@ -1319,8 +1358,12 @@ class GramophonePlaybackService : MediaLibraryService(), MediaSessionService.Lis
                 (line.words?.map { it.timeRange.first }?.filter { it > cPos } ?: listOf())
                     .let { i -> if (line.start > cPos) i + line.start else i }
         }?.minOrNull()
-        nextUpdate?.let { handler.postDelayed(sendLyrics, ((it - cPos).toLong()
-                / (controller?.playbackParameters?.speed ?: 1f)).toLong()) }
+        nextUpdate?.let {
+            handler.postDelayed(
+                sendLyrics, ((it - cPos).toLong()
+                        / (controller?.playbackParameters?.speed ?: 1f)).toLong()
+            )
+        }
     }
 
     private fun sendLyricNow(new: Boolean) {
@@ -1363,7 +1406,8 @@ class GramophonePlaybackService : MediaLibraryService(), MediaSessionService.Lis
         if (max == null) {
             return null
         }
-        val maxLines = lines.filter { it.second.start == max.second.start && it.second.text.isNotBlank() }
+        val maxLines =
+            lines.filter { it.second.start == max.second.start && it.second.text.isNotBlank() }
         return maxLines.firstOrNull()?.first ?: max.first
     }
 

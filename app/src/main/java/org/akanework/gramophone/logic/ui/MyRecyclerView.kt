@@ -19,10 +19,10 @@ package org.akanework.gramophone.logic.ui
 
 import android.content.Context
 import android.util.AttributeSet
-import androidx.media3.common.util.Log
 import android.view.View
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.coordinatorlayout.widget.CoordinatorLayout
+import androidx.media3.common.util.Log
 import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -38,8 +38,10 @@ import org.akanework.gramophone.ui.components.GridPaddingDecoration
 class MyRecyclerView : FixOnItemTouchListenerRecyclerView, AppBarLayout.OnOffsetChangedListener {
     constructor(context: Context, attributeSet: AttributeSet?, defStyleAttr: Int) :
             super(context, attributeSet, defStyleAttr) {
-        val arr = context.theme.obtainStyledAttributes(attributeSet,
-            R.styleable.MyRecyclerView, defStyleAttr, 0)
+        val arr = context.theme.obtainStyledAttributes(
+            attributeSet,
+            R.styleable.MyRecyclerView, defStyleAttr, 0
+        )
         if (arr.getBoolean(R.styleable.MyRecyclerView_hasFixedSize, false)) {
             setHasFixedSize(true)
         }
@@ -94,7 +96,7 @@ class MyRecyclerView : FixOnItemTouchListenerRecyclerView, AppBarLayout.OnOffset
             this.appBarLayout?.removeOnOffsetChangedListener(this)
         this.appBarLayout = appBarLayout
         if (isAttachedToWindow)
-	        appBarLayout?.addOnOffsetChangedListener(this)
+            appBarLayout?.addOnOffsetChangedListener(this)
     }
 
     private fun setAppBarExpanded(expanded: Boolean) {

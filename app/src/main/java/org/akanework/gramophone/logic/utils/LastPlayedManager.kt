@@ -22,13 +22,13 @@ import android.content.Context
 import android.net.Uri
 import android.os.Bundle
 import android.util.Base64
-import androidx.media3.common.util.Log
 import androidx.core.content.edit
 import androidx.core.net.toUri
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.Player
+import androidx.media3.common.util.Log
 import androidx.media3.session.MediaSession.MediaItemsWithStartPosition
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -205,9 +205,10 @@ class LastPlayedManager(
                             } else b.readStringSafe()
                             var uri = b.readUri()
                             if (version == 0 && uri?.toString()?.let {
-                                it.startsWith("/storage/") || it.startsWith("/mnt/")
-                                        || (@SuppressLint("SdCardPath")
-                                it.startsWith("/sdcard/")) } == true)
+                                    it.startsWith("/storage/") || it.startsWith("/mnt/")
+                                            || (@SuppressLint("SdCardPath")
+                                    it.startsWith("/sdcard/"))
+                                } == true)
                                 uri = uri.buildUpon().scheme("file").build()
                             val mimeType = b.readStringSafe()
                             val title = b.readStringSafe()
@@ -355,6 +356,7 @@ private class SafeDelimitedStringConcat(private val delimiter: String) {
     fun writeBase64(b: ByteArray?) = append(b?.let { Base64.encodeToString(it, Base64.DEFAULT) })
     fun writeStringSafe(s: CharSequence?) =
         writeBase64(s?.toString()?.toByteArray(StandardCharsets.UTF_8))
+
     fun writeInt(i: Int?) = append(i?.toString())
     fun writeLong(i: Long?) = append(i?.toString())
     fun writeBool(b: Boolean?) = append(b?.toString())
@@ -388,9 +390,10 @@ private object PrefsListUtils {
         if (groupStr.isEmpty()) return emptyList()
         val groups = groupStr.split(",")
         return groups.map { hc ->
-            stringSet.firstOrNull { it.hashCode().toString() == hc } ?:
-                throw NoSuchElementException("tried to find \"$hc\" (from \"$groupStr\") in: " +
-                        stringSet.joinToString { it.hashCode().toString() })
+            stringSet.firstOrNull { it.hashCode().toString() == hc }
+                ?: throw NoSuchElementException(
+                    "tried to find \"$hc\" (from \"$groupStr\") in: " +
+                            stringSet.joinToString { it.hashCode().toString() })
         }
     }
 

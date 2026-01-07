@@ -17,12 +17,12 @@
             style="?attr/collapsingToolbarLayoutLargeStyle"
             android:layout_width="match_parent"
             android:layout_height="?attr/collapsingToolbarLayoutLargeSize"
-            app:collapsedTitleTextColor="?attr/colorOnSurface"
             app:collapsedTitleTextAppearance="?textAppearanceTitleLarge"
-            app:expandedTitleTextColor="?attr/colorOnSurface"
-            app:expandedTitleTextAppearance="?textAppearanceHeadlineLarge"
-            app:layout_scrollFlags="scroll|exitUntilCollapsed|snap"
+            app:collapsedTitleTextColor="?attr/colorOnSurface"
             app:expandedTitleMarginStart="24dp"
+            app:expandedTitleTextAppearance="?textAppearanceHeadlineLarge"
+            app:expandedTitleTextColor="?attr/colorOnSurface"
+            app:layout_scrollFlags="scroll|exitUntilCollapsed|snap"
             app:title="@string/gramophone_crashed"
             app:titleCollapseMode="scale">
 
@@ -71,12 +71,12 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:importantForAccessibility="no"
-                        app:layout_constraintHorizontal_bias="1"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"
+                        android:src="@drawable/baseline_bug_report_24"
                         app:layout_constraintBottom_toBottomOf="@id/ohNo"
                         app:layout_constraintEnd_toStartOf="@id/ohNo"
-                        android:src="@drawable/baseline_bug_report_24" />
+                        app:layout_constraintHorizontal_bias="1"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
 
                     <TextView
                         android:id="@+id/ohNo"
@@ -84,29 +84,29 @@
                         android:layout_height="wrap_content"
                         android:text="@string/oh_no"
                         android:textSize="24sp"
+                        app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintHorizontal_bias="0"
                         app:layout_constraintStart_toEndOf="@id/bugIcon"
-                        app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintTop_toTopOf="parent" />
 
                     <TextView
                         android:id="@+id/crashExplainer"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:textSize="16sp"
                         android:text="@string/gramophone_crashed_explainer2"
-                        app:layout_constraintStart_toStartOf="parent"
+                        android:textSize="16sp"
                         app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@id/ohNo" />
 
                     <Button
                         android:id="@+id/sendEmail"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        app:layout_constraintStart_toStartOf="parent"
+                        android:text="@string/send_email"
                         app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/crashExplainer"
-                        android:text="@string/send_email" />
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/crashExplainer" />
                 </androidx.constraintlayout.widget.ConstraintLayout>
             </com.google.android.material.card.MaterialCardView>
 
@@ -127,12 +127,12 @@
     </androidx.core.widget.NestedScrollView>
 
     <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
-            android:id="@+id/actionShare"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_margin="16dp"
-            android:text="@string/share"
-            android:layout_gravity="bottom|end"
-            app:icon="@drawable/ic_share_24" />
+        android:id="@+id/actionShare"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="16dp"
+        android:text="@string/share"
+        app:icon="@drawable/ic_share_24" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

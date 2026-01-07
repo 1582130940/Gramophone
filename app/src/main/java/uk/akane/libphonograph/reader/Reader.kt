@@ -6,10 +6,10 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
-import androidx.media3.common.util.Log
 import androidx.media3.common.HeartRating
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
+import androidx.media3.common.util.Log
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 import org.akanework.gramophone.logic.hasAudioPermission
@@ -129,11 +129,12 @@ internal object Reader {
         if (!context.hasAudioPermission()) {
             throw SecurityException("Audio permission is not granted")
         }
-        val useEnhancedCoverReading = if (hasScopedStorageWithMediaTypes() && !context.hasImagePermission()) {
-            if (shouldUseEnhancedCoverReading == true)
-                throw SecurityException("Requested enhanced cover reading but permission isn't granted")
-            false
-        } else shouldUseEnhancedCoverReading != false
+        val useEnhancedCoverReading =
+            if (hasScopedStorageWithMediaTypes() && !context.hasImagePermission()) {
+                if (shouldUseEnhancedCoverReading == true)
+                    throw SecurityException("Requested enhanced cover reading but permission isn't granted")
+                false
+            } else shouldUseEnhancedCoverReading != false
 
         var selection = "${MediaStore.Audio.Media.IS_MUSIC} != 0"
         if (shouldIncludeExtraFormat) {
@@ -166,7 +167,7 @@ internal object Reader {
         val idMap = if (shouldLoadIdMap) hashMapOf<Long, MediaItem>() else null
         val pathMap = if (shouldLoadIdMap) hashMapOf<String, MediaItem>() else null
         val hasVolume = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-	        MediaStore.getExternalVolumeNames(context).contains(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+            MediaStore.getExternalVolumeNames(context).contains(MediaStore.VOLUME_EXTERNAL_PRIMARY)
         } else true
         val cursor = if (hasVolume) context.contentResolver.query(
             MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
@@ -175,9 +176,11 @@ internal object Reader {
             null,
             MediaStore.Audio.Media.TITLE + " COLLATE UNICODE ASC",
         ) else null
-        val defaultZone by lazy { if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            ZoneId.systemDefault()
-        } else null }
+        val defaultZone by lazy {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                ZoneId.systemDefault()
+            } else null
+        }
 
         cursor?.use {
             // Get columns from mediaStore.
@@ -215,7 +218,8 @@ internal object Reader {
 
             while (it.moveToNext()) {
                 val path = it.getStringOrNullIfThrow(pathColumn)
-                val duration = it.getLongOrNullIfThrow(durationColumn)?.let { if (it >= 0) it else null }
+                val duration =
+                    it.getLongOrNullIfThrow(durationColumn)?.let { if (it >= 0) it else null }
                 val pathFile = path?.let { it1 -> File(it1) }
                 val parent = pathFile?.parentFile
                 val fldPath = parent?.absolutePath
@@ -251,7 +255,8 @@ internal object Reader {
                 val mimeType = it.getStringOrNullIfThrow(mimeTypeColumn)!!
                 var discNumber = discNumberColumn?.let { col -> it.getIntOrNullIfThrow(col) }
                 var trackNumber = it.getIntOrNullIfThrow(trackNumberColumn)
-                var cdTrackNumber = cdTrackNumberColumn?.let { col -> it.getStringOrNullIfThrow(col) }
+                var cdTrackNumber =
+                    cdTrackNumberColumn?.let { col -> it.getStringOrNullIfThrow(col) }
                 val compilation = compilationColumn?.let { col -> it.getStringOrNullIfThrow(col) }
                 val dateTaken = dateTakenColumn?.let { col -> it.getStringOrNullIfThrow(col) }
                 val composer = composerColumn?.let { col -> it.getStringOrNullIfThrow(col) }
@@ -259,7 +264,9 @@ internal object Reader {
                 val author = authorColumn?.let { col -> it.getStringOrNullIfThrow(col) }
                 val genre = genreColumn?.let { col -> it.getStringOrNullIfThrow(col) }
                 val favorite = favoriteColumn?.let { col -> it.getIntOrNullIfThrow(col) }.let {
-                    when (it) { 1 -> true; 0 -> false; else -> null }
+                    when (it) {
+                        1 -> true; 0 -> false; else -> null
+                    }
                 }
                 val addDate = it.getLongOrNullIfThrow(addDateColumn)
                 val modifiedDate = it.getLongOrNullIfThrow(modifiedDateColumn)
@@ -295,7 +302,8 @@ internal object Reader {
                 if (trackNumber == null && pathFile != null) {
                     val match = trackNumberRegex.matchEntire(pathFile.name)
                     if (match != null && match.groups.size > 1
-                        && (hasNoMetadata || !title.startsWith(match.groups[1]!!.value))) {
+                        && (hasNoMetadata || !title.startsWith(match.groups[1]!!.value))
+                    ) {
                         trackNumber = match.groups[1]!!.value.toIntOrNull()
                     }
                 }
@@ -303,8 +311,9 @@ internal object Reader {
                 // e.g. 1001 - Disc 01, Track 01
                 // MediaStore encodes info this way even if the file does not
                 if (trackNumber != null &&
-                    (discNumber == null || discNumber == 0 || discNumber == trackNumber / 1000) && 
-                    trackNumber >= 1000) {
+                    (discNumber == null || discNumber == 0 || discNumber == trackNumber / 1000) &&
+                    trackNumber >= 1000
+                ) {
                     discNumber = trackNumber / 1000
                     trackNumber %= 1000
                 }
@@ -374,7 +383,7 @@ internal object Reader {
                 albumMap?.getOrPut(albumId) {
                     // in enhanced cover loading case, cover uri is created later using coverCache
                     val cover = if (coverCache != null || albumId == null) null else
-                            ContentUris.withAppendedId(Constants.baseAlbumCoverUri, albumId)
+                        ContentUris.withAppendedId(Constants.baseAlbumCoverUri, albumId)
                     MiscUtils.AlbumImpl(
                         albumId,
                         album,
@@ -387,7 +396,13 @@ internal object Reader {
                         mutableListOf()
                     )
                 }?.songList?.add(song)
-                (genreMap?.getOrPut(genre) { Genre(genre.hashCode().toLong(), genre, mutableListOf()) }?.songList
+                (genreMap?.getOrPut(genre) {
+                    Genre(
+                        genre.hashCode().toLong(),
+                        genre,
+                        mutableListOf()
+                    )
+                }?.songList
                         as MutableList?)?.add(song)
                 (dateMap?.getOrPut(year) {
                     Date(
@@ -410,7 +425,8 @@ internal object Reader {
                         folders!!.add(tmpPath.absolutePath)
                         tmpPath = tmpPath.parentFile
                         if (tmpPath != null && (tmpPath.absolutePath == "/storage/emulated"
-                                    || tmpPath.absolutePath == "/storage"))
+                                    || tmpPath.absolutePath == "/storage")
+                        )
                             tmpPath = null // lets not allow to blacklist more than entire volumes
                     }
                 }
@@ -427,9 +443,15 @@ internal object Reader {
                     ?: "nonMediaStoreArtist:${it.albumArtist}".hashCode().toLong()
             it.albumYear = it.songList.mapNotNull { it.mediaMetadata.releaseYear }.maxOrNull()
             if (it.albumYear != null)
-                it.songList.forEach { item -> item.mediaMetadata.extras!!.putLong(EXTRA_ALBUM_YEAR, it.albumYear!!.toLong()) }
+                it.songList.forEach { item ->
+                    item.mediaMetadata.extras!!.putLong(
+                        EXTRA_ALBUM_YEAR,
+                        it.albumYear!!.toLong()
+                    )
+                }
             it.albumAddDate = it.songList.mapNotNull { it.mediaMetadata.addDate }.minOrNull()
-            it.albumModifiedDate = it.songList.mapNotNull { it.mediaMetadata.modifiedDate }.maxOrNull()
+            it.albumModifiedDate =
+                it.songList.mapNotNull { it.mediaMetadata.modifiedDate }.maxOrNull()
             val albumArtist = albumArtistMap?.getOrPut(it.albumArtistId) {
                 Artist(it.albumArtistId, it.albumArtist, mutableListOf(), mutableListOf())
             }
@@ -474,7 +496,8 @@ internal object Reader {
                     folders.add(tmpPath.absolutePath)
                     tmpPath = tmpPath.parentFile
                     if (tmpPath != null && (tmpPath.absolutePath == "/storage/emulated"
-                                || tmpPath.absolutePath == "/storage"))
+                                || tmpPath.absolutePath == "/storage")
+                    )
                         tmpPath = null // lets not allow to blacklist more than entire volumes
                 }
             }
@@ -526,7 +549,8 @@ internal object Reader {
             while (it.moveToNext()) {
                 val playlistId = it.getLong(playlistIdColumn)
                 val playlistName = it.getString(playlistNameColumn)?.ifEmpty { null }
-                val playlistPath = it.getString(playlistPathColumn)?.ifEmpty { null }?.let { p -> File(p) }
+                val playlistPath =
+                    it.getString(playlistPathColumn)?.ifEmpty { null }?.let { p -> File(p) }
                 val playlistDateAdded = it.getLongOrNullIfThrow(playlistDateAddedColumn)
                 val playlistDateModified = it.getLongOrNullIfThrow(playlistDateModifiedColumn)
                 val content = mutableListOf<Long?>()
@@ -567,8 +591,12 @@ internal object Reader {
                 if (paths != null && content.size > paths.size) {
                     throw IllegalStateException("playlist $playlistName failed to parse: $content, $paths")
                 }
-                playlists.add(RawPlaylist(playlistId, playlistName, playlistPath,
-                    playlistDateAdded, playlistDateModified, content, paths))
+                playlists.add(
+                    RawPlaylist(
+                        playlistId, playlistName, playlistPath,
+                        playlistDateAdded, playlistDateModified, content, paths
+                    )
+                )
             }
         }
         return Pair(playlists, foundPlaylistContent)

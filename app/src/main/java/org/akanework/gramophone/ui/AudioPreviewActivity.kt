@@ -3,7 +3,6 @@ package org.akanework.gramophone.ui
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
-import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
@@ -12,7 +11,6 @@ import android.provider.MediaStore
 import android.provider.Settings
 import android.system.ErrnoException
 import android.system.Os
-import androidx.media3.common.util.Log
 import android.view.View
 import android.widget.ImageView
 import android.widget.SeekBar
@@ -30,6 +28,7 @@ import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
 import androidx.media3.common.Timeline
 import androidx.media3.common.TrackSelectionParameters
+import androidx.media3.common.util.Log
 import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
@@ -97,7 +96,10 @@ class AudioPreviewActivity : BaseActivity(), View.OnClickListener {
     private var askedForPermissionInSettings = false
     private val updateSliderRunnable = object : Runnable {
         override fun run() {
-            updateMediaMetadata(player, true) // TODO: figure out in which callback this needs to go.
+            updateMediaMetadata(
+                player,
+                true
+            ) // TODO: figure out in which callback this needs to go.
             val currentPosition = player.currentPosition.toFloat().coerceAtMost(timeSlider.valueTo)
                 .coerceAtLeast(timeSlider.valueFrom)
             if (!isUserTracking) {
@@ -160,20 +162,23 @@ class AudioPreviewActivity : BaseActivity(), View.OnClickListener {
             it.animate = false
         }
         // TODO de-dupe
-	    val rgAp = ReplayGainAudioProcessor()
+        val rgAp = ReplayGainAudioProcessor()
         player = ExoPlayer.Builder(
             this,
-            GramophoneRenderFactory(this,
+            GramophoneRenderFactory(
+                this,
                 rgAp, {}, {})
                 .setPcmEncodingRestrictionLifted(true)
                 .setEnableDecoderFallback(true)
                 .setEnableAudioTrackPlaybackParams(true)
                 .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER),
-            GramophoneMediaSourceFactory(DefaultDataSource.Factory(this), GramophoneExtractorsFactory().also {
-                it.setConstantBitrateSeekingEnabled(true)
-                if (prefs.getBooleanStrict("mp3_index_seeking", false))
-                    it.setMp3ExtractorFlags(Mp3Extractor.FLAG_ENABLE_INDEX_SEEKING)
-            })
+            GramophoneMediaSourceFactory(
+                DefaultDataSource.Factory(this),
+                GramophoneExtractorsFactory().also {
+                    it.setConstantBitrateSeekingEnabled(true)
+                    if (prefs.getBooleanStrict("mp3_index_seeking", false))
+                        it.setMp3ExtractorFlags(Mp3Extractor.FLAG_ENABLE_INDEX_SEEKING)
+                })
         )
             .setWakeMode(C.WAKE_MODE_LOCAL)
             .setAudioAttributes(
@@ -185,14 +190,15 @@ class AudioPreviewActivity : BaseActivity(), View.OnClickListener {
             )
             .setHandleAudioBecomingNoisy(true)
             .setTrackSelector(DefaultTrackSelector(this).apply {
-                setParameters(buildUponParameters()
+                setParameters(
+                    buildUponParameters()
                     .setAllowInvalidateSelectionsOnRendererCapabilitiesChange(true)
                     .setAudioOffloadPreferences(
                         TrackSelectionParameters.AudioOffloadPreferences.Builder()
                             .apply {
                                 val config = prefs.getStringStrict("offload", "0")?.toIntOrNull()
                                 if (config != null && config > 0 && Flags.OFFLOAD) {
-	                                rgAp.setOffloadEnabled(true)
+                                    rgAp.setOffloadEnabled(true)
                                     setAudioOffloadMode(TrackSelectionParameters.AudioOffloadPreferences.AUDIO_OFFLOAD_MODE_ENABLED)
                                     setIsGaplessSupportRequired(config == 2)
                                 }
@@ -334,12 +340,16 @@ class AudioPreviewActivity : BaseActivity(), View.OnClickListener {
                         uri
                     else if (uri.scheme == "content")
                         try {
-                            if (hasScopedStorageV1()) MediaStore.getMediaUri(this@AudioPreviewActivity, uri) else null
+                            if (hasScopedStorageV1()) MediaStore.getMediaUri(
+                                this@AudioPreviewActivity,
+                                uri
+                            ) else null
                         } catch (e: Exception) {
                             if (e is SecurityException || e.message == "Provider for this Uri is not supported."
                                 || e.message?.startsWith("Invalid URI: ") == true
                                 || e.message?.startsWith("No item at") == true
-                                || e.message?.contains("Missing file for") == true)
+                                || e.message?.contains("Missing file for") == true
+                            )
                                 Log.w(TAG, e.javaClass.name + ": " + e.message)
                             else
                                 Log.e(TAG, Log.getThrowableString(e)!!)
@@ -444,7 +454,11 @@ class AudioPreviewActivity : BaseActivity(), View.OnClickListener {
                         } catch (e: IllegalStateException) {
                             if (e.message?.startsWith("No suitable media source factory found for content type:") != true)
                                 throw e
-                            Toast.makeText(this@AudioPreviewActivity, R.string.cannot_play_file, Toast.LENGTH_LONG).show()
+                            Toast.makeText(
+                                this@AudioPreviewActivity,
+                                R.string.cannot_play_file,
+                                Toast.LENGTH_LONG
+                            ).show()
                             finish()
                             return@withContext
                         }

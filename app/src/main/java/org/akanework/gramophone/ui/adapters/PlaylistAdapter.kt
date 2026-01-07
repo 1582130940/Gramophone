@@ -25,7 +25,6 @@ import android.content.DialogInterface
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
-import androidx.media3.common.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
@@ -38,6 +37,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.iterator
 import androidx.core.widget.addTextChangedListener
+import androidx.media3.common.util.Log
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
@@ -95,11 +95,13 @@ class PlaylistAdapter(
             Uri.Builder()
                 .scheme(ContentResolver.SCHEME_ANDROID_RESOURCE)
                 .authority(context.packageName)
-                .path(when (item) {
-                    is RecentlyAdded -> R.drawable.ic_default_cover_playlist_recently
-                    is Favorite -> R.drawable.ic_default_cover_playlist_favorite
-                    else -> R.drawable.ic_default_cover_playlist
-                }.toString()).build()
+                .path(
+                    when (item) {
+                        is RecentlyAdded -> R.drawable.ic_default_cover_playlist_recently
+                        is Favorite -> R.drawable.ic_default_cover_playlist_favorite
+                        else -> R.drawable.ic_default_cover_playlist
+                    }.toString()
+                ).build()
     }
 
     override fun onClick(item: Playlist, position: Int) {
@@ -136,9 +138,12 @@ class PlaylistAdapter(
 
                 R.id.delete -> {
                     if (item.id == null) {
-                        Toast.makeText(context, context.getString(
-                            R.string.delete_failed_playlist, "item.id == null"),
-                            Toast.LENGTH_LONG).show()
+                        Toast.makeText(
+                            context, context.getString(
+                                R.string.delete_failed_playlist, "item.id == null"
+                            ),
+                            Toast.LENGTH_LONG
+                        ).show()
                         return@setOnMenuItemClickListener true
                     }
                     val res = ItemManipulator.deletePlaylist(context, item.id!!)
@@ -159,9 +164,13 @@ class PlaylistAdapter(
                                     } catch (e: Exception) {
                                         Log.e("PlaylistAdapter", Log.getThrowableString(e)!!)
                                         withContext(Dispatchers.Main) {
-                                            Toast.makeText(context, context.getString(
-                                                R.string.delete_failed_playlist, e.javaClass.name + ": " + e.message),
-                                                Toast.LENGTH_LONG).show()
+                                            Toast.makeText(
+                                                context, context.getString(
+                                                    R.string.delete_failed_playlist,
+                                                    e.javaClass.name + ": " + e.message
+                                                ),
+                                                Toast.LENGTH_LONG
+                                            ).show()
                                         }
                                     }
                                 }
@@ -177,13 +186,22 @@ class PlaylistAdapter(
 
                 R.id.rename -> {
                     if (item.id == null) {
-                        Toast.makeText(context, context.getString(R.string.rename_failed_playlist, "$item"), Toast.LENGTH_LONG).show()
+                        Toast.makeText(
+                            context,
+                            context.getString(R.string.rename_failed_playlist, "$item"),
+                            Toast.LENGTH_LONG
+                        ).show()
                         return@setOnMenuItemClickListener true
                     }
-                    playlistNameDialog(context, R.string.rename_playlist, item.title ?: "") { name ->
+                    playlistNameDialog(
+                        context,
+                        R.string.rename_playlist,
+                        item.title ?: ""
+                    ) { name ->
                         val id = item.id!!
                         val uri = ContentUris.withAppendedId(
-                            @Suppress("deprecation") MediaStore.Audio.Playlists.getContentUri("external"), id
+                            @Suppress("deprecation") MediaStore.Audio.Playlists.getContentUri("external"),
+                            id
                         )
                         val data = Bundle().apply {
                             putLong("Id", id)
@@ -231,15 +249,22 @@ class PlaylistAdapter(
                 } catch (e: Exception) {
                     Log.e("PlaylistAdapter", Log.getThrowableString(e)!!)
                     withContext(Dispatchers.Main) {
-                        Toast.makeText(context, context.getString(
-                            R.string.rename_failed_playlist, e.javaClass.name + ": " + e.message),
-                            Toast.LENGTH_LONG).show()
+                        Toast.makeText(
+                            context, context.getString(
+                                R.string.rename_failed_playlist, e.javaClass.name + ": " + e.message
+                            ),
+                            Toast.LENGTH_LONG
+                        ).show()
                     }
                 }
             }
         } else {
-            Toast.makeText(context, context.getString(R.string.rename_failed_playlist,
-                "$resultCode"), Toast.LENGTH_LONG).show()
+            Toast.makeText(
+                context, context.getString(
+                    R.string.rename_failed_playlist,
+                    "$resultCode"
+                ), Toast.LENGTH_LONG
+            ).show()
         }
     }
 
@@ -267,9 +292,13 @@ class PlaylistAdapter(
                         } catch (e: Exception) {
                             Log.e("PlaylistAdapter", Log.getThrowableString(e)!!)
                             withContext(Dispatchers.Main) {
-                                Toast.makeText(context, context.getString(
-                                    R.string.create_failed_playlist, e.javaClass.name + ": " + e.message),
-                                    Toast.LENGTH_LONG).show()
+                                Toast.makeText(
+                                    context, context.getString(
+                                        R.string.create_failed_playlist,
+                                        e.javaClass.name + ": " + e.message
+                                    ),
+                                    Toast.LENGTH_LONG
+                                ).show()
                             }
                         }
                     }
@@ -287,12 +316,20 @@ class PlaylistAdapter(
     object StorePlaylistHelper : StoreItemHelper<Playlist>()
 
     companion object {
-        fun playlistNameDialog(context: Context, title: Int, initialValue: String, then: (String) -> Unit) {
+        fun playlistNameDialog(
+            context: Context,
+            title: Int,
+            initialValue: String,
+            then: (String) -> Unit
+        ) {
             val d = MaterialAlertDialogBuilder(context)
                 .setTitle(title)
                 .setView(R.layout.dialog_new_playlist)
                 .setPositiveButton(android.R.string.ok) { d, _ ->
-                    val et = DialogCompat.requireViewById(d as AlertDialog, R.id.editText) as TextInputEditText
+                    val et = DialogCompat.requireViewById(
+                        d as AlertDialog,
+                        R.id.editText
+                    ) as TextInputEditText
                     val name = et.editableText.toString()
                     then(name)
                 }
@@ -304,12 +341,16 @@ class PlaylistAdapter(
             et.editableText.append(initialValue)
             b.isEnabled = !initialValue.isBlank()
             inL.error = null
-            d.window!!.decorView.measure(View.MeasureSpec.UNSPECIFIED,View.MeasureSpec.UNSPECIFIED)
+            d.window!!.decorView.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED)
             // TODO: why on earth is this even needed? "Small Phone" emu otherwise cant type
-            d.window!!.setLayout(ViewGroup.LayoutParams.WRAP_CONTENT, d.window!!.decorView.measuredHeight)
+            d.window!!.setLayout(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                d.window!!.decorView.measuredHeight
+            )
             et.addTextChangedListener(afterTextChanged = {
                 val tmp = et.editableText.toString()
-                val hasForbidden = tmp.any { it in "/\\:*?\"<>|" || it.code <= 0x1F || it.code == 0x7F }
+                val hasForbidden =
+                    tmp.any { it in "/\\:*?\"<>|" || it.code <= 0x1F || it.code == 0x7F }
                 if (hasForbidden) {
                     inL.error = context.getString(R.string.forbidden_symbol_error)
                 } else {

@@ -18,7 +18,6 @@
 package org.akanework.gramophone.ui.adapters
 
 import android.net.Uri
-import androidx.media3.common.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.activity.result.IntentSenderRequest
@@ -30,6 +29,7 @@ import androidx.fragment.app.activityViewModels
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
+import androidx.media3.common.util.Log
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -73,8 +73,8 @@ class SongAdapter(
     sortHelper = MediaItemHelper,
     naturalOrderHelper = helper,
     initialSortType =
-        (if (helper != null) Sorter.Type.NaturalOrder else (rawOrderExposed ?:
-        if (folder) Sorter.Type.ByFilePathAscending else Sorter.Type.ByTitleAscending)),
+        (if (helper != null) Sorter.Type.NaturalOrder else (rawOrderExposed
+            ?: if (folder) Sorter.Type.ByFilePathAscending else Sorter.Type.ByTitleAscending)),
     canSort = true,
     pluralStr = R.plurals.songs,
     defaultLayoutType = LayoutType.COMPACT_LIST,
@@ -139,21 +139,21 @@ class SongAdapter(
                 override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
                     currentIsPlaying =
                         playWhenReady &&
-		                        mediaControllerViewModel.get()!!.playbackState != Player.STATE_ENDED
-		                        && mediaControllerViewModel.get()!!.playbackState != Player.STATE_IDLE
+                                mediaControllerViewModel.get()!!.playbackState != Player.STATE_ENDED
+                                && mediaControllerViewModel.get()!!.playbackState != Player.STATE_IDLE
                 }
 
                 override fun onPlaybackStateChanged(playbackState: Int) {
                     currentIsPlaying =
-	                    mediaControllerViewModel.get()!!.playWhenReady
-			                    && playbackState != Player.STATE_ENDED &&
-			                    mediaControllerViewModel.get()!!.playbackState != Player.STATE_IDLE
+                        mediaControllerViewModel.get()!!.playWhenReady
+                                && playbackState != Player.STATE_ENDED &&
+                                mediaControllerViewModel.get()!!.playbackState != Player.STATE_IDLE
                 }
             }
         ) {
-	        currentMediaItem = it.currentMediaItem?.mediaId
-	        currentIsPlaying =
-		        it.playWhenReady && it.playbackState != Player.STATE_ENDED && it.playbackState != Player.STATE_IDLE
+            currentMediaItem = it.currentMediaItem?.mediaId
+            currentIsPlaying =
+                it.playWhenReady && it.playbackState != Player.STATE_ENDED && it.playbackState != Player.STATE_IDLE
         }
     }
 
@@ -161,7 +161,7 @@ class SongAdapter(
         // TODO run this method on a different thread / in advance
         idToPosMap = hashMapOf()
         list!!.second.forEachIndexed { i, item ->
-            idToPosMap!![item.mediaId] = (idToPosMap!![item.mediaId]?: emptyList()).plus(listOf(i))
+            idToPosMap!![item.mediaId] = (idToPosMap!![item.mediaId] ?: emptyList()).plus(listOf(i))
         }
     }
 
@@ -344,8 +344,9 @@ class SongAdapter(
             if (currentMediaItem == null || getSongList()[position].mediaId != currentMediaItem)
                 return
         }
-        holder.nowPlaying.setImageDrawable(NowPlayingDrawable(context)
-            .also { it.level = if (currentIsPlaying == true) 1 else 0 })
+        holder.nowPlaying.setImageDrawable(
+            NowPlayingDrawable(context)
+                .also { it.level = if (currentIsPlaying == true) 1 else 0 })
         holder.nowPlaying.visibility = View.VISIBLE
     }
 

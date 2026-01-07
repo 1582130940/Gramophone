@@ -30,13 +30,13 @@ import android.os.StrictMode
 import android.os.StrictMode.ThreadPolicy
 import android.os.StrictMode.VmPolicy
 import android.provider.MediaStore
-import androidx.media3.common.util.Log
 import android.util.Size
 import android.webkit.MimeTypeMap
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.runtime.Composer
 import androidx.compose.runtime.ExperimentalComposeRuntimeApi
 import androidx.fragment.app.strictmode.FragmentStrictMode
+import androidx.media3.common.util.Log
 import androidx.media3.session.DefaultMediaNotificationProvider
 import androidx.preference.PreferenceManager
 import coil3.ImageLoader
@@ -82,6 +82,7 @@ class GramophoneApplication : Application(), SingletonImageLoader.Factory,
 
     companion object {
         private const val TAG = "GramophoneApplication"
+
         // not actually defined in API, but CTS tested
         // https://cs.android.com/android/platform/superproject/main/+/main:packages/providers/MediaProvider/src/com/android/providers/media/LocalUriMatcher.java;drc=ddf0d00b2b84b205a2ab3581df8184e756462e8d;l=182
         private const val MEDIA_ALBUM_ART = "albumart"
@@ -121,7 +122,8 @@ class GramophoneApplication : Application(), SingletonImageLoader.Factory,
                     .detectAll()
                     .let {
                         if (Build.VERSION.SDK_INT == Build.VERSION_CODES.UPSIDE_DOWN_CAKE ||
-                            Build.VERSION.SDK_INT == Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+                            Build.VERSION.SDK_INT == Build.VERSION_CODES.VANILLA_ICE_CREAM
+                        ) {
                             it.permitExplicitGc() // platform bug, now fixed
                         } else it
                     }
@@ -265,7 +267,8 @@ class GramophoneApplication : Application(), SingletonImageLoader.Factory,
                     return@Factory Fetcher {
                         val file = File(data.path!!)
                         val uri = ContentUris.appendId(
-                            MediaStore.Audio.Media.EXTERNAL_CONTENT_URI.buildUpon(), data.authority!!.toLong()
+                            MediaStore.Audio.Media.EXTERNAL_CONTENT_URI.buildUpon(),
+                            data.authority!!.toLong()
                         ).appendPath(MEDIA_ALBUM_ART).build()
                         val bmp = if (options.size.width.pxOrElse { 0 } > 300
                             && options.size.height.pxOrElse { 0 } > 300) try {
@@ -280,7 +283,8 @@ class GramophoneApplication : Application(), SingletonImageLoader.Factory,
                             if (e.message != "No embedded album art found" &&
                                 e.message != "No thumbnails in Downloads directories" &&
                                 e.message != "No thumbnails in top-level directories" &&
-                                e.message != "No album art found")
+                                e.message != "No album art found"
+                            )
                                 throw e
                             null
                         } else null
@@ -311,7 +315,10 @@ class GramophoneApplication : Application(), SingletonImageLoader.Factory,
                         val cover = MiscUtils.findBestCover(File(data.path!!))
                         if (cover == null) {
                             val uri =
-                                ContentUris.withAppendedId(Constants.baseAlbumCoverUri, data.authority!!.toLong())
+                                ContentUris.withAppendedId(
+                                    Constants.baseAlbumCoverUri,
+                                    data.authority!!.toLong()
+                                )
                             val contentResolver = options.context.contentResolver
                             val afd = contentResolver.openAssetFileDescriptor(uri, "r")
                             checkNotNull(afd) { "Unable to open '$uri'." }

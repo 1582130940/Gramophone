@@ -1,7 +1,6 @@
 package org.akanework.gramophone.ui.components
 
 import android.content.Context
-import android.content.res.Configuration
 import android.graphics.Rect
 import android.view.View
 import androidx.recyclerview.widget.ConcatAdapter
@@ -29,7 +28,7 @@ class GridPaddingDecoration(context: Context) : RecyclerView.ItemDecoration() {
             return
         }
         var adapter = parent.adapter
-        loop@while (adapter is ConcatAdapter) {
+        loop@ while (adapter is ConcatAdapter) {
             for (it in adapter.adapters) {
                 val c = it.itemCount
                 if (itemPosition < c) {
@@ -47,7 +46,8 @@ class GridPaddingDecoration(context: Context) : RecyclerView.ItemDecoration() {
             throw IllegalStateException("Cannot find desired adapter! ${adapter?.javaClass?.name}")
         }
         if (adapter.layoutType != BaseAdapter.LayoutType.GRID &&
-            adapter.layoutType != BaseAdapter.LayoutType.COMPACT_GRID) {
+            adapter.layoutType != BaseAdapter.LayoutType.COMPACT_GRID
+        ) {
             return
         }
         val columnSize = CustomGridLayoutManager.FULL_SPAN_COUNT / adapter.getSpanSize()

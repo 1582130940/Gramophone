@@ -34,7 +34,8 @@ import org.akanework.gramophone.logic.utils.data.Contributors
 import org.akanework.gramophone.ui.fragments.BasePreferenceFragment
 import org.akanework.gramophone.ui.fragments.BaseSettingsActivity
 
-class AboutSettingsActivity : BaseSettingsActivity(R.string.settings_about_app,
+class AboutSettingsActivity : BaseSettingsActivity(
+    R.string.settings_about_app,
     { AboutSettingsFragment() })
 
 class AboutSettingsFragment : BasePreferenceFragment() {
@@ -46,7 +47,8 @@ class AboutSettingsFragment : BasePreferenceFragment() {
         versionPrefs!!.summary = BuildConfig.MY_VERSION_NAME
         releaseType!!.summary = BuildConfig.RELEASE_TYPE
         contributorsPref!!.summary =
-            requireContext().getString(R.string.settings_contributors_click,
+            requireContext().getString(
+                R.string.settings_contributors_click,
                 Contributors.LIST.subList(0, 5).joinToString { it.login })
     }
 

@@ -246,9 +246,11 @@ class PostAmpAudioSink(
         } else {
             // ReplayGainAudioProcessor must be re-configured when compressor state changes.
             val compressorOnBefore = ReplayGainUtil.calculateGain(
-                tags, mode, rgGain, reduceGain, ReplayGainUtil.RATIO)?.second != null
+                tags, mode, rgGain, reduceGain, ReplayGainUtil.RATIO
+            )?.second != null
             val compressorOnAfter = ReplayGainUtil.calculateGain(
-                pendingTags, mode, rgGain, reduceGain, ReplayGainUtil.RATIO)?.second != null
+                pendingTags, mode, rgGain, reduceGain, ReplayGainUtil.RATIO
+            )?.second != null
             return compressorOnBefore == compressorOnAfter
         }
     }
@@ -444,7 +446,8 @@ class PostAmpAudioSink(
                 val hasOffloadDpe = isDpeAvailable && isDpeOffloadable && offloadEnabled
                 val useDpeForVolume = !isVolumeAvailable && !offloadEnabled && isDpeAvailable
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P &&
-                    (hasOffloadDpe || useDpeForVolume)) {
+                    (hasOffloadDpe || useDpeForVolume)
+                ) {
                     createDpeEffect()
                 } else {
                     Log.i(
@@ -479,7 +482,7 @@ class PostAmpAudioSink(
     private fun myOnRoutingChanged(routedDevice: AudioDeviceInfo?) {
         Log.d(
             TAG, "routed device is now ${routedDevice?.productName} " +
-                "(${routedDevice?.type?.let { audioDeviceTypeToString(context, it) }})"
+                    "(${routedDevice?.type?.let { audioDeviceTypeToString(context, it) }})"
         )
         deviceType = routedDevice?.type
         if (hasDpe) {
@@ -735,7 +738,8 @@ class PostAmpAudioSink(
         val masterVolume = AudioSystemHiddenApi.getMasterVolume()
         val masterBalance = AudioSystemHiddenApi.getMasterBalance()
         if (masterVolume != null && masterVolume != 1f &&
-            masterBalance != null && masterBalance != 0.5f) {
+            masterBalance != null && masterBalance != 0.5f
+        ) {
             // Later, this could actually adjust computed headroom instead of bailing. But it'd need
             // good testing first.
             Log.w(TAG, "unsupported master config v=$masterVolume b=$masterBalance")
@@ -778,7 +782,8 @@ class PostAmpAudioSink(
             }
             if (output != null) {
                 val streamVolume = AudioSystemHiddenApi.getStreamVolume(
-                    AudioManager.STREAM_MUSIC, output)
+                    AudioManager.STREAM_MUSIC, output
+                )
                 if (streamVolume != null) {
                     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                         streamVolume // streamVolume is -96f..0f dB

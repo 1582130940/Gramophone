@@ -23,7 +23,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.card.MaterialCardView
 import org.akanework.gramophone.R
-import org.akanework.gramophone.logic.GramophonePlaybackService
 import org.akanework.gramophone.logic.dpToPx
 import org.akanework.gramophone.logic.getBooleanStrict
 import org.akanework.gramophone.logic.ui.CustomSmoothScroller
@@ -280,7 +279,8 @@ class LegacyLyricsAdapter(
                                         if (lyricList[i].isTranslation) 1 else 0
                                 val depth = 15.dpToPx(context).toFloat()
                                 val duration = (LYRIC_SCROLL_DURATION * 0.278 * speed).toLong()
-                                val durationReturn = (LYRIC_SCROLL_DURATION * 0.722 * speed).toLong()
+                                val durationReturn =
+                                    (LYRIC_SCROLL_DURATION * 0.722 * speed).toLong()
                                 val durationStep = (LYRIC_SCROLL_DURATION * 0.1 * speed).toLong()
                                 val animator = ObjectAnimator.ofFloat(
                                     view,
@@ -395,7 +395,11 @@ class LegacyLyricsAdapter(
                 Lyric(it.start.toLong(), it.text, it.isTranslated)
             }.toMutableList()
         }
-        return mutableListOf(Lyric(null,
-            this.unsyncedText.joinToString("\n") { it.first }, false))
+        return mutableListOf(
+            Lyric(
+                null,
+            this.unsyncedText.joinToString("\n") { it.first }, false
+        )
+        )
     }
 }

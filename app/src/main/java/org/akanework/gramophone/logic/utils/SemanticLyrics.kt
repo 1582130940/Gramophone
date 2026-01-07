@@ -2,9 +2,9 @@ package org.akanework.gramophone.logic.utils
 
 import android.os.Parcel
 import android.os.Parcelable
-import androidx.media3.common.util.Log
 import android.util.Xml
 import androidx.media3.common.MimeTypes
+import androidx.media3.common.util.Log
 import androidx.media3.common.util.ParsableByteArray
 import androidx.media3.extractor.text.CuesWithTiming
 import androidx.media3.extractor.text.SubtitleParser
@@ -50,7 +50,11 @@ private const val TAG = "SemanticLyrics"
  */
 
 @Parcelize
-enum class SpeakerEntity(val isVoice2: Boolean = false, val isGroup: Boolean = false, val isBackground: Boolean = false) : Parcelable {
+enum class SpeakerEntity(
+    val isVoice2: Boolean = false,
+    val isGroup: Boolean = false,
+    val isBackground: Boolean = false
+) : Parcelable {
     Voice1,
     Background(isBackground = true),
     Voice2(isVoice2 = true),
@@ -199,15 +203,19 @@ private sealed class SyntacticLrc {
                         .indexOfLast { it is NewLine }.let { if (it < 0) null else it }?.let {
                             (out.subList(it, out.size - 1).findLast { it is SpeakerTag }
                                     as SpeakerTag?)?.speaker
-                    } else null
+                        } else null
                     // TODO revisit this heuristic. iTunes bg lines are a child of the last main
                     //  line and there is no "opposite" flag for background lines, but reality does
                     //  not work that way. can main lines be empty in iTunes' lyrics?
-                    out.add(SpeakerTag(when {
-                        lastSpeaker?.isGroup == true -> SpeakerEntity.GroupBackground
-                        lastSpeaker?.isVoice2 == true -> SpeakerEntity.Voice2Background
-                        else -> SpeakerEntity.Background
-                    }))
+                    out.add(
+                        SpeakerTag(
+                            when {
+                                lastSpeaker?.isGroup == true -> SpeakerEntity.GroupBackground
+                                lastSpeaker?.isVoice2 == true -> SpeakerEntity.Voice2Background
+                                else -> SpeakerEntity.Background
+                            }
+                        )
+                    )
                     pos += 4
                     isBgSpeaker = true
                     continue
@@ -429,7 +437,8 @@ sealed class SemanticLyrics : Parcelable {
     abstract val unsyncedText: List<Pair<String, SpeakerEntity?>>
 
     @Parcelize
-    data class UnsyncedLyrics(override val unsyncedText: List<Pair<String, SpeakerEntity?>>) : SemanticLyrics()
+    data class UnsyncedLyrics(override val unsyncedText: List<Pair<String, SpeakerEntity?>>) :
+        SemanticLyrics()
 
     @Parcelize
     data class SyncedLyrics(val text: List<LyricLine>) : SemanticLyrics() {
@@ -462,6 +471,7 @@ sealed class SemanticLyrics : Parcelable {
     ) : Parcelable {
         constructor(timeRange: ULongRange, charRange: IntRange, isRtl: Boolean)
                 : this(timeRange.first, timeRange.last, charRange, isRtl)
+
         val timeRange
             get() = begin..endInclusive!!
     }
@@ -487,10 +497,12 @@ fun parseLrc(lyricText: String, trimEnabled: Boolean, multiLineEnabled: Boolean)
                 is SyntacticLrc.SpeakerTag -> {
                     lastSpeakerTag = element.speaker
                 }
+
                 is SyntacticLrc.InvalidText -> {
                     out += element.text to lastSpeakerTag
                     lastSpeakerTag = null
                 }
+
                 else -> throw IllegalStateException("unexpected type ${element.javaClass.name}")
             }
         }
@@ -632,16 +644,28 @@ fun parseLrc(lyricText: String, trimEnabled: Boolean, multiLineEnabled: Boolean)
                     val lastWordSyncForEnd = lastWordSyncPoint?.let { it - 1uL }
                     val lastWordBegin = words?.lastOrNull()?.begin
                     val end = if (lastWordSyncForEnd != null && lastWordBegin != null &&
-                        lastWordBegin < lastWordSyncForEnd) lastWordSyncForEnd else null
-                    out.add(LyricLine(text, start, end ?: 0uL /* filled later */,
-                        end == null, words, speaker, false /* filled later */))
+                        lastWordBegin < lastWordSyncForEnd
+                    ) lastWordSyncForEnd else null
+                    out.add(
+                        LyricLine(
+                            text, start, end ?: 0uL /* filled later */,
+                            end == null, words, speaker, false /* filled later */
+                        )
+                    )
                     compressed.forEach {
                         val diff = it - start
-                        out.add(out.last().copy(start = it,
+                        out.add(
+                            out.last().copy(
+                                start = it,
                             end = end?.plus(diff) ?: 0uL /* filled later */,
-                            words = words?.map { it.copy(begin = it.begin + diff,
-                                endInclusive = it.endInclusive?.plus(diff))
-                        }?.toMutableList()))
+                            words = words?.map {
+                                it.copy(
+                                    begin = it.begin + diff,
+                                    endInclusive = it.endInclusive?.plus(diff)
+                                )
+                            }?.toMutableList()
+                        )
+                        )
                     }
                 }
                 compressed.clear()
@@ -660,13 +684,14 @@ fun parseLrc(lyricText: String, trimEnabled: Boolean, multiLineEnabled: Boolean)
     var previousLyric: LyricLine? = null
     out.forEach { lyric ->
         val mainEnd = if (lyric.start == previousLyric?.start) out.firstOrNull {
-            it.start == lyric.start && !it.endIsImplicit }?.end else null
+            it.start == lyric.start && !it.endIsImplicit
+        }?.end else null
         val wordWithoutEnd = lyric.words?.lastOrNull()
         if (wordWithoutEnd != null && wordWithoutEnd.endInclusive == null) {
             wordWithoutEnd.endInclusive = mainEnd?.takeIf { it > wordWithoutEnd.begin }
                 ?: out.find { it.start > lyric.start }?.start?.minus(1uL)
                     ?.takeIf { it > wordWithoutEnd.begin }
-                ?: run {
+                        ?: run {
                     // Estimate how long this word will take based on character
                     // to time ratio. To avoid this estimation, add a last word
                     // sync point to the line after the text :)
@@ -683,7 +708,7 @@ fun parseLrc(lyricText: String, trimEnabled: Boolean, multiLineEnabled: Boolean)
             } else {
                 lyric.end = wordWithoutEnd?.endInclusive
                     ?: out.find { it.start > lyric.start }?.start?.minus(1uL)
-                    ?: Long.MAX_VALUE.toULong()
+                            ?: Long.MAX_VALUE.toULong()
                 lyric.endIsImplicit = wordWithoutEnd == null // TODO: should this just stay true?
             }
         }
@@ -703,10 +728,16 @@ fun parseLrc(lyricText: String, trimEnabled: Boolean, multiLineEnabled: Boolean)
 object UsltFrameDecoder {
     sealed class Result {
         data class Uslt(val language: String, val description: String, val text: String) : Result()
-        data class Sylt(val language: String, val contentType: Int, val description: String, val text: List<Line>) : Result() {
+        data class Sylt(
+            val language: String,
+            val contentType: Int,
+            val description: String,
+            val text: List<Line>
+        ) : Result() {
             data class Line(val timestamp: UInt, val text: String)
         }
     }
+
     private const val ID3_TEXT_ENCODING_ISO_8859_1 = 0
     private const val ID3_TEXT_ENCODING_UTF_16 = 1
     private const val ID3_TEXT_ENCODING_UTF_16BE = 2
@@ -724,7 +755,8 @@ object UsltFrameDecoder {
         id3Data.readBytes(lang, 0, 3) // language
         val language = decodeStringIfValid(lang, 0, 3, Charset.forName("ISO-8859-1"))
         if (delimiterLength(encoding) == 1 &&
-            (id3Data.peekUnsignedByte() == 1 || id3Data.peekUnsignedByte() == 2)) {
+            (id3Data.peekUnsignedByte() == 1 || id3Data.peekUnsignedByte() == 2)
+        ) {
             return null // this got to be SYLT
         }
         val rest = ByteArray(id3Data.limit() - 4)
@@ -837,8 +869,9 @@ object UsltFrameDecoder {
     }
 
     private fun decodeTimestamp(data: ByteArray, pos: Int, format: Int, sampleRate: Int): UInt {
-        val dec = ((((data[pos].toUInt() shl 24) and 0xff000000U) or ((data[pos + 1].toUInt() shl 16)
-                and 0xff0000U)) or ((data[pos + 2].toUInt() shl 8) and 0xff00U)) or (data[pos + 3].toUInt() and 0xffU)
+        val dec =
+            ((((data[pos].toUInt() shl 24) and 0xff000000U) or ((data[pos + 1].toUInt() shl 16)
+                    and 0xff0000U)) or ((data[pos + 2].toUInt() shl 8) and 0xff00U)) or (data[pos + 3].toUInt() and 0xffU)
         return when (format) {
             1 -> mpegFramePositionToMs(sampleRate, dec.toLong()).toUInt()
             2 -> dec
@@ -964,7 +997,8 @@ fun UsltFrameDecoder.Result.Sylt.toSyncedLyrics(trimEnabled: Boolean): SyncedLyr
     var previousTimestamp = ULong.MAX_VALUE
     out.forEach { lyric ->
         val mainEnd = if (lyric.start == previousTimestamp) out.firstOrNull {
-            it.start == lyric.start && !it.endIsImplicit }?.end else null
+            it.start == lyric.start && !it.endIsImplicit
+        }?.end else null
         val wordWithoutEnd = lyric.words?.lastOrNull()
         if (wordWithoutEnd != null && wordWithoutEnd.endInclusive == null) {
             wordWithoutEnd.endInclusive = mainEnd?.takeIf { it > wordWithoutEnd.begin }
@@ -1018,18 +1052,22 @@ private fun XmlPullParser.skipToEndOfTag() {
         // else: we have some text, boring
     }
 }
+
 private fun XmlPullParser.nextAndThrowIfNotEnd() {
     if (next() != XmlPullParser.END_TAG)
         throw XmlPullParserException("expected end tag in nextAndThrowIfNotEnd()")
 }
+
 private fun XmlPullParser.nextAndThrowIfNotText() {
     if (next() != XmlPullParser.TEXT)
         throw XmlPullParserException("expected end tag in nextAndThrowIfNotText()")
 }
+
 private class TtmlTimeTracker(private val parser: XmlPullParser, private val isApple: Boolean) {
     private val effectiveFrameRate: Float
     private val subFrameRate: Int
     private val tickRate: Int
+
     init {
         val frameRate = parser.getAttributeValue(ttp, "frameRate")?.toInt() ?: 30
         val frameRateMultiplier = parser.getAttributeValue(ttp, "frameRateMultiplier")
@@ -1040,9 +1078,11 @@ private class TtmlTimeTracker(private val parser: XmlPullParser, private val isA
         subFrameRate = parser.getAttributeValue(ttp, "subFrameRate")?.toInt() ?: 1
         tickRate = parser.getAttributeValue(ttp, "tickRate")?.toInt() ?: 1
     }
+
     // of course someone didn't conform to spec again :D - business as usual
     private val appleTimeRegex = Regex("^(?:([0-9]+):)?(?:([0-9]+):)?([0-9]+(?:\\.[0-9]+)?)?$")
-    private val clockTimeRegex = Regex("^([0-9]{2,}):([0-9]{2}):([0-9]{2})(?:(\\.[0-9]+)|:([0-9]{2})(?:\\.([0-9]+))?)?$")
+    private val clockTimeRegex =
+        Regex("^([0-9]{2,}):([0-9]{2}):([0-9]{2})(?:(\\.[0-9]+)|:([0-9]{2})(?:\\.([0-9]+))?)?$")
     private val offsetTimeRegex = Regex("^([0-9]+(?:\\.[0-9]+)?)(h|m|s|ms|f|t)$")
     var audioOffset: Long? = null
     fun parseTimestampMs(input: String?, offset: Long, negative: Boolean): Long? {
@@ -1059,7 +1099,8 @@ private class TtmlTimeTracker(private val parser: XmlPullParser, private val isA
                     appleMatch.groupValues[1].toDoubleOrNull() ?: 0.0
                 val seconds = appleMatch.groupValues[3].toDouble()
                 // Apple has no idea how a TTML file works. So omit frame offset just for their broken files
-                return ((hours * 3600000 + minutes * 60000 + seconds * 1000).toLong() + (audioOffset ?: 0L)) * multiplier
+                return ((hours * 3600000 + minutes * 60000 + seconds * 1000).toLong() + (audioOffset
+                    ?: 0L)) * multiplier
             }
         } else {
             val clockMatch = clockTimeRegex.matchEntire(input)
@@ -1090,12 +1131,19 @@ private class TtmlTimeTracker(private val parser: XmlPullParser, private val isA
         }
         throw XmlPullParserException("can't understand this TTML timestamp: $input")
     }
+
     private fun parseRange(offset: ULong): ULongRange? {
-        var begin = parseTimestampMs(parser.getAttributeValue("", "begin"), offset.toLong(), false)?.toULong()
+        var begin = parseTimestampMs(
+            parser.getAttributeValue("", "begin"),
+            offset.toLong(),
+            false
+        )?.toULong()
         val dur = parseTimestampMs(parser.getAttributeValue("", "dur"), 0L, false)?.toULong()
-        var end = parseTimestampMs(parser.getAttributeValue("", "end"), offset.toLong(), false)?.toULong()
+        var end =
+            parseTimestampMs(parser.getAttributeValue("", "end"), offset.toLong(), false)?.toULong()
         if (begin == null && end == null || end == null && dur == null
-            || begin == null && dur == null)
+            || begin == null && dur == null
+        )
             return null
         if (begin == null && dur != null)
             begin = (end ?: 0uL) - dur
@@ -1103,7 +1151,9 @@ private class TtmlTimeTracker(private val parser: XmlPullParser, private val isA
             end = begin!! + dur
         return begin!!..end!!
     }
+
     private class TtmlLevel(val time: ULongRange?, val level: Int, var seq: ULong?)
+
     private val stack = mutableListOf<TtmlLevel>()
     fun beginBlock() {
         val isSeq = parser.getAttributeValue("", "timeContainer").let {
@@ -1116,14 +1166,23 @@ private class TtmlTimeTracker(private val parser: XmlPullParser, private val isA
         val last = stack.lastOrNull()
         val range = parseRange(last?.seq ?: last?.time?.first ?: 0uL)
         val frange = range ?: last?.time
-        stack.add(TtmlLevel(frange, (last?.level ?: 0) + if (range != null) 1 else 0, if (isSeq) frange?.first else null))
+        stack.add(
+            TtmlLevel(
+                frange,
+                (last?.level ?: 0) + if (range != null) 1 else 0,
+                if (isSeq) frange?.first else null
+            )
+        )
     }
+
     fun getTime(): ULongRange? {
         return stack.lastOrNull()?.time
     }
+
     fun getLevel(): Int {
         return stack.lastOrNull()?.level ?: 0
     }
+
     fun endBlock() {
         val removed = stack.removeAt(stack.size - 1)
         stack.lastOrNull()?.let {
@@ -1131,14 +1190,29 @@ private class TtmlTimeTracker(private val parser: XmlPullParser, private val isA
         }
     }
 }
-private class TtmlParserState(private val parser: XmlPullParser, private val timer: TtmlTimeTracker) {
+
+private class TtmlParserState(
+    private val parser: XmlPullParser,
+    private val timer: TtmlTimeTracker
+) {
     data class Text(val text: String, val time: ULongRange?, val role: String?)
-    data class P(val texts: List<Text>, val time: ULongRange?, val agent: String?,
-        val songPart: String?, val key: String?, val role: String?, val translated: Boolean = false)
+    data class P(
+        val texts: List<Text>, val time: ULongRange?, val agent: String?,
+        val songPart: String?, val key: String?, val role: String?, val translated: Boolean = false
+    )
+
     private var texts: MutableList<Text>? = null
     val paragraphs = mutableListOf<P>()
 
-    fun parse(time: ULongRange? = null, level: Int = 0, plevel: Int = 0, agent: String? = null, songPart: String? = null, key: String? = null, role: String? = null) {
+    fun parse(
+        time: ULongRange? = null,
+        level: Int = 0,
+        plevel: Int = 0,
+        agent: String? = null,
+        songPart: String? = null,
+        key: String? = null,
+        role: String? = null
+    ) {
         var time = time
         var agent = agent
         var songPart = songPart
@@ -1174,12 +1248,14 @@ private class TtmlParserState(private val parser: XmlPullParser, private val tim
                 parser.getAttributeValue(itunes, "song-part")?.let { songPart = it }
                 parser.getAttributeValue(itunesInternal, "songPart")?.let { songPart = it }
             }
+
             "p" -> {
                 parser.getAttributeValue(itunesInternal, "key")?.let { key = it }
                 texts = mutableListOf()
                 isP = true
                 plevel = level
             }
+
             "body", "span" -> {}
             else -> throw IllegalStateException("unknown tag ${parser.name}, wanted body/span/div/p")
         }
@@ -1270,6 +1346,7 @@ fun parseTtml(audioMimeType: String?, lyricText: String): SemanticLyrics? {
                                     }
                                 }
                             }
+
                             "audio" -> {
                                 val role = parser.getAttributeValue(null, "role")
                                 if (when (role) {
@@ -1301,6 +1378,7 @@ fun parseTtml(audioMimeType: String?, lyricText: String): SemanticLyrics? {
                                 }
                                 parser.nextAndThrowIfNotEnd()
                             }
+
                             "translations" -> {
                                 while (parser.nextTag() != XmlPullParser.END_TAG) {
                                     if (parser.name == "translation") {
@@ -1308,7 +1386,10 @@ fun parseTtml(audioMimeType: String?, lyricText: String): SemanticLyrics? {
                                         if (type != "subtitle") {
                                             throw XmlPullParserException("unsupported translation type $type")
                                         }
-                                        val lang = parser.getAttributeValue("http://www.w3.org/XML/1998/namespace", "lang")
+                                        val lang = parser.getAttributeValue(
+                                            "http://www.w3.org/XML/1998/namespace",
+                                            "lang"
+                                        )
                                         val out = hashMapOf<String, String>()
                                         while (parser.nextTag() != XmlPullParser.END_TAG) {
                                             if (parser.name == "text") {
@@ -1335,6 +1416,7 @@ fun parseTtml(audioMimeType: String?, lyricText: String): SemanticLyrics? {
                                     }
                                 }
                             }
+
                             else -> parser.skipToEndOfTag()
                         } // there are some others
                     }
@@ -1352,9 +1434,16 @@ fun parseTtml(audioMimeType: String?, lyricText: String): SemanticLyrics? {
         lang.value.forEach { line ->
             val lastIdx = state.paragraphs.indexOfLast { it.key == line.key }
             if (lastIdx != -1) {
-                state.paragraphs.add(lastIdx + 1, state.paragraphs
-                    .find { it.key == line.key }!!.copy(texts = listOf(TtmlParserState.Text(
-                        line.value, time = null, role = null)), translated = true))
+                state.paragraphs.add(
+                    lastIdx + 1, state.paragraphs
+                        .find { it.key == line.key }!!.copy(
+                            texts = listOf(
+                                TtmlParserState.Text(
+                                    line.value, time = null, role = null
+                                )
+                            ), translated = true
+                        )
+                )
             }
         }
     }
@@ -1368,7 +1457,8 @@ fun parseTtml(audioMimeType: String?, lyricText: String): SemanticLyrics? {
         do {
             if (cur == 0 && idx == -1 && !(it.texts.firstOrNull()?.text?.startsWith('(') == true
                         && it.texts.lastOrNull()?.text?.endsWith(')') == true &&
-                        (it.texts.firstOrNull()?.role ?: it.role) == "x-bg"))
+                        (it.texts.firstOrNull()?.role ?: it.role) == "x-bg")
+            )
                 out.add(it.copy(role = it.texts.firstOrNull()?.role ?: it.role))
             else {
                 while ((cur < idx || (idx == -1 && cur < it.texts.size)) && it.texts[cur].text.isBlank())
@@ -1405,8 +1495,10 @@ fun parseTtml(audioMimeType: String?, lyricText: String): SemanticLyrics? {
             val text = it.texts.joinToString("") { it.text }
             val isBg = it.role == "x-bg"
             val isGroup = peopleToType[it.agent] == "group"
-            val isVoice2 = it.agent != null && (people[peopleToType[it.agent]] ?: throw NullPointerException(
-                "expected to find ${it.agent} (${peopleToType[it.agent]}) in $people")).indexOf(it.agent) % 2 == 1
+            val isVoice2 =
+                it.agent != null && (people[peopleToType[it.agent]] ?: throw NullPointerException(
+                    "expected to find ${it.agent} (${peopleToType[it.agent]}) in $people"
+                )).indexOf(it.agent) % 2 == 1
             val speaker = when {
                 isGroup && isBg -> SpeakerEntity.GroupBackground
                 isGroup -> SpeakerEntity.Group
@@ -1433,8 +1525,10 @@ fun parseTtml(audioMimeType: String?, lyricText: String): SemanticLyrics? {
             ?.toMutableList()
         val isBg = it.role == "x-bg"
         val isGroup = peopleToType[it.agent] == "group"
-        val isVoice2 = it.agent != null && (people[peopleToType[it.agent]] ?: throw NullPointerException(
-            "expected to find ${it.agent} (${peopleToType[it.agent]}) in $people")).indexOf(it.agent) % 2 == 1
+        val isVoice2 =
+            it.agent != null && (people[peopleToType[it.agent]] ?: throw NullPointerException(
+                "expected to find ${it.agent} (${peopleToType[it.agent]}) in $people"
+            )).indexOf(it.agent) % 2 == 1
         val speaker = when {
             isGroup && isBg -> SpeakerEntity.GroupBackground
             isGroup -> SpeakerEntity.Group
@@ -1447,9 +1541,11 @@ fun parseTtml(audioMimeType: String?, lyricText: String): SemanticLyrics? {
             throw IllegalArgumentException("it.time == null but some other P has non-null time")
         }
         val next = paragraphs.getOrNull(j + 1)?.time?.first
-        LyricLine(text.toString(), it.time.first, it.time.last,
+        LyricLine(
+            text.toString(), it.time.first, it.time.last,
             next != null && (it.time.last == next || it.time.last == next - 1uL),
-            theWords, speaker, it.translated)
+            theWords, speaker, it.translated
+        )
     }).also { splitBidirectionalWords(it) }
 }
 
@@ -1471,11 +1567,13 @@ fun parseSrt(lyricText: String, trimEnabled: Boolean): SemanticLyrics? {
         val ts = (it.startTimeUs / 1000).toULong()
         val l = lastTs == ts
         lastTs = ts
-        LyricLine(it.cues[0].text!!.toString().let {
-            if (trimEnabled)
-                it.trim()
-            else it
-        }, ts, (it.endTimeUs / 1000).toULong(), false, null,
-            null, l)
+        LyricLine(
+            it.cues[0].text!!.toString().let {
+                if (trimEnabled)
+                    it.trim()
+                else it
+            }, ts, (it.endTimeUs / 1000).toULong(), false, null,
+            null, l
+        )
     })
 }

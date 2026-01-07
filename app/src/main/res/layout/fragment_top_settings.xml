@@ -31,13 +31,13 @@
             style="?attr/collapsingToolbarLayoutLargeStyle"
             android:layout_width="match_parent"
             android:layout_height="?attr/collapsingToolbarLayoutLargeSize"
-            app:collapsedTitleTextColor="?attr/colorOnSurface"
             app:collapsedTitleTextAppearance="?textAppearanceTitleLarge"
-            app:expandedTitleTextColor="?attr/colorOnSurface"
+            app:collapsedTitleTextColor="?attr/colorOnSurface"
+            app:expandedTitleMarginStart="24dp"
             app:expandedTitleTextAppearance="?textAppearanceHeadlineLarge"
+            app:expandedTitleTextColor="?attr/colorOnSurface"
             app:layout_scrollFlags="scroll|exitUntilCollapsed|snap"
-            app:title="@string/home_menu_settings"
-            app:expandedTitleMarginStart="24dp">
+            app:title="@string/home_menu_settings">
 
             <com.google.android.material.appbar.MaterialToolbar
                 android:id="@+id/topAppBar"
@@ -59,7 +59,6 @@
         android:id="@+id/settings"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior"
-        />
+        app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

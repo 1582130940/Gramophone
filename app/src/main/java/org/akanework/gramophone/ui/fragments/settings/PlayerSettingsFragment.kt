@@ -26,7 +26,8 @@ import org.akanework.gramophone.R
 import org.akanework.gramophone.ui.fragments.BasePreferenceFragment
 import org.akanework.gramophone.ui.fragments.BaseSettingsActivity
 
-class PlayerSettingsActivity : BaseSettingsActivity(R.string.settings_player_ui,
+class PlayerSettingsActivity : BaseSettingsActivity(
+    R.string.settings_player_ui,
     { PlayerSettingsFragment() })
 
 class PlayerSettingsFragment : BasePreferenceFragment() {

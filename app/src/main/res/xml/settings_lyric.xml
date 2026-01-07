@@ -40,8 +40,8 @@
         android:defaultValue="false"
         android:key="status_bar_lyrics"
         android:layout="@layout/preference_switch"
-        android:title="@string/settings_status_bar_lyrics_title"
         android:summary="@string/settings_status_bar_lyrics_summary"
+        android:title="@string/settings_status_bar_lyrics_title"
         android:widgetLayout="@layout/preference_switch_widget"
         app:iconSpaceReserved="false" />
 
@@ -49,8 +49,8 @@
         android:defaultValue="true"
         android:key="trim_lyrics"
         android:layout="@layout/preference_switch"
-        android:title="@string/settings_trim_lyrics"
         android:summary="@string/settings_trim_lyrics_summary"
+        android:title="@string/settings_trim_lyrics"
         android:widgetLayout="@layout/preference_switch_widget"
         app:iconSpaceReserved="false" />
 

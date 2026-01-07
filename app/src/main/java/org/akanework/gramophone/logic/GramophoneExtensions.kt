@@ -214,16 +214,17 @@ fun View.fadOutAnimation(
     }
     (getTag(R.id.fade_in_animation) as ViewPropertyAnimator?)?.cancel()
     (getTag(R.id.fade_out_animation) as ViewPropertyAnimator?)?.cancel()
-    setTag(R.id.fade_out_animation, animate()
-        .alpha(0f)
-        .setDuration(CalculationUtils.lerp(0f, duration.toFloat(), this.alpha).toLong())
-        .withEndAction {
-            this.visibility = visibility
-            setTag(R.id.fade_out_animation, null)
-            completion?.let {
-                it()
-            }
-        })
+    setTag(
+        R.id.fade_out_animation, animate()
+            .alpha(0f)
+            .setDuration(CalculationUtils.lerp(0f, duration.toFloat(), this.alpha).toLong())
+            .withEndAction {
+                this.visibility = visibility
+                setTag(R.id.fade_out_animation, null)
+                completion?.let {
+                    it()
+                }
+            })
 }
 
 fun View.fadInAnimation(duration: Long = 300, completion: (() -> Unit)? = null) {
@@ -231,15 +232,16 @@ fun View.fadInAnimation(duration: Long = 300, completion: (() -> Unit)? = null) 
     (getTag(R.id.fade_out_animation) as ViewPropertyAnimator?)?.cancel()
     alpha = 0f
     visibility = View.VISIBLE
-    setTag(R.id.fade_in_animation, animate()
-        .alpha(1f)
-        .setDuration(CalculationUtils.lerp(duration.toFloat(), 0f, this.alpha).toLong())
-        .withEndAction {
-            setTag(R.id.fade_in_animation, null)
-            completion?.let {
-                it()
-            }
-        })
+    setTag(
+        R.id.fade_in_animation, animate()
+            .alpha(1f)
+            .setDuration(CalculationUtils.lerp(duration.toFloat(), 0f, this.alpha).toLong())
+            .withEndAction {
+                setTag(R.id.fade_in_animation, null)
+                completion?.let {
+                    it()
+                }
+            })
 }
 
 @Suppress("NOTHING_TO_INLINE")
@@ -262,7 +264,7 @@ fun MediaController.getTimer(): Pair<Int?, Boolean> =
             getInt("duration")
         else null) to (if (containsKey("pauseOnEnd"))
             getBoolean("pauseOnEnd")
-            else throw IllegalArgumentException("expected pauseOnEnd to be set"))
+        else throw IllegalArgumentException("expected pauseOnEnd to be set"))
     }
 
 fun MediaController.setTimer(value: Int, waitUntilSongEnd: Boolean) {
@@ -311,11 +313,16 @@ fun MediaController.getAudioFormat(): AudioFormatDetector.AudioFormats =
         Bundle.EMPTY
     ).get().extras.let {
         AudioFormatDetector.AudioFormats(
-            BundleCompat.getParcelableArrayList(it, "file_format",
-                Bundle::class.java)?.let { bundles -> bundles.map { bundle ->
-                        bundle.getInt("type", C.TRACK_TYPE_UNKNOWN) to
-                                (Format.fromBundle(bundle.getBundle("format")!!)
-                                        to ReplayGainUtil.ReplayGainInfo.fromBundle(bundle.getBundle("rg")!!)) } },
+            BundleCompat.getParcelableArrayList(
+                it, "file_format",
+                Bundle::class.java
+            )?.let { bundles ->
+                bundles.map { bundle ->
+                    bundle.getInt("type", C.TRACK_TYPE_UNKNOWN) to
+                            (Format.fromBundle(bundle.getBundle("format")!!)
+                                    to ReplayGainUtil.ReplayGainInfo.fromBundle(bundle.getBundle("rg")!!))
+                }
+            },
             it.getBundle("sink_format")?.let { bundle -> Format.fromBundle(bundle) },
             BundleCompat.getParcelable(it, "track_format", AudioTrackInfo::class.java),
             BundleCompat.getParcelable(it, "hal_format", AfFormatInfo::class.java),

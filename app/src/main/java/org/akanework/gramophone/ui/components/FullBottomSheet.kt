@@ -7,7 +7,6 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.content.res.ColorStateList
 import android.content.res.Configuration
-import android.graphics.Color
 import android.graphics.drawable.BitmapDrawable
 import android.os.Build
 import android.provider.MediaStore
@@ -25,17 +24,20 @@ import androidx.appcompat.content.res.AppCompatResources
 import androidx.appcompat.view.ContextThemeWrapper
 import androidx.appcompat.widget.TooltipCompat
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.content.edit
 import androidx.core.graphics.Insets
 import androidx.core.graphics.TypefaceCompat
 import androidx.core.view.HapticFeedbackConstantsCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isInvisible
+import androidx.core.widget.NestedScrollView
 import androidx.core.widget.TextViewCompat
 import androidx.media3.common.C
 import androidx.media3.common.HeartRating
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
+import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.Player
 import androidx.media3.common.util.Log
 import androidx.media3.session.MediaBrowser
@@ -52,6 +54,7 @@ import coil3.request.error
 import coil3.size.Scale
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.card.MaterialCardView
+import com.google.android.material.checkbox.MaterialCheckBox
 import com.google.android.material.color.DynamicColors
 import com.google.android.material.color.DynamicColorsOptions
 import com.google.android.material.color.MaterialColors
@@ -98,10 +101,6 @@ import uk.akane.libphonograph.items.albumId
 import uk.akane.libphonograph.items.artistId
 import uk.akane.libphonograph.manipulator.ItemManipulator
 import kotlin.math.min
-import androidx.core.content.edit
-import androidx.core.widget.NestedScrollView
-import androidx.media3.common.PlaybackParameters
-import com.google.android.material.checkbox.MaterialCheckBox
 
 @SuppressLint("NotifyDataSetChanged")
 class FullBottomSheet
@@ -182,8 +181,10 @@ class FullBottomSheet
             }
         }
     private val formatUpdateRunnable = Runnable {
-        updateQualityIndicators(if (enableQualityInfo)
-            AudioFormatDetector.detectAudioFormat(currentFormat) else null)
+        updateQualityIndicators(
+            if (enableQualityInfo)
+                AudioFormatDetector.detectAudioFormat(currentFormat) else null
+        )
     }
     private val bottomSheetFullCover: TransformableImageView
     private val bottomSheetFullTitle: TextView
@@ -293,7 +294,8 @@ class FullBottomSheet
                     val format = instance?.getAudioFormat()
                     this.currentFormat = format
                     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q ||
-                        !handler.hasCallbacks(formatUpdateRunnable)) {
+                        !handler.hasCallbacks(formatUpdateRunnable)
+                    ) {
                         // TODO: is 300ms long enough wait for stuff like bitrate? 100ms isn't.
                         handler.postDelayed(formatUpdateRunnable, 300)
                     }
@@ -413,7 +415,7 @@ class FullBottomSheet
         bottomSheetPlaylistButton.setOnClickListener {
             ViewCompat.performHapticFeedback(it, HapticFeedbackConstantsCompat.CONTEXT_CLICK)
             if (instance != null)
-				PlaylistQueueSheet(wrappedContext ?: context, activity).show()
+                PlaylistQueueSheet(wrappedContext ?: context, activity).show()
         }
         bottomSheetFullControllerButton.setOnClickListener {
             ViewCompat.performHapticFeedback(it, HapticFeedbackConstantsCompat.CONTEXT_CLICK)
@@ -519,8 +521,10 @@ class FullBottomSheet
         }
         if (key == null || key == "audio_quality_info") {
             enableQualityInfo = prefs.getBooleanStrict("audio_quality_info", false)
-            updateQualityIndicators(if (enableQualityInfo)
-                AudioFormatDetector.detectAudioFormat(currentFormat) else null)
+            updateQualityIndicators(
+                if (enableQualityInfo)
+                    AudioFormatDetector.detectAudioFormat(currentFormat) else null
+            )
         }
         if (key == null || key == "centered_title") {
             if (prefs.getBooleanStrict("centered_title", false)) {
@@ -553,7 +557,8 @@ class FullBottomSheet
         val context = wrappedContext ?: context
         val initialPlaybackParameters = instance!!.playbackParameters
         val wantsToBeLocked = prefs.getBoolean("playback_tempo_pitch_locked", true)
-        val isLocked = initialPlaybackParameters.pitch == initialPlaybackParameters.speed && wantsToBeLocked
+        val isLocked =
+            initialPlaybackParameters.pitch == initialPlaybackParameters.speed && wantsToBeLocked
 
         val tempoSlider = Slider(context).apply {
             valueFrom = 0.25f
@@ -567,7 +572,11 @@ class FullBottomSheet
         }
 
         val tempoText = TextView(context).apply {
-            text = context.getString(R.string.tempo_pitch_value, context.getString(R.string.tempo), tempoSlider.value)
+            text = context.getString(
+                R.string.tempo_pitch_value,
+                context.getString(R.string.tempo),
+                tempoSlider.value
+            )
             gravity = Gravity.CENTER
             textSize = 16f
             LinearLayout.LayoutParams(
@@ -588,7 +597,11 @@ class FullBottomSheet
         }
 
         val pitchText = TextView(context).apply {
-            text = context.getString(R.string.tempo_pitch_value, context.getString(R.string.pitch), pitchSlider.value)
+            text = context.getString(
+                R.string.tempo_pitch_value,
+                context.getString(R.string.pitch),
+                pitchSlider.value
+            )
             gravity = Gravity.CENTER
             textSize = 16f
             LinearLayout.LayoutParams(
@@ -611,8 +624,10 @@ class FullBottomSheet
 
         val container = LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(48.dpToPx(context), 16.dpToPx(context),
-                48.dpToPx(context), 0)
+            setPadding(
+                48.dpToPx(context), 16.dpToPx(context),
+                48.dpToPx(context), 0
+            )
             addView(tempoText)
             addView(tempoSlider)
             addView(pitchText)
@@ -621,7 +636,11 @@ class FullBottomSheet
         }
 
         tempoSlider.addOnChangeListener { _, value, fromUser ->
-            tempoText.text = context.getString(R.string.tempo_pitch_value, context.getString(R.string.tempo), value)
+            tempoText.text = context.getString(
+                R.string.tempo_pitch_value,
+                context.getString(R.string.tempo),
+                value
+            )
             if (fromUser) {
                 if (lockCheckbox.isChecked) {
                     pitchSlider.value = value
@@ -632,7 +651,11 @@ class FullBottomSheet
         }
 
         pitchSlider.addOnChangeListener { _, value, fromUser ->
-            pitchText.text = context.getString(R.string.tempo_pitch_value, context.getString(R.string.pitch), value)
+            pitchText.text = context.getString(
+                R.string.tempo_pitch_value,
+                context.getString(R.string.pitch),
+                value
+            )
             if (fromUser) {
                 instance?.playbackParameters =
                     PlaybackParameters(tempoSlider.value, pitchSlider.value)
@@ -750,7 +773,8 @@ class FullBottomSheet
                             }.let { themeContext ->
                                 if (prefs.getBoolean("pureDark", false) &&
                                     (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) ==
-                                    Configuration.UI_MODE_NIGHT_YES) {
+                                    Configuration.UI_MODE_NIGHT_YES
+                                ) {
                                     ContextThemeWrapper(themeContext, R.style.ThemeOverlay_PureDark)
                                 } else themeContext
                             }
@@ -768,7 +792,8 @@ class FullBottomSheet
     }
 
     private fun updateQualityIndicators(info: AudioFormatInfo?) {
-        val oldInfo = (bottomSheetFullQualityDetails.getTag(R.id.quality_details) as AudioFormatInfo?)
+        val oldInfo =
+            (bottomSheetFullQualityDetails.getTag(R.id.quality_details) as AudioFormatInfo?)
         if (oldInfo == info) return
         (bottomSheetFullQualityDetails.getTag(R.id.fade_in_animation) as ViewPropertyAnimator?)?.cancel()
         (bottomSheetFullQualityDetails.getTag(R.id.fade_out_animation) as ViewPropertyAnimator?)?.cancel()
@@ -1031,11 +1056,13 @@ class FullBottomSheet
             bottomSheetFullLyricView.updateTextColor(
                 androidx.core.graphics.ColorUtils.compositeColors(
                     androidx.core.graphics.ColorUtils.setAlphaComponent(colorPrimary, 77),
-                    fullPlayerFinalColor),
+                    fullPlayerFinalColor
+                ),
                 colorPrimary,
                 androidx.core.graphics.ColorUtils.compositeColors(
                     androidx.core.graphics.ColorUtils.setAlphaComponent(colorPrimary, 200),
-                    fullPlayerFinalColor),
+                    fullPlayerFinalColor
+                ),
             )
 
             bottomSheetTimerButton.iconTint =
@@ -1113,7 +1140,8 @@ class FullBottomSheet
             ?: instance?.currentMediaItem?.mediaMetadata?.durationMs
         if (duration != null && duration.toInt() != bottomSheetFullSeekBar.max) {
             bottomSheetFullDuration.setTextAnimation(
-                CalculationUtils.convertDurationToTimeStamp(duration))
+                CalculationUtils.convertDurationToTimeStamp(duration)
+            )
             val position =
                 CalculationUtils.convertDurationToTimeStamp(instance?.currentPosition ?: 0)
             if (!isUserTracking) {
@@ -1137,7 +1165,10 @@ class FullBottomSheet
         val mediaItem = instance?.currentMediaItem
         Log.d(TAG, "load cover for " + mediaItem?.mediaMetadata?.title + " considered")
         if (bottomSheetFullCover.width != 0 && bottomSheetFullCover.height != 0) {
-            Log.d(TAG, "load cover for " + mediaItem?.mediaMetadata?.title + " at " + bottomSheetFullCover.width + " " + bottomSheetFullCover.height)
+            Log.d(
+                TAG,
+                "load cover for " + mediaItem?.mediaMetadata?.title + " at " + bottomSheetFullCover.width + " " + bottomSheetFullCover.height
+            )
             lastDisposable = context.imageLoader.enqueue(
                 ImageRequest.Builder(context).apply {
                     data(mediaItem?.mediaMetadata?.artworkUri)

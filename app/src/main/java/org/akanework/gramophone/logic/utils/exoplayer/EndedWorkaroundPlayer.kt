@@ -14,22 +14,26 @@ import org.akanework.gramophone.logic.utils.CircularShuffleOrder
  * update to STATE_ENDED and only then media3 will wrap around playlist for us. This is a workaround
  * to restore STATE_ENDED as well and fake it for media3 until it indeed wraps around playlist.
  */
-class EndedWorkaroundPlayer(exoPlayer: ExoPlayer) : ForwardingSimpleBasePlayer(exoPlayer), Player.Listener {
+class EndedWorkaroundPlayer(exoPlayer: ExoPlayer) : ForwardingSimpleBasePlayer(exoPlayer),
+    Player.Listener {
 
     companion object {
         private const val TAG = "EndedWorkaroundPlayer"
     }
 
     private val remoteDeviceInfo = DeviceInfo.Builder(DeviceInfo.PLAYBACK_TYPE_REMOTE).build()
+
     init {
         player.addListener(this)
     }
+
     val exoPlayer
         get() = player as ExoPlayer
+
     // TODO: can't we do this in a cleaner way?
     var nextShuffleOrder:
-            ((firstIndex: Int, mediaItemCount: Int, EndedWorkaroundPlayer) -> CircularShuffleOrder)?
-            = null
+            ((firstIndex: Int, mediaItemCount: Int, EndedWorkaroundPlayer) -> CircularShuffleOrder)? =
+        null
     var isEnded = false
         set(value) {
             if (BuildConfig.DEBUG) {

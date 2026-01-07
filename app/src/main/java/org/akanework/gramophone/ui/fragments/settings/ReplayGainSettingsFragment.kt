@@ -22,7 +22,8 @@ import org.akanework.gramophone.R
 import org.akanework.gramophone.ui.fragments.BasePreferenceFragment
 import org.akanework.gramophone.ui.fragments.BaseSettingsActivity
 
-class ReplayGainSettingsActivity : BaseSettingsActivity(R.string.settings_replaygain,
+class ReplayGainSettingsActivity : BaseSettingsActivity(
+    R.string.settings_replaygain,
     { ReplayGainSettingsFragment() })
 
 class ReplayGainSettingsFragment : BasePreferenceFragment() {

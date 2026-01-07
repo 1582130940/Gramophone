@@ -15,6 +15,18 @@ import java.util.Objects;
         this.delegate = delegate;
     }
 
+    @SuppressWarnings("PrivateApi")
+    public static Method getAdd() throws NoSuchMethodException {
+        return AudioSystem.class.getDeclaredMethod("registerAudioVolumeGroupCallback",
+                INativeAudioVolumeGroupCallback.class);
+    }
+
+    @SuppressWarnings("PrivateApi")
+    public static Method getRemove() throws NoSuchMethodException {
+        return AudioSystem.class.getDeclaredMethod("unregisterAudioVolumeGroupCallback",
+                INativeAudioVolumeGroupCallback.class);
+    }
+
     @Override
     public void onAudioVolumeGroupChanged(AudioVolumeGroupChangeEvent volumeChangeEvent) {
         org.nift4.audiosysfwd.AudioVolumeGroupChangeEvent event;
@@ -30,17 +42,5 @@ import java.util.Objects;
             return;
         }
         delegate.onAudioVolumeGroupChanged(event);
-    }
-
-    @SuppressWarnings("PrivateApi")
-    public static Method getAdd() throws NoSuchMethodException {
-        return AudioSystem.class.getDeclaredMethod("registerAudioVolumeGroupCallback",
-                INativeAudioVolumeGroupCallback.class);
-    }
-
-    @SuppressWarnings("PrivateApi")
-    public static Method getRemove() throws NoSuchMethodException {
-        return AudioSystem.class.getDeclaredMethod("unregisterAudioVolumeGroupCallback",
-                INativeAudioVolumeGroupCallback.class);
     }
 }

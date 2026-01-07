@@ -18,50 +18,67 @@ import android.media.audio.common.AudioVolumeGroupChangeEvent;
  */
 @SuppressLint("NewApi")
 @SuppressWarnings("unused")
-public interface INativeAudioVolumeGroupCallback extends android.os.IInterface
-{
-    /** Default implementation for INativeAudioVolumeGroupCallback. */
-    class Default implements android.media.INativeAudioVolumeGroupCallback
-    {
-        /** Called when the index applied by the AudioPolicyManager changes */
-        @Override public void onAudioVolumeGroupChanged(android.media.audio.common.AudioVolumeGroupChangeEvent volumeChangeEvent) throws android.os.RemoteException
-        {
+public interface INativeAudioVolumeGroupCallback extends android.os.IInterface {
+    String DESCRIPTOR = "android.media.INativeAudioVolumeGroupCallback";
+
+    /**
+     * Called when the index applied by the AudioPolicyManager changes
+     */
+    void onAudioVolumeGroupChanged(android.media.audio.common.AudioVolumeGroupChangeEvent volumeChangeEvent) throws android.os.RemoteException;
+
+    /**
+     * Default implementation for INativeAudioVolumeGroupCallback.
+     */
+    class Default implements android.media.INativeAudioVolumeGroupCallback {
+        /**
+         * Called when the index applied by the AudioPolicyManager changes
+         */
+        @Override
+        public void onAudioVolumeGroupChanged(android.media.audio.common.AudioVolumeGroupChangeEvent volumeChangeEvent) throws android.os.RemoteException {
         }
+
         @Override
         public android.os.IBinder asBinder() {
             return null;
         }
     }
-    /** Local-side IPC implementation stub class. */
-    abstract class Stub extends android.os.Binder implements android.media.INativeAudioVolumeGroupCallback
-    {
-        /** Construct the stub and attach it to the interface. */
+
+    /**
+     * Local-side IPC implementation stub class.
+     */
+    abstract class Stub extends android.os.Binder implements android.media.INativeAudioVolumeGroupCallback {
+        static final int TRANSACTION_onAudioVolumeGroupChanged = (android.os.IBinder.FIRST_CALL_TRANSACTION);
+
+        /**
+         * Construct the stub and attach it to the interface.
+         */
         @SuppressWarnings("this-escape")
-        public Stub()
-        {
+        public Stub() {
             this.attachInterface(this, DESCRIPTOR);
         }
+
         /**
          * Cast an IBinder object into an android.media.INativeAudioVolumeGroupCallback interface,
          * generating a proxy if needed.
          */
-        public static android.media.INativeAudioVolumeGroupCallback asInterface(android.os.IBinder obj)
-        {
-            if (obj==null) {
+        public static android.media.INativeAudioVolumeGroupCallback asInterface(android.os.IBinder obj) {
+            if (obj == null) {
                 return null;
             }
             android.os.IInterface iin = obj.queryLocalInterface(DESCRIPTOR);
             if (iin instanceof INativeAudioVolumeGroupCallback) {
-                return ((android.media.INativeAudioVolumeGroupCallback)iin);
+                return ((android.media.INativeAudioVolumeGroupCallback) iin);
             }
             return new android.media.INativeAudioVolumeGroupCallback.Stub.Proxy(obj);
         }
-        @Override public android.os.IBinder asBinder()
-        {
+
+        @Override
+        public android.os.IBinder asBinder() {
             return this;
         }
-        @Override public boolean onTransact(int code, android.os.Parcel data, android.os.Parcel reply, int flags) throws android.os.RemoteException
-        {
+
+        @Override
+        public boolean onTransact(int code, android.os.Parcel data, android.os.Parcel reply, int flags) throws android.os.RemoteException {
             java.lang.String descriptor = DESCRIPTOR;
             if (code >= android.os.IBinder.FIRST_CALL_TRANSACTION && code <= android.os.IBinder.LAST_CALL_TRANSACTION) {
                 data.enforceInterface(descriptor);
@@ -79,38 +96,37 @@ public interface INativeAudioVolumeGroupCallback extends android.os.IInterface
             }
             return super.onTransact(code, data, reply, flags);
         }
-        private static class Proxy implements android.media.INativeAudioVolumeGroupCallback
-        {
+
+        private static class Proxy implements android.media.INativeAudioVolumeGroupCallback {
             private final android.os.IBinder mRemote;
-            Proxy(android.os.IBinder remote)
-            {
+
+            Proxy(android.os.IBinder remote) {
                 mRemote = remote;
             }
-            @Override public android.os.IBinder asBinder()
-            {
+
+            @Override
+            public android.os.IBinder asBinder() {
                 return mRemote;
             }
-            public java.lang.String getInterfaceDescriptor()
-            {
+
+            public java.lang.String getInterfaceDescriptor() {
                 return DESCRIPTOR;
             }
-            /** Called when the index applied by the AudioPolicyManager changes */
-            @Override public void onAudioVolumeGroupChanged(android.media.audio.common.AudioVolumeGroupChangeEvent volumeChangeEvent) throws android.os.RemoteException
-            {
+
+            /**
+             * Called when the index applied by the AudioPolicyManager changes
+             */
+            @Override
+            public void onAudioVolumeGroupChanged(android.media.audio.common.AudioVolumeGroupChangeEvent volumeChangeEvent) throws android.os.RemoteException {
                 android.os.Parcel _data = android.os.Parcel.obtain(asBinder());
                 try {
                     _data.writeInterfaceToken(DESCRIPTOR);
                     _data.writeTypedObject(volumeChangeEvent, 0);
                     mRemote.transact(Stub.TRANSACTION_onAudioVolumeGroupChanged, _data, null, android.os.IBinder.FLAG_ONEWAY);
-                }
-                finally {
+                } finally {
                     _data.recycle();
                 }
             }
         }
-        static final int TRANSACTION_onAudioVolumeGroupChanged = (android.os.IBinder.FIRST_CALL_TRANSACTION);
     }
-    String DESCRIPTOR = "android.media.INativeAudioVolumeGroupCallback";
-    /** Called when the index applied by the AudioPolicyManager changes */
-    void onAudioVolumeGroupChanged(android.media.audio.common.AudioVolumeGroupChangeEvent volumeChangeEvent) throws android.os.RemoteException;
 }

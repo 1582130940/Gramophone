@@ -83,7 +83,10 @@ class MeiZuLyricsMediaNotificationProvider(
         extras: Bundle
     ) = inner.handleCustomCommand(session, action, extras)
 
-    private fun MediaNotification.applyNotificationFlags(alwaysShowTicker: Boolean, onlyUpdateTicker: Boolean) {
+    private fun MediaNotification.applyNotificationFlags(
+        alwaysShowTicker: Boolean,
+        onlyUpdateTicker: Boolean
+    ) {
         notification.apply {
             // Keep the status bar lyrics scrolling
             if (alwaysShowTicker)

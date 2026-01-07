@@ -10,22 +10,22 @@
         android:id="@+id/appbarlayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:liftOnScroll="false"
-        android:stateListAnimator="@null">
+        android:stateListAnimator="@null"
+        app:liftOnScroll="false">
 
         <com.google.android.material.appbar.CollapsingToolbarLayout
             android:id="@+id/collapsingtoolbar"
             style="?attr/collapsingToolbarLayoutMediumStyle"
             android:layout_width="match_parent"
             android:layout_height="?attr/collapsingToolbarLayoutMediumSize"
-            app:collapsedTitleTextColor="?attr/colorOnSurface"
             app:collapsedTitleTextAppearance="?textAppearanceTitleLarge"
-            app:expandedTitleTextColor="?attr/colorOnSurface"
-            app:expandedTitleTextAppearance="?textAppearanceHeadlineLarge"
-            app:layout_scrollFlags="scroll|exitUntilCollapsed|snap"
+            app:collapsedTitleTextColor="?attr/colorOnSurface"
             app:contentScrim="@android:color/transparent"
-            app:title="@string/app_name"
             app:expandedTitleMarginStart="24dp"
+            app:expandedTitleTextAppearance="?textAppearanceHeadlineLarge"
+            app:expandedTitleTextColor="?attr/colorOnSurface"
+            app:layout_scrollFlags="scroll|exitUntilCollapsed|snap"
+            app:title="@string/app_name"
             app:titleCollapseMode="scale">
 
             <com.google.android.material.appbar.MaterialToolbar
@@ -46,19 +46,19 @@
             android:layout_height="wrap_content"
             android:background="@android:color/transparent"
             app:tabBackground="@android:color/transparent"
+            app:tabGravity="start"
             app:tabIndicator="@drawable/selected_chip_background"
             app:tabIndicatorColor="?colorSecondaryContainer"
             app:tabIndicatorFullWidth="true"
             app:tabIndicatorGravity="stretch"
             app:tabMinWidth="0dp"
             app:tabMode="scrollable"
-            app:tabGravity="start"
             app:tabPaddingEnd="12dp"
             app:tabPaddingStart="12dp"
             app:tabRippleColor="@android:color/transparent"
             app:tabSelectedTextColor="?colorOnSecondaryContainer"
-            app:tabTextColor="?attr/colorOnSurfaceVariant"
-            app:tabTextAppearance="@style/TabTextAppearance"/>
+            app:tabTextAppearance="@style/TabTextAppearance"
+            app:tabTextColor="?attr/colorOnSurfaceVariant" />
 
     </com.google.android.material.appbar.AppBarLayout>
 

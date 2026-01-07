@@ -6,7 +6,6 @@ import android.net.Uri
 import androidx.media3.common.util.Log
 import okio.Path.Companion.toOkioPath
 import java.io.File
-import java.io.IOException
 
 object PlaylistSerializer {
     private const val TAG = "PlaylistSerializer"
@@ -40,8 +39,10 @@ object PlaylistSerializer {
             PlaylistFormat.M3u -> {
                 val lines = outFile.readLines()
                 lines.filter { !it.startsWith('#') }.map { Uri.decode(it) }.map {
-					outFile.resolveSibling(it).toOkioPath(normalize = true).toFile() }
+                    outFile.resolveSibling(it).toOkioPath(normalize = true).toFile()
+                }
             }
+
             PlaylistFormat.Xspf -> TODO()
             PlaylistFormat.Wpl -> TODO()
             PlaylistFormat.Pls -> TODO()
@@ -51,10 +52,14 @@ object PlaylistSerializer {
     private fun write(context: Context, format: PlaylistFormat, outFile: File, songs: List<File>) {
         when (format) {
             PlaylistFormat.M3u -> {
-                val parent = outFile.parentFile ?: throw NullPointerException("parentFile of playlist is null")
-                val out = "#EXTM3U\n" + songs.joinToString("\n") { it.relativeTo(parent).toString() }.trim()
+                val parent = outFile.parentFile
+                    ?: throw NullPointerException("parentFile of playlist is null")
+                val out =
+                    "#EXTM3U\n" + songs.joinToString("\n") { it.relativeTo(parent).toString() }
+                        .trim()
                 outFile.writeText(out)
             }
+
             PlaylistFormat.Xspf -> TODO()
             PlaylistFormat.Wpl -> TODO()
             PlaylistFormat.Pls -> TODO()

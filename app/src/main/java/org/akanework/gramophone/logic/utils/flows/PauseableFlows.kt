@@ -47,6 +47,7 @@ interface PauseManager : CoroutineContext.Element {
     val isPaused: StateFlow<Boolean>
 
     override val key: CoroutineContext.Key<*> get() = Key
+
     companion object Key : CoroutineContext.Key<PauseManager>
 }
 
@@ -57,8 +58,9 @@ class LifecyclePauseManager(
     @OptIn(ExperimentalCoroutinesApi::class)
     override val isPaused = bypassFlow.flatMapLatest {
         if (it || true) flowOf(false) else
-        source.lifecycle.currentStateFlow.map { !it.isAtLeast(minimumState) } }
-            .stateIn(scope, WhileSubscribed(), !source.lifecycle.currentState.isAtLeast(minimumState))
+            source.lifecycle.currentStateFlow.map { !it.isAtLeast(minimumState) }
+    }
+        .stateIn(scope, WhileSubscribed(), !source.lifecycle.currentState.isAtLeast(minimumState))
 }
 
 object EmptyPauseManager : PauseManager {
@@ -127,8 +129,12 @@ class PauseManagingSharedFlow<T>(paused: SharingStarted) : SharedFlow<T> {
             replay: Int = 0
         ): SharedFlow<T> {
             val wrapper = PauseManagingSharedFlow<T>(paused)
-            wrapper.sharedFlow = shareIn(CoroutineScope(scope.coroutineContext + Job(scope.coroutineContext[Job])
-                    + wrapper.pauseManager), started, replay)
+            wrapper.sharedFlow = shareIn(
+                CoroutineScope(
+                    scope.coroutineContext + Job(scope.coroutineContext[Job])
+                            + wrapper.pauseManager
+                ), started, replay
+            )
             return wrapper
         }
     }
@@ -165,8 +171,12 @@ class PauseManagingStateFlow<T>(paused: SharingStarted) : StateFlow<T> {
             initialValue: T
         ): SharedFlow<T> {
             val wrapper = PauseManagingStateFlow<T>(paused)
-            wrapper.stateFlow = stateIn(CoroutineScope(scope.coroutineContext + Job(scope.coroutineContext[Job])
-                    + wrapper.pauseManager), started, initialValue)
+            wrapper.stateFlow = stateIn(
+                CoroutineScope(
+                    scope.coroutineContext + Job(scope.coroutineContext[Job])
+                            + wrapper.pauseManager
+                ), started, initialValue
+            )
             return wrapper
         }
     }
@@ -191,13 +201,16 @@ suspend fun <T> repeatUntilDoneWhenUnpaused(block: suspend () -> T): T {
     return repeatFlowWhenUnpaused(block).first()
 }
 
-fun repeatPausingWithLifecycle(source: LifecycleOwner,
-                               context: CoroutineContext = EmptyCoroutineContext,
-                               minimumStateForCollect: Lifecycle.State = Lifecycle.State.INITIALIZED,
-                               minimumStateForUnpause: Lifecycle.State = Lifecycle.State.RESUMED,
-                               initialUnpauseUntilResumeTimeoutMs: ULong = 2000U,
-                               block: suspend () -> Unit) {
-    val maxForceUnpausedTimestamp = SystemClock.elapsedRealtime() + initialUnpauseUntilResumeTimeoutMs.toLong()
+fun repeatPausingWithLifecycle(
+    source: LifecycleOwner,
+    context: CoroutineContext = EmptyCoroutineContext,
+    minimumStateForCollect: Lifecycle.State = Lifecycle.State.INITIALIZED,
+    minimumStateForUnpause: Lifecycle.State = Lifecycle.State.RESUMED,
+    initialUnpauseUntilResumeTimeoutMs: ULong = 2000U,
+    block: suspend () -> Unit
+) {
+    val maxForceUnpausedTimestamp =
+        SystemClock.elapsedRealtime() + initialUnpauseUntilResumeTimeoutMs.toLong()
     val bypass = flow {
         val timeLeft = maxForceUnpausedTimestamp - SystemClock.elapsedRealtime()
         if (timeLeft > 0) {
@@ -208,12 +221,26 @@ fun repeatPausingWithLifecycle(source: LifecycleOwner,
     }
     source.lifecycleScope.launch(context) {
         if (minimumStateForCollect == Lifecycle.State.INITIALIZED) {
-            withContext(context + LifecyclePauseManager(this, source, minimumStateForUnpause, bypass)) {
+            withContext(
+                context + LifecyclePauseManager(
+                    this,
+                    source,
+                    minimumStateForUnpause,
+                    bypass
+                )
+            ) {
                 block()
             }
         } else {
             source.repeatOnLifecycle(minimumStateForCollect) {
-                withContext(context + LifecyclePauseManager(this, source, minimumStateForUnpause, bypass)) {
+                withContext(
+                    context + LifecyclePauseManager(
+                        this,
+                        source,
+                        minimumStateForUnpause,
+                        bypass
+                    )
+                ) {
                     block()
                 }
             }

@@ -39,8 +39,10 @@ class ArtistAdapter(
 ) : BaseAdapter<Artist>
     (
     fragment,
-    liveData = (fragment.requireActivity() as MainActivity).let { if (isAlbumArtist)
-        it.reader.albumArtistListFlow else it.reader.artistListFlow },
+    liveData = (fragment.requireActivity() as MainActivity).let {
+        if (isAlbumArtist)
+            it.reader.albumArtistListFlow else it.reader.artistListFlow
+    },
     sortHelper = StoreArtistHelper,
     naturalOrderHelper = null,
     initialSortType = Sorter.Type.ByTitleAscending,

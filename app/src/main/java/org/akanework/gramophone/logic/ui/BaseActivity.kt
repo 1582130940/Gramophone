@@ -9,27 +9,29 @@ import org.akanework.gramophone.R
 import org.akanework.gramophone.logic.getBooleanStrict
 
 open class BaseActivity : AppCompatActivity() {
-	private lateinit var prefs: SharedPreferences
-	private val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
-		if (key == "pureDark" && (resources.configuration.uiMode and
-					Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES) {
-			recreate()
-		}
-	}
+    private lateinit var prefs: SharedPreferences
+    private val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+        if (key == "pureDark" && (resources.configuration.uiMode and
+                    Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+        ) {
+            recreate()
+        }
+    }
 
-	override fun onCreate(savedInstanceState: Bundle?) {
-		prefs = PreferenceManager.getDefaultSharedPreferences(applicationContext)
-		if (prefs.getBooleanStrict("pureDark", false) &&
-			(resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) ==
-			Configuration.UI_MODE_NIGHT_YES) {
-			setTheme(R.style.Theme_Gramophone_PureDark)
-		}
-		prefs.registerOnSharedPreferenceChangeListener(listener)
-		super.onCreate(savedInstanceState)
-	}
+    override fun onCreate(savedInstanceState: Bundle?) {
+        prefs = PreferenceManager.getDefaultSharedPreferences(applicationContext)
+        if (prefs.getBooleanStrict("pureDark", false) &&
+            (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) ==
+            Configuration.UI_MODE_NIGHT_YES
+        ) {
+            setTheme(R.style.Theme_Gramophone_PureDark)
+        }
+        prefs.registerOnSharedPreferenceChangeListener(listener)
+        super.onCreate(savedInstanceState)
+    }
 
-	override fun onDestroy() {
-		prefs.unregisterOnSharedPreferenceChangeListener(listener)
-		super.onDestroy()
-	}
+    override fun onDestroy() {
+        prefs.unregisterOnSharedPreferenceChangeListener(listener)
+        super.onDestroy()
+    }
 }

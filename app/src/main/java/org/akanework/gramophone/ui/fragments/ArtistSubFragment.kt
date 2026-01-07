@@ -80,13 +80,16 @@ class ArtistSubFragment : BaseFragment(true), PopupTextProvider {
             isSubFragment = itemType
         )
         songAdapter.decorAdapter.jumpUpPos = { 0 }
-        val ih = DefaultItemHeightHelper.concatItemHeightHelper(albumAdapter.itemHeightHelper,
+        val ih = DefaultItemHeightHelper.concatItemHeightHelper(
+            albumAdapter.itemHeightHelper,
             { albumAdapter.concatAdapter.itemCount }, songAdapter.itemHeightHelper
         )
         recyclerView!!.enableEdgeToEdgePaddingListener()
         recyclerView!!.adapter =
-            ConcatAdapter(ConcatAdapter.Config.Builder().setIsolateViewTypes(false).build(),
-                albumAdapter.concatAdapter, songAdapter.concatAdapter)
+            ConcatAdapter(
+                ConcatAdapter.Config.Builder().setIsolateViewTypes(false).build(),
+                albumAdapter.concatAdapter, songAdapter.concatAdapter
+            )
         recyclerView!!.setAppBar(appBarLayout)
         recyclerView!!.fastScroll(this, ih)
 

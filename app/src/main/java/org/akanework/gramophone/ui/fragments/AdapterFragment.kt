@@ -114,7 +114,8 @@ class AdapterFragment : BaseFragment(null) {
             -1, null -> throw IllegalArgumentException("unset ID value")
             else -> throw IllegalArgumentException("invalid ID value")
         }.apply {
-            onFullyDrawnListener = { (requireParentFragment() as ViewPagerFragment).maybeReportFullyDrawn(id) }
+            onFullyDrawnListener =
+                { (requireParentFragment() as ViewPagerFragment).maybeReportFullyDrawn(id) }
         }
     }
 

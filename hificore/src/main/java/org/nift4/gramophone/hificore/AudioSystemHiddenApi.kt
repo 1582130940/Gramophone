@@ -7,7 +7,6 @@ import android.os.Build
 import android.os.IBinder
 import android.os.Parcel
 import androidx.core.content.getSystemService
-import androidx.media3.common.audio.AudioManagerCompat
 import androidx.media3.common.util.Log
 import com.google.common.util.concurrent.MoreExecutors
 import java.lang.reflect.Method
@@ -144,9 +143,11 @@ object AudioSystemHiddenApi {
 
     // ======= AUDIO PORT / MIX PORT =======
 
-    data class MixPort(val id: Int, val ioHandle: Int, val name: String?, val flags: Int?,
-                       val channelMask: Int?, val format: UInt?, val sampleRate: UInt?,
-                       val hwModule: Int?, val fast: Boolean?)
+    data class MixPort(
+        val id: Int, val ioHandle: Int, val name: String?, val flags: Int?,
+        val channelMask: Int?, val format: UInt?, val sampleRate: UInt?,
+        val hwModule: Int?, val fast: Boolean?
+    )
 
     @SuppressLint("PrivateApi") // sorry, not sorry...
     private fun listAudioPorts(): Pair<List<Any>, Int>? {
@@ -175,10 +176,17 @@ object AudioSystemHiddenApi {
         // flags exposed to app process since below commit which first appeared in T release.
         // https://cs.android.com/android/_/android/platform/frameworks/av/+/99809024b36b243ad162c780c1191bb503a8df47
         // https://cs.android.com/android/_/android/platform/frameworks/av/+/0805de160715e82fcf59f9367a43b96a352abd11
-        return MixPort(id, ioHandle, name, flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
-            mixPortData?.get(3) else null, channelMask = mixPortData?.get(2),
-            format = mixPortData?.get(1)?.toUInt(), sampleRate = mixPortData?.get(0)?.toUInt(),
-            hwModule = mixPortData?.get(4), fast = if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU)
+        return MixPort(
+            id,
+            ioHandle,
+            name,
+            flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+                mixPortData?.get(3) else null,
+            channelMask = mixPortData?.get(2),
+            format = mixPortData?.get(1)?.toUInt(),
+            sampleRate = mixPortData?.get(0)?.toUInt(),
+            hwModule = mixPortData?.get(4),
+            fast = if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU)
                 mixPortData?.let { it[5] == 0 } else null)
     }
 
@@ -237,6 +245,7 @@ object AudioSystemHiddenApi {
             null
         }
     }
+
     @Suppress("unused") // for parameters
     private external fun findAfFlagsForPortInternal(id: Int, sr: Int): IntArray?
 
@@ -244,7 +253,8 @@ object AudioSystemHiddenApi {
 
     private val adapterCache = hashMapOf<VolumeChangeListener, Any>()
     private val adapterClazz by lazy {
-        Class.forName("org.nift4.audiosysfwd.AudioVolumeGroupCallbackAdapter") }
+        Class.forName("org.nift4.audiosysfwd.AudioVolumeGroupCallbackAdapter")
+    }
     private val addAudioVolumeGroupCallbackFn by lazy {
         adapterClazz.getDeclaredMethod("getAdd").invoke(null) as Method
     }
@@ -252,13 +262,15 @@ object AudioSystemHiddenApi {
         adapterClazz.getDeclaredMethod("getRemove").invoke(null) as Method
     }
     private val adapterClazzLegacy by lazy {
-        Class.forName("org.nift4.audiofxfwd.VolumeGroupCallbackAdapter") }
+        Class.forName("org.nift4.audiofxfwd.VolumeGroupCallbackAdapter")
+    }
     private val addVolumeGroupCallbackFn by lazy {
         adapterClazzLegacy.getDeclaredMethod("getAdd").invoke(null) as Method
     }
     private val removeVolumeGroupCallbackFn by lazy {
         adapterClazzLegacy.getDeclaredMethod("getRemove").invoke(null) as Method
     }
+
     @Throws(IllegalStateException::class, IllegalArgumentException::class)
     fun addVolumeCallback(context: Context, cb: VolumeChangeListener) {
         if (adapterCache.containsKey(cb))
@@ -286,15 +298,21 @@ object AudioSystemHiddenApi {
                         cb.onVolumeChanged(a, b)
                     })
                 adapterCache[cb] = adapter
-                addVolumeGroupCallbackFn.invoke(audioManager, MoreExecutors.directExecutor(), adapter)
+                addVolumeGroupCallbackFn.invoke(
+                    audioManager,
+                    MoreExecutors.directExecutor(),
+                    adapter
+                )
             }
         } catch (t: Throwable) {
             throw IllegalStateException("failed to add vol cb", t)
         }
     }
+
     @Throws(IllegalStateException::class, IllegalArgumentException::class)
     fun removeVolumeCallback(context: Context, cb: VolumeChangeListener) {
-        val adapter = adapterCache.remove(cb) ?: throw IllegalArgumentException("never registered $cb")
+        val adapter =
+            adapterCache.remove(cb) ?: throw IllegalArgumentException("never registered $cb")
         try {
             if (Build.VERSION.SDK_INT >= 36) {
                 removeAudioVolumeGroupCallbackFn.invoke(null, adapter)
@@ -306,6 +324,7 @@ object AudioSystemHiddenApi {
             throw IllegalStateException("failed to add vol cb", t)
         }
     }
+
     fun interface VolumeChangeListener {
         fun onVolumeChanged(groupId: Int, flags: Int)
     }
@@ -321,13 +340,15 @@ object AudioSystemHiddenApi {
                 .also { Log.d(TRACE_TAG, "native getStreamVolumeInternal is done: $it") }
         } catch (t: Throwable) {
             if (Build.VERSION.SDK_INT == Build.VERSION_CODES.VANILLA_ICE_CREAM &&
-                t is Exception && t.message == "dlsym failed")
+                t is Exception && t.message == "dlsym failed"
+            )
                 Log.i(TAG, "dlsym failed, assuming 15 QPR1 or later")
             else
                 Log.e(TAG, Log.getThrowableString(t)!!)
             return null
         }
     }
+
     private external fun getStreamVolumeInternal(stream: Int, output: Int): Float
 
     fun getMasterVolume(): Float? {
@@ -342,6 +363,7 @@ object AudioSystemHiddenApi {
             return null
         }
     }
+
     private external fun getMasterVolumeInternal(): Float
 
     fun getMasterBalance(): Float? {
@@ -356,6 +378,7 @@ object AudioSystemHiddenApi {
             return null
         }
     }
+
     private external fun getMasterBalanceInternal(): Float
 
     fun getMasterMono(): Boolean? {
@@ -370,6 +393,7 @@ object AudioSystemHiddenApi {
             return null
         }
     }
+
     private external fun getMasterMonoInternal(): Boolean
 
     // TODO: addErrorCallback, removeErrorCallback for audioflinger crash detect out of curiosity

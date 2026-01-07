@@ -61,9 +61,11 @@ class FlowReader(
     private val scope = CoroutineScope(Dispatchers.IO + CoroutineName("FlowReader"))
     private val finishRefreshTrigger = MutableSharedFlow<Unit>(replay = 0)
     private val manualRefreshTrigger = MutableSharedFlow<Unit>(replay = 1)
+
     init {
         manualRefreshTrigger.emitOrDie(Unit)
     }
+
     // Start observing as soon as class gets instantiated. ContentObservers are cheap, and more
     // importantly, this allows us to skip the expensive Reader call if nothing changed while we
     // were inactive - that's the most common case!
@@ -74,53 +76,57 @@ class FlowReader(
     private val mediaVersionFlow = contentObserverVersioningFlow(
         context, scope, MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, true
     ).shareIn(scope, Eagerly, replay = 1)
+
     // These expensive Reader calls are only done if we have someone (UI) observing the result AND
     // something changed. The PauseableFlows mechanism allows us to skip any unnecessary work.
     private val rawPlaylistFlow = rawPlaylistVersionFlow
-            .onEach { requireReplayCacheInvalidationManager().invalidate() }
-            .conflateAndBlockWhenPaused()
-            .flatMapLatest {
-                manualRefreshTrigger.mapLatest { _ ->
-                    if (context.hasAudioPermission())
-                        Reader.fetchPlaylists(context).first
-                    else emptyList()
-                }
+        .onEach { requireReplayCacheInvalidationManager().invalidate() }
+        .conflateAndBlockWhenPaused()
+        .flatMapLatest {
+            manualRefreshTrigger.mapLatest { _ ->
+                if (context.hasAudioPermission())
+                    Reader.fetchPlaylists(context).first
+                else emptyList()
             }
-            .provideReplayCacheInvalidationManager(copyDownstream = Invalidation.Optional)
-            .sharePauseableIn(scope, WhileSubscribed(20000), WhileSubscribed(2000), replay = 1)
-    private val readerFlow: Flow<ReaderResult> =
-        shouldIncludeExtraFormatFlow.distinctUntilChanged().flatMapLatest { shouldIncludeExtraFormat ->
-            shouldUseEnhancedCoverReadingFlow.distinctUntilChanged()
-                .flatMapLatest { shouldUseEnhancedCoverReading ->
-                    minSongLengthSecondsFlow.distinctUntilChanged().flatMapLatest { minSongLengthSeconds ->
-                        blackListSetFlow.distinctUntilChanged().flatMapLatest { blackListSet ->
-                            mediaVersionFlow
-                                .onEach { requireReplayCacheInvalidationManager().invalidate() }
-                                .conflateAndBlockWhenPaused()
-                                .flatMapLatest {
-                                    // manual refresh may for whatever reason run in background
-                                    // but all others shouldn't trigger background runs
-                                    manualRefreshTrigger.mapLatest { _ ->
-                                        repeatUntilDoneWhenUnpaused {
-                                            // TODO repeatUntilDoneWhenUnpaused makes no sense with non-cancelable
-                                            //  function, make it cancelable
-                                            if (context.hasAudioPermission())
-                                                Reader.readFromMediaStore(
-                                                    context,
-                                                    minSongLengthSeconds,
-                                                    blackListSet,
-                                                    shouldUseEnhancedCoverReading,
-                                                    shouldIncludeExtraFormat,
-                                                    coverStubUri = coverStubUri
-                                                )
-                                            else ReaderResult.emptyReaderResult()
-                                        }
-                                    }
-                                }
-                        }
-                    }
-                }
         }
+        .provideReplayCacheInvalidationManager(copyDownstream = Invalidation.Optional)
+        .sharePauseableIn(scope, WhileSubscribed(20000), WhileSubscribed(2000), replay = 1)
+    private val readerFlow: Flow<ReaderResult> =
+        shouldIncludeExtraFormatFlow.distinctUntilChanged()
+            .flatMapLatest { shouldIncludeExtraFormat ->
+                shouldUseEnhancedCoverReadingFlow.distinctUntilChanged()
+                    .flatMapLatest { shouldUseEnhancedCoverReading ->
+                        minSongLengthSecondsFlow.distinctUntilChanged()
+                            .flatMapLatest { minSongLengthSeconds ->
+                                blackListSetFlow.distinctUntilChanged()
+                                    .flatMapLatest { blackListSet ->
+                                        mediaVersionFlow
+                                            .onEach { requireReplayCacheInvalidationManager().invalidate() }
+                                            .conflateAndBlockWhenPaused()
+                                            .flatMapLatest {
+                                                // manual refresh may for whatever reason run in background
+                                                // but all others shouldn't trigger background runs
+                                                manualRefreshTrigger.mapLatest { _ ->
+                                                    repeatUntilDoneWhenUnpaused {
+                                                        // TODO repeatUntilDoneWhenUnpaused makes no sense with non-cancelable
+                                                        //  function, make it cancelable
+                                                        if (context.hasAudioPermission())
+                                                            Reader.readFromMediaStore(
+                                                                context,
+                                                                minSongLengthSeconds,
+                                                                blackListSet,
+                                                                shouldUseEnhancedCoverReading,
+                                                                shouldIncludeExtraFormat,
+                                                                coverStubUri = coverStubUri
+                                                            )
+                                                        else ReaderResult.emptyReaderResult()
+                                                    }
+                                                }
+                                            }
+                                    }
+                            }
+                    }
+            }
             .onEach {
                 finishRefreshTrigger.emit(Unit)
                 awaitingRefresh = true
@@ -145,13 +151,14 @@ class FlowReader(
         .provideReplayCacheInvalidationManager(copyDownstream = Invalidation.Optional)
         .sharePauseableIn(scope, WhileSubscribed(20000), WhileSubscribed(2000), replay = 1)
     private val favoriteFlow = songListFlow.map { songList ->
-            Favorite(songList)
-        }
+        Favorite(songList)
+    }
         .provideReplayCacheInvalidationManager(copyDownstream = Invalidation.Optional)
         .sharePauseableIn(scope, WhileSubscribed(20000), WhileSubscribed(2000), replay = 1)
-    private val mappedPlaylistsFlow = idPathMapFlow.combine(rawPlaylistFlow) { idPathMap, rawPlaylists ->
-        rawPlaylists.map { it.toPlaylist(idPathMap.first, idPathMap.second) }
-    }
+    private val mappedPlaylistsFlow =
+        idPathMapFlow.combine(rawPlaylistFlow) { idPathMap, rawPlaylists ->
+            rawPlaylists.map { it.toPlaylist(idPathMap.first, idPathMap.second) }
+        }
     val albumListFlow: Flow<List<Album>> = readerFlow.map { it.albumList!! }
     val albumArtistListFlow: Flow<List<Artist>> = readerFlow.map { it.albumArtistList!! }
     val artistListFlow: Flow<List<Artist>> = readerFlow.map { it.artistList!! }

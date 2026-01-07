@@ -1,6 +1,5 @@
 package uk.akane.libphonograph.items
 
-import androidx.compose.ui.util.fastFilterNotNull
 import androidx.media3.common.MediaItem
 import java.io.File
 import kotlin.math.max
@@ -14,13 +13,19 @@ open class Playlist protected constructor(
     val hasGaps: Boolean,
 ) : Item {
     private var _songList: List<MediaItem>? = null
-    constructor(id: Long?, title: String?, path: File?, dateAdded: Long?, dateModified: Long?,
-                hasGaps: Boolean, songList: List<MediaItem>) : this(id, title, path, dateAdded, dateModified, hasGaps) {
+
+    constructor(
+        id: Long?, title: String?, path: File?, dateAdded: Long?, dateModified: Long?,
+        hasGaps: Boolean, songList: List<MediaItem>
+    ) : this(id, title, path, dateAdded, dateModified, hasGaps) {
         _songList = songList
     }
+
     override val songList: List<MediaItem>
-        get() = _songList ?: throw IllegalStateException("code bug: Playlist subclass used " +
-                "protected constructor but did not override songList")
+        get() = _songList ?: throw IllegalStateException(
+            "code bug: Playlist subclass used " +
+                    "protected constructor but did not override songList"
+        )
 
     override fun hashCode(): Int {
         var result = id?.hashCode() ?: 0
@@ -61,7 +66,7 @@ internal data class RawPlaylist(
                 ?: if (idList.getOrNull(i) != null) idMap!![idList[i]!!] else null
         }
         val result = if (tmp.contains(null)) tmp.filterNotNull() else
-                (@Suppress("UNCHECKED_CAST") (tmp as Array<MediaItem>)).toList()
+            (@Suppress("UNCHECKED_CAST") (tmp as Array<MediaItem>)).toList()
         return Playlist(id, title, path, dateAdded, dateModified, result.size != tmp.size, result)
     }
 }

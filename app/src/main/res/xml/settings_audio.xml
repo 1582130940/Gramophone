@@ -23,10 +23,10 @@
         android:title="@string/settings_category_misc">
 
         <Preference
-            app:iconSpaceReserved="false"
             android:key="replaygain"
             android:layout="@layout/preference_basic"
-            android:title="@string/settings_replaygain" />
+            android:title="@string/settings_replaygain"
+            app:iconSpaceReserved="false" />
 
 
         <SwitchPreferenceCompat

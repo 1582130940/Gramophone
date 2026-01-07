@@ -6,9 +6,9 @@
     android:layout_height="@dimen/folder_card_height"
     android:clickable="true"
     android:focusable="true"
+    android:orientation="horizontal"
     android:paddingStart="24dp"
     android:paddingEnd="54dp"
-    android:orientation="horizontal"
     tools:ignore="RtlSymmetry">
 
     <com.google.android.material.card.MaterialCardView
@@ -16,16 +16,16 @@
         android:layout_width="50dp"
         android:layout_height="50dp"
         android:layout_gravity="center_vertical"
-        app:cardCornerRadius="@dimen/list_round_corner_size"
-        app:cardBackgroundColor="@android:color/transparent">
+        app:cardBackgroundColor="@android:color/transparent"
+        app:cardCornerRadius="@dimen/list_round_corner_size">
 
         <ImageView
             android:id="@+id/cover"
             android:layout_width="50dp"
             android:layout_height="50dp"
-            android:padding="10dp"
             android:layout_gravity="center_vertical"
             android:importantForAccessibility="no"
+            android:padding="10dp"
             android:scaleType="centerCrop"
             app:srcCompat="@drawable/ic_folder" />
 
@@ -43,22 +43,22 @@
             android:id="@+id/title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:fontFamily="sans-serif"
             android:singleLine="true"
             android:textColor="?attr/colorOnSurface"
-            app:textFontWeight="400"
-            android:fontFamily="sans-serif"
             android:textSize="17sp"
+            app:textFontWeight="400"
             tools:text="Example Title" />
 
         <TextView
             android:id="@+id/subtitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:fontFamily="sans-serif"
             android:singleLine="true"
             android:textColor="?attr/colorOnSurfaceVariant"
-            app:textFontWeight="400"
-            android:fontFamily="sans-serif"
             android:textSize="14sp"
+            app:textFontWeight="400"
             tools:text="Example Artist" />
 
     </LinearLayout>

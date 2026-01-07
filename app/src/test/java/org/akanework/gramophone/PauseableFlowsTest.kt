@@ -39,7 +39,7 @@ class PauseableFlowsTest {
                 val start = System.currentTimeMillis()
                 println("flow: emit $i")
                 emit(i++)
-                println("flow: emit ${i-1} took ${System.currentTimeMillis() - start}")
+                println("flow: emit ${i - 1} took ${System.currentTimeMillis() - start}")
             }
         }.conflateAndBlockWhenPaused()
         runBlocking {
@@ -194,38 +194,59 @@ class PauseableFlowsTest {
                 it is IncrementalList.Begin || cache == null -> {
                     // nothing to check
                 }
+
                 it is IncrementalList.Insert -> {
                     var new = ArrayList(cache!!.after)
-                    for (i in it.pos..<it.pos+it.count) {
+                    for (i in it.pos..<it.pos + it.count) {
                         new.add(i, it.after[i])
                     }
-                    assertEquals("at \"$tag\", expected match while processing op $it (old=${cache!!.after})", it.after, new)
+                    assertEquals(
+                        "at \"$tag\", expected match while processing op $it (old=${cache!!.after})",
+                        it.after,
+                        new
+                    )
                 }
+
                 it is IncrementalList.Move -> {
                     var new = ArrayList(cache!!.after)
                     var removed = ArrayList<T>(it.count)
                     repeat(it.count) { _ ->
                         removed.add(new.removeAt(it.pos))
                     }
-                    for (i in it.outPos..<it.outPos+it.count) {
+                    for (i in it.outPos..<it.outPos + it.count) {
                         new.add(i, removed[i - it.outPos])
                     }
-                    assertEquals("at \"$tag\", expected match while processing op $it (old=${cache!!.after})", it.after, new)
+                    assertEquals(
+                        "at \"$tag\", expected match while processing op $it (old=${cache!!.after})",
+                        it.after,
+                        new
+                    )
                 }
+
                 it is IncrementalList.Remove -> {
                     var new = ArrayList(cache!!.after)
                     repeat(it.count) { _ ->
                         new.removeAt(it.pos)
                     }
-                    assertEquals("at \"$tag\", expected match while processing op $it (old=${cache!!.after})", it.after, new)
+                    assertEquals(
+                        "at \"$tag\", expected match while processing op $it (old=${cache!!.after})",
+                        it.after,
+                        new
+                    )
                 }
+
                 it is IncrementalList.Update -> {
                     var new = ArrayList(cache!!.after)
-                    for (i in it.pos..<it.pos+it.count) {
+                    for (i in it.pos..<it.pos + it.count) {
                         new[i] = it.after[i]
                     }
-                    assertEquals("at \"$tag\", expected match while processing op $it (old=${cache!!.after})", it.after, new)
+                    assertEquals(
+                        "at \"$tag\", expected match while processing op $it (old=${cache!!.after})",
+                        it.after,
+                        new
+                    )
                 }
+
                 else -> throw IllegalArgumentException("unknown command?")
             }
             emit(it)
@@ -241,31 +262,55 @@ class PauseableFlowsTest {
                 it is IncrementalMap.Begin || cache == null -> {
                     // nothing to check
                 }
+
                 it is IncrementalMap.Insert -> {
                     var new = HashMap(cache!!.after)
                     assertFalse(new.contains(it.key))
                     new[it.key] = it.after[it.key]
-                    assertEquals("at \"$tag\", expected match while processing op $it (old=${cache!!.after})", it.after, new)
+                    assertEquals(
+                        "at \"$tag\", expected match while processing op $it (old=${cache!!.after})",
+                        it.after,
+                        new
+                    )
                 }
+
                 it is IncrementalMap.Move -> {
                     var new = HashMap(cache!!.after)
                     assertTrue(new.contains(it.key))
                     assertFalse(new.contains(it.outKey))
                     new[it.outKey] = new.remove(it.key)
-                    assertEquals("at \"$tag\", expected match while processing op $it (old=${cache!!.after})", it.after, new)
+                    assertEquals(
+                        "at \"$tag\", expected match while processing op $it (old=${cache!!.after})",
+                        it.after,
+                        new
+                    )
                 }
+
                 it is IncrementalMap.Remove -> {
                     var new = HashMap(cache!!.after)
                     assertTrue(new.contains(it.key))
                     new.remove(it.key)
-                    assertEquals("at \"$tag\", expected match while processing op $it (old=${cache!!.after})", it.after, new)
+                    assertEquals(
+                        "at \"$tag\", expected match while processing op $it (old=${cache!!.after})",
+                        it.after,
+                        new
+                    )
                 }
+
                 it is IncrementalMap.Update -> {
                     var new = HashMap(cache!!.after)
-                    assertTrue("at \"$tag\", processing op $it: expected key to exist", new.contains(it.key))
+                    assertTrue(
+                        "at \"$tag\", processing op $it: expected key to exist",
+                        new.contains(it.key)
+                    )
                     new[it.key] = it.after[it.key]
-                    assertEquals("at \"$tag\", expected match while processing op $it (old=${cache!!.after})", it.after, new)
+                    assertEquals(
+                        "at \"$tag\", expected match while processing op $it (old=${cache!!.after})",
+                        it.after,
+                        new
+                    )
                 }
+
                 else -> throw IllegalArgumentException("unknown command?")
             }
             emit(it)

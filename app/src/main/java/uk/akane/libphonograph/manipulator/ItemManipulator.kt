@@ -13,10 +13,9 @@ import android.os.Build
 import android.os.Environment
 import android.os.Process
 import android.provider.MediaStore
-import androidx.media3.common.util.Log
 import androidx.annotation.ChecksSdkIntAtLeast
 import androidx.annotation.RequiresApi
-import kotlinx.coroutines.withContext
+import androidx.media3.common.util.Log
 import org.akanework.gramophone.logic.hasImprovedMediaStore
 import org.akanework.gramophone.logic.hasMarkIsFavouriteStatus
 import org.akanework.gramophone.logic.hasScopedStorageV2
@@ -30,8 +29,8 @@ import java.io.IOException
 object ItemManipulator {
     private const val TAG = "ItemManipulator"
     // TODO: generally migrate writing IO to MediaStore on R+ (not on legacy!) in order to get rich
-	//  error messages instead of FUSE just saying ENOPERM (reading is more complicated because the
-	//  database can be out of sync for whatever reasons)
+    //  error messages instead of FUSE just saying ENOPERM (reading is more complicated because the
+    //  database can be out of sync for whatever reasons)
     //  i.e. do not use FUSE for insert, delete, or anything else
     //  also fallback to ContentProvider.delete() with RecoverableSecurityException if
     //   createDeleteRequest throws the all items need to be specified unique id stuff
@@ -84,8 +83,10 @@ object ItemManipulator {
                     )
                     throw DeleteFailedPleaseTryDeleteRequestException(pendingIntent)
                 } else if (!ok) {
-                    throw IOException("failed to delete" +
-                            "${notOk.size} items")
+                    throw IOException(
+                        "failed to delete" +
+                                "${notOk.size} items"
+                    )
                 }
             }
         }
@@ -128,11 +129,13 @@ object ItemManipulator {
     }
 
     private fun getIdForPath(context: Context, file: File): Long? {
-        val cursor = context.contentResolver.query(MediaStore.Files.getContentUri("external"),
+        val cursor = context.contentResolver.query(
+            MediaStore.Files.getContentUri("external"),
             if (hasImprovedMediaStore())
                 arrayOf(MediaStore.MediaColumns._ID, MediaStore.Files.FileColumns.MEDIA_TYPE)
             else arrayOf(MediaStore.MediaColumns._ID),
-            "${MediaStore.Files.FileColumns.DATA} = ?", arrayOf(file.absolutePath), null)
+            "${MediaStore.Files.FileColumns.DATA} = ?", arrayOf(file.absolutePath), null
+        )
         if (cursor == null) return null
         cursor.use {
             if (!cursor.moveToFirst()) return null
@@ -160,14 +163,18 @@ object ItemManipulator {
     @ChecksSdkIntAtLeast(Build.VERSION_CODES.R)
     fun needRequestWrite(context: Context, uri: Uri): Boolean {
         return hasScopedStorageV2() && !checkIfFileAttributedToSelf(context, uri) &&
-                context.checkUriPermission(uri, Process.myPid(), Process.myUid(),
-                    Intent.FLAG_GRANT_WRITE_URI_PERMISSION) != PackageManager.PERMISSION_GRANTED
+                context.checkUriPermission(
+                    uri, Process.myPid(), Process.myUid(),
+                    Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                ) != PackageManager.PERMISSION_GRANTED
     }
 
     @RequiresApi(Build.VERSION_CODES.Q)
     private fun checkIfFileAttributedToSelf(context: Context, uri: Uri): Boolean {
-        val cursor = context.contentResolver.query(uri,
-            arrayOf(MediaStore.MediaColumns.OWNER_PACKAGE_NAME), null, null, null)
+        val cursor = context.contentResolver.query(
+            uri,
+            arrayOf(MediaStore.MediaColumns.OWNER_PACKAGE_NAME), null, null, null
+        )
         if (cursor == null) return false
         cursor.use {
             if (!cursor.moveToFirst()) return false
@@ -191,13 +198,17 @@ object ItemManipulator {
             PlaylistSerializer.write(context.applicationContext, out, songs)
         } catch (t: Throwable) {
             try {
-                PlaylistSerializer.write(context.applicationContext, out.resolveSibling(
-                    "${out.nameWithoutExtension}_NEW_${System.currentTimeMillis()}.m3u"), songs)
+                PlaylistSerializer.write(
+                    context.applicationContext, out.resolveSibling(
+                        "${out.nameWithoutExtension}_NEW_${System.currentTimeMillis()}.m3u"
+                    ), songs
+                )
             } catch (t: Throwable) {
                 Log.e(TAG, Log.getThrowableString(t)!!)
             }
             try {
-                out.resolveSibling("${out.nameWithoutExtension}_BAK_${System.currentTimeMillis()}.${out.extension}").writeBytes(backup)
+                out.resolveSibling("${out.nameWithoutExtension}_BAK_${System.currentTimeMillis()}.${out.extension}")
+                    .writeBytes(backup)
             } catch (t: Throwable) {
                 Log.e(TAG, Log.getThrowableString(t)!!)
             }
@@ -219,17 +230,25 @@ object ItemManipulator {
             }
             if (!hasScopedStorageV2())
                 throw IOException("deletion of old file failed, both old and new files exist")
-            throw DeleteFailedPleaseTryDeleteRequestException(MediaStore.createDeleteRequest(
-                context.contentResolver, listOf(new.toUriCompat())
-            ))
+            throw DeleteFailedPleaseTryDeleteRequestException(
+                MediaStore.createDeleteRequest(
+                    context.contentResolver, listOf(new.toUriCompat())
+                )
+            )
         }
-        MediaScannerConnection.scanFile(context, arrayOf(out.toString(), new.toString()), null) { path, uri ->
+        MediaScannerConnection.scanFile(
+            context,
+            arrayOf(out.toString(), new.toString()),
+            null
+        ) { path, uri ->
             if (uri == null && path == new.toString()) {
                 Log.e(TAG, "failed to scan renamed playlist $path")
             }
         }
     }
-    class DeleteFailedPleaseTryDeleteRequestException(val pendingIntent: PendingIntent) : Exception()
+
+    class DeleteFailedPleaseTryDeleteRequestException(val pendingIntent: PendingIntent) :
+        Exception()
 
     class MediaStoreRequest {
         val startSystemDialog: IntentSender?

@@ -21,8 +21,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlin.random.Random
 import org.akanework.gramophone.logic.utils.CalculationUtils.lerp
+import kotlin.random.Random
 
 private inline val padding
     get() = 160f
@@ -58,8 +58,10 @@ class NowPlayingDrawable(context: Context) : Drawable() {
 
     init {
         CoroutineScope(Dispatchers.Default).launch {
-            val animationsEnabled = Settings.Global.getFloat(context.contentResolver,
-                Settings.Global.ANIMATOR_DURATION_SCALE, 1f) != 0f
+            val animationsEnabled = Settings.Global.getFloat(
+                context.contentResolver,
+                Settings.Global.ANIMATOR_DURATION_SCALE, 1f
+            ) != 0f
             withContext(Dispatchers.Main) {
                 this@NowPlayingDrawable.animationsEnabled = animationsEnabled
                 if (animationsEnabled) ts = SystemClock.elapsedRealtime()
@@ -80,7 +82,7 @@ class NowPlayingDrawable(context: Context) : Drawable() {
         } else false
         if ((ld || md || rd) && animationsEnabled == true) ts = SystemClock.elapsedRealtime()
         val scale = if (animationsEnabled == true)
-                ((SystemClock.elapsedRealtime() - ts) / animDuration).coerceAtMost(1f)
+            ((SystemClock.elapsedRealtime() - ts) / animDuration).coerceAtMost(1f)
         else if (animationsEnabled == false) 1f else 0f
 
         // Left bar

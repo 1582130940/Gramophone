@@ -30,37 +30,36 @@ class BlacklistFolderAdapter(
 
     init {
         repeatPausingWithLifecycle(activity, Dispatchers.Default) {
-            activity.gramophoneApplication.reader.foldersFlow.
-            combine(activity.gramophoneApplication.blackListSetFlow) { newFolderArray, newFolderFilter ->
+            activity.gramophoneApplication.reader.foldersFlow.combine(activity.gramophoneApplication.blackListSetFlow) { newFolderArray, newFolderFilter ->
                 val sortedFolderArray = newFolderArray.sorted()
                 val oldFolderArray = folderArray?.toList()
                 val oldFolderFilter = folderFilter?.toSet()
                 val diff = if (oldFolderArray != null && oldFolderFilter != null)
                     DiffUtil.calculateDiff(object : DiffUtil.Callback() {
-                    override fun getOldListSize(): Int {
-                        return oldFolderArray.size
-                    }
+                        override fun getOldListSize(): Int {
+                            return oldFolderArray.size
+                        }
 
-                    override fun getNewListSize(): Int {
-                        return sortedFolderArray.size
-                    }
+                        override fun getNewListSize(): Int {
+                            return sortedFolderArray.size
+                        }
 
-                    override fun areItemsTheSame(
-                        oldItemPosition: Int,
-                        newItemPosition: Int
-                    ): Boolean {
-                        return oldFolderArray[oldItemPosition] == sortedFolderArray[newItemPosition]
-                    }
+                        override fun areItemsTheSame(
+                            oldItemPosition: Int,
+                            newItemPosition: Int
+                        ): Boolean {
+                            return oldFolderArray[oldItemPosition] == sortedFolderArray[newItemPosition]
+                        }
 
-                    override fun areContentsTheSame(
-                        oldItemPosition: Int,
-                        newItemPosition: Int
-                    ): Boolean {
-                        return oldFolderFilter.contains(oldFolderArray[oldItemPosition]) ==
-                                newFolderFilter.contains(sortedFolderArray[newItemPosition])
-                    }
+                        override fun areContentsTheSame(
+                            oldItemPosition: Int,
+                            newItemPosition: Int
+                        ): Boolean {
+                            return oldFolderFilter.contains(oldFolderArray[oldItemPosition]) ==
+                                    newFolderFilter.contains(sortedFolderArray[newItemPosition])
+                        }
 
-                }, true) else null
+                    }, true) else null
                 withContext(Dispatchers.Main + NonCancellable) {
                     folderArray = sortedFolderArray
                     folderFilter = newFolderFilter

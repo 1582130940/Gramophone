@@ -47,14 +47,17 @@ class LyricWidgetProvider : AppWidgetProvider() {
                     setPendingIntentTemplate(R.id.list_view, seekPi)
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                         val factory = LyricRemoteViewsFactory(context, appWidgetId)
-                        setRemoteAdapter(R.id.list_view,
+                        setRemoteAdapter(
+                            R.id.list_view,
                             RemoteViews.RemoteCollectionItems.Builder()
                                 .setViewTypeCount(factory.viewTypeCount)
                                 .setHasStableIds(factory.hasStableIds())
                                 .apply {
                                     for (i in 0..<factory.count) {
-                                        addItem(factory.getItemId(i),
-                                            factory.getViewAt(i)!!)
+                                        addItem(
+                                            factory.getItemId(i),
+                                            factory.getViewAt(i)!!
+                                        )
                                     }
                                 }
                                 .build())
@@ -159,7 +162,8 @@ private class LyricRemoteViewsFactory(private val context: Context, private val 
             val li = service?.getCurrentLyricIndex(true)
             val awm = AppWidgetManager.getInstance(context)
             if (li != null) {
-                awm.partiallyUpdateAppWidget(appWidgetId,
+                awm.partiallyUpdateAppWidget(
+                    appWidgetId,
                     RemoteViews(context.packageName, R.layout.lyric_widget).apply {
                         setScrollPosition(R.id.list_view, li)
                     }
@@ -187,7 +191,8 @@ private class LyricRemoteViewsFactory(private val context: Context, private val 
             }
         }
         val item = service?.syncedLyrics?.text?.getOrNull(position)
-        val itemUnsynced = if (item == null) service?.lyrics?.unsyncedText?.getOrNull(position) else null
+        val itemUnsynced =
+            if (item == null) service?.lyrics?.unsyncedText?.getOrNull(position) else null
         if (item == null && itemUnsynced == null) return null
         val isTranslation = item?.isTranslated == true
         val isBackground = (item?.speaker ?: itemUnsynced?.second)?.isBackground == true
@@ -214,8 +219,10 @@ private class LyricRemoteViewsFactory(private val context: Context, private val 
         ).apply {
             val sb = SpannableString(item?.text ?: itemUnsynced!!.first)
             if (isActive) {
-                val hlChar = if (item?.words != null) item.words.findLast { it.timeRange.first <=
-                        cPos!!.toULong() }?.charRange?.last?.plus(1) ?: 0 else sb.length
+                val hlChar = if (item?.words != null) item.words.findLast {
+                    it.timeRange.first <=
+                            cPos!!.toULong()
+                }?.charRange?.last?.plus(1) ?: 0 else sb.length
                 if (hlChar > 0)
                     sb.setSpan(span, 0, hlChar, Spanned.SPAN_INCLUSIVE_INCLUSIVE)
             }
@@ -236,9 +243,11 @@ private class LyricRemoteViewsFactory(private val context: Context, private val 
     override fun getViewTypeCount(): Int {
         return 12
     }
+
     override fun getItemId(position: Int): Long {
         val item = service?.syncedLyrics?.text?.getOrNull(position)
-        val itemUnsynced = if (item == null) service?.lyrics?.unsyncedText?.getOrNull(position) else null
+        val itemUnsynced =
+            if (item == null) service?.lyrics?.unsyncedText?.getOrNull(position) else null
         if (item == null && itemUnsynced == null) return 0L
         return ((item?.text ?: itemUnsynced!!.first).hashCode()).toLong()
             .shl(32) or

@@ -1,7 +1,7 @@
 package org.akanework.gramophone.logic.utils
 
-import androidx.media3.common.util.Log
 import androidx.media3.common.C
+import androidx.media3.common.util.Log
 import androidx.media3.exoplayer.source.ShuffleOrder
 import org.akanework.gramophone.logic.utils.exoplayer.EndedWorkaroundPlayer
 import kotlin.random.Random
@@ -103,8 +103,10 @@ class CircularShuffleOrder private constructor(
             listener.nextShuffleOrder = null
             val nextShuffleOrder = factory(insertionIndex, shuffled.size + insertionCount, listener)
             if (nextShuffleOrder.length != shuffled.size + insertionCount)
-                throw IllegalStateException("next shuffle order size ${nextShuffleOrder.length} " +
-                        "does not match requested ${shuffled.size + insertionCount}")
+                throw IllegalStateException(
+                    "next shuffle order size ${nextShuffleOrder.length} " +
+                            "does not match requested ${shuffled.size + insertionCount}"
+                )
                     .also { Log.e(TAG, Log.getThrowableString(it)!!) }
             return nextShuffleOrder
         }
@@ -134,8 +136,10 @@ class CircularShuffleOrder private constructor(
 
     override fun cloneAndSet(insertionCount: Int, startIndex: Int): ShuffleOrder {
         if (listener.nextShuffleOrder == null && startIndex != C.INDEX_UNSET) {
-            return CircularShuffleOrder(listener, startIndex, insertionCount,
-                random.nextLong())
+            return CircularShuffleOrder(
+                listener, startIndex, insertionCount,
+                random.nextLong()
+            )
         }
         // fall back to super which calls cloneAndInsert() which will process next shuffle order
         // or just randomly shuffles as appropriate
@@ -164,7 +168,11 @@ class CircularShuffleOrder private constructor(
         return CircularShuffleOrder(listener, newShuffled, Random(random.nextLong()))
     }
 
-    override fun cloneAndMove(indexFrom: Int, indexToExclusive: Int, newIndexFrom: Int): ShuffleOrder {
+    override fun cloneAndMove(
+        indexFrom: Int,
+        indexToExclusive: Int,
+        newIndexFrom: Int
+    ): ShuffleOrder {
         return cloneAndRemove(indexFrom, indexToExclusive)
             .cloneAndInsert(newIndexFrom, indexToExclusive - indexFrom)
     }
@@ -188,7 +196,10 @@ class CircularShuffleOrder private constructor(
                     )
                 } catch (e: NumberFormatException) {
                     // might happen with some real bad luck?
-                    Log.e(TAG, "gave up trying to restore shuffle order: " + Log.getThrowableString(e)!!)
+                    Log.e(
+                        TAG,
+                        "gave up trying to restore shuffle order: " + Log.getThrowableString(e)!!
+                    )
                     Persistent(Random.nextLong(), null)
                 }
             }
@@ -201,7 +212,8 @@ class CircularShuffleOrder private constructor(
         fun toFactory(): (Int, Int, EndedWorkaroundPlayer) -> CircularShuffleOrder {
             if (data == null) {
                 return { firstIndex, mediaItemCount, it ->
-                    CircularShuffleOrder(it, firstIndex, mediaItemCount, seed) }
+                    CircularShuffleOrder(it, firstIndex, mediaItemCount, seed)
+                }
             } else {
                 return { _, _, it ->
                     CircularShuffleOrder(it, data, seed)

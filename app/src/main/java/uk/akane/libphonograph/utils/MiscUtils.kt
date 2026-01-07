@@ -1,8 +1,8 @@
 package uk.akane.libphonograph.utils
 
 import android.net.Uri
-import androidx.media3.common.util.Log
 import androidx.media3.common.MediaItem
+import androidx.media3.common.util.Log
 import uk.akane.libphonograph.ALLOWED_EXT
 import uk.akane.libphonograph.items.Album
 import uk.akane.libphonograph.items.FileNode
@@ -27,8 +27,10 @@ object MiscUtils {
     }
 
     internal fun handleMediaFolder(path: String, rootNode: FileNode): FileNode {
-        val splitPath = path.substring(1, if (path.endsWith('/'))
-            path.length - 1 else path.length).split('/')
+        val splitPath = path.substring(
+            1, if (path.endsWith('/'))
+                path.length - 1 else path.length
+        ).split('/')
         var node: FileNode = rootNode
         for (fld in splitPath) {
             var newNode = node.folderList[fld]
@@ -95,9 +97,12 @@ object MiscUtils {
         val foundAlbumArtists = songs.groupBy { it.mediaMetadata.albumArtist?.toString() }
             .mapValues { it.value.size }
         if (foundAlbumArtists.size > 2
-            || (foundAlbumArtists.size == 2 && !foundAlbumArtists.containsKey(null))) {
-            Log.w("libPhonograph", "Odd, album artists: $foundAlbumArtists for one album exceed 1, " +
-                    "MediaStore usually doesn't do that")
+            || (foundAlbumArtists.size == 2 && !foundAlbumArtists.containsKey(null))
+        ) {
+            Log.w(
+                "libPhonograph", "Odd, album artists: $foundAlbumArtists for one album exceed 1, " +
+                        "MediaStore usually doesn't do that"
+            )
             return null
         }
         val theAlbumArtist = foundAlbumArtists.keys.find { it != null }
@@ -114,7 +119,8 @@ object MiscUtils {
             )
         } else {
             // Meh, let's guess based on artist tag.
-            val bestMatch = songs.groupBy { it.mediaMetadata.artist?.toString() }.maxByOrNull { it.value.size }
+            val bestMatch =
+                songs.groupBy { it.mediaMetadata.artist?.toString() }.maxByOrNull { it.value.size }
             if (bestMatch?.key == null) return null
             // If less than 60% of songs have said artist, we can't reasonably assume the best match
             // is the actual album artist.

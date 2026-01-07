@@ -37,8 +37,11 @@ import org.akanework.gramophone.ui.adapters.DetailedFolderAdapter
 class CustomGridLayoutManager(
     context: Context
 ) : GridLayoutManager(context, FULL_SPAN_COUNT) {
-    constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int,
-                defStyleRes: Int) : this(context)
+    constructor(
+        context: Context, attrs: AttributeSet?, defStyleAttr: Int,
+        defStyleRes: Int
+    ) : this(context)
+
     companion object {
         const val FULL_SPAN_COUNT = 12
         const val LIST_PORTRAIT_SPAN_SIZE = 12 // 100%
@@ -48,6 +51,7 @@ class CustomGridLayoutManager(
         const val COMPACT_GRID_PORTRAIT_SPAN_SIZE = 4 // 33%
         const val COMPACT_GRID_LANDSCAPE_SPAN_SIZE = 2 // 16%
     }
+
     init {
         spanSizeLookup =
             object : SpanSizeLookup() {
@@ -62,7 +66,7 @@ class CustomGridLayoutManager(
                     }
                     var adapter = parent.adapter
                     var itemPosition = pos
-                    loop@while (adapter is ConcatAdapter) {
+                    loop@ while (adapter is ConcatAdapter) {
                         for (it in adapter.adapters) {
                             val c = it.itemCount
                             if (itemPosition < c) {
@@ -79,21 +83,21 @@ class CustomGridLayoutManager(
                 override fun getSpanSize(position: Int): Int {
                     val (adapter, pos) = getAdapterAndPosForPos(position)
                     return when (adapter) {
-	                    is BaseDecorAdapter<*> -> {
-		                    spanCount
-	                    }
+                        is BaseDecorAdapter<*> -> {
+                            spanCount
+                        }
 
                         is DetailedFolderAdapter.FolderCardAdapter -> {
                             spanCount
                         }
 
-	                    is BaseAdapter<*> -> {
-		                    adapter.getSpanSize()
-	                    }
+                        is BaseAdapter<*> -> {
+                            adapter.getSpanSize()
+                        }
 
-	                    else -> {
-		                    throw IllegalStateException("unsupported adapter ${adapter.javaClass.name}")
-	                    }
+                        else -> {
+                            throw IllegalStateException("unsupported adapter ${adapter.javaClass.name}")
+                        }
                     }
                 }
 

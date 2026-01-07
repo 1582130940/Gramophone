@@ -62,22 +62,36 @@ class ReplayGainAudioProcessor : BaseAudioProcessor() {
                     while (inputBuffer.hasRemaining()) {
                         when (inputAudioFormat.encoding) {
                             C.ENCODING_PCM_8BIT -> outputBuffer.put(
-                                (inputBuffer.get() * gain).toInt().toByte())
+                                (inputBuffer.get() * gain).toInt().toByte()
+                            )
+
                             C.ENCODING_PCM_16BIT, C.ENCODING_PCM_16BIT_BIG_ENDIAN ->
                                 outputBuffer.putShort(
-                                    (inputBuffer.getShort() * gain).toInt().toShort())
+                                    (inputBuffer.getShort() * gain).toInt().toShort()
+                                )
+
                             C.ENCODING_PCM_24BIT, C.ENCODING_PCM_24BIT_BIG_ENDIAN -> {
-                                Util.putInt24(outputBuffer, (Util.getInt24(inputBuffer,
-                                    inputBuffer.position()) * gain).toInt()
-                                    .shl(8).shr(8))
+                                Util.putInt24(
+                                    outputBuffer, (Util.getInt24(
+                                        inputBuffer,
+                                        inputBuffer.position()
+                                    ) * gain).toInt()
+                                        .shl(8).shr(8)
+                                )
                                 inputBuffer.position(inputBuffer.position() + 3)
                             }
+
                             C.ENCODING_PCM_32BIT, C.ENCODING_PCM_32BIT_BIG_ENDIAN ->
                                 outputBuffer.putInt((inputBuffer.getInt() * gain).toInt())
+
                             C.ENCODING_PCM_FLOAT -> outputBuffer.putFloat(
-                                inputBuffer.getFloat() * gain)
+                                inputBuffer.getFloat() * gain
+                            )
+
                             C.ENCODING_PCM_DOUBLE -> outputBuffer.putDouble(
-                                inputBuffer.getDouble() * gain)
+                                inputBuffer.getDouble() * gain
+                            )
+
                             else -> throw IllegalStateException("unreachable, bad encoding")
                         }
                     }

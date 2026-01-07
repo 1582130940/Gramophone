@@ -119,7 +119,11 @@ class GeneralSubFragment : BaseFragment(true) {
                     it.find { it.id == id && it.javaClass.name == clazz }
                 }
                     .provideReplayCacheInvalidationManager()
-                    .sharePauseableIn(CoroutineScope(Dispatchers.Default), WhileSubscribed(), replay = 1)
+                    .sharePauseableIn(
+                        CoroutineScope(Dispatchers.Default),
+                        WhileSubscribed(),
+                        replay = 1
+                    )
                 title = item.map {
                     if (it is RecentlyAdded) {
                         requireContext().getString(R.string.recently_added)

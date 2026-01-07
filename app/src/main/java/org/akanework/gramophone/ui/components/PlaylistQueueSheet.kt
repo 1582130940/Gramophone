@@ -68,10 +68,12 @@ class PlaylistQueueSheet(
         touchHelper.attachToRecyclerView(recyclerView)
         recyclerView.layoutManager = LinearLayoutManager(context)
         recyclerView.adapter = playlistAdapter
-        recyclerView.scrollToPositionWithOffsetCompat(playlistAdapter.playlist.first.indexOfFirst { i ->
-            i == (instance?.currentMediaItemIndex ?: 0)
-        }, // quick UX hack to show there's more songs above (well, if there is).
-            (context.resources.getDimensionPixelOffset(R.dimen.list_height) * 0.5f).toInt())
+        recyclerView.scrollToPositionWithOffsetCompat(
+            playlistAdapter.playlist.first.indexOfFirst { i ->
+                i == (instance?.currentMediaItemIndex ?: 0)
+            }, // quick UX hack to show there's more songs above (well, if there is).
+            (context.resources.getDimensionPixelOffset(R.dimen.list_height) * 0.5f).toInt()
+        )
         recyclerView.fastScroll(null, null)
         findViewById<Button>(R.id.clearQueue)!!.setOnClickListener {
             dismiss()
@@ -120,6 +122,7 @@ class PlaylistQueueSheet(
                 durationView.stop()
             }
         }
+
         var currentMediaItemIndex: Int? = null
             set(value) {
                 if (field != value) {
@@ -239,7 +242,8 @@ class PlaylistQueueSheet(
         fun updateTimer() {
             val current = (instance?.currentMediaItemIndex ?: 0)
             val elapsedCurrentMs = (instance?.currentPosition ?: 0)
-            durationView.format = context.getString(R.string.duration_queue,
+            durationView.format = context.getString(
+                R.string.duration_queue,
                 "%s", playlist.second.sumOf { it.mediaMetadata.durationMs ?: 0L }
                     .convertDurationToTimeStamp(true))
             if (instance?.isPlaying == true) {
@@ -249,7 +253,7 @@ class PlaylistQueueSheet(
             }
             durationView.base = SystemClock.elapsedRealtime() +
                     playlist.second.subList(current, playlist.second.size)
-                    .sumOf { it.mediaMetadata.durationMs ?: 0L } - elapsedCurrentMs + 1000
+                        .sumOf { it.mediaMetadata.durationMs ?: 0L } - elapsedCurrentMs + 1000
         }
     }
 }

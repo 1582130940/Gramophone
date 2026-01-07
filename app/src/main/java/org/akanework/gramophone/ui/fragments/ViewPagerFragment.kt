@@ -122,7 +122,9 @@ class ViewPagerFragment : BaseFragment(true) {
                 R.id.quick_refresh -> {
                     val playerLayout = activity.playerBottomSheet
                     activity.updateLibrary {
-                        showRefreshDoneSnackBar(playerLayout, runBlocking { activity.reader.songListFlow.first().size })
+                        showRefreshDoneSnackBar(
+                            playerLayout,
+                            runBlocking { activity.reader.songListFlow.first().size })
                     }
                 }
 
@@ -141,15 +143,21 @@ class ViewPagerFragment : BaseFragment(true) {
                             if (progress.step != SdScanner.SimpleProgress.Step.DONE) {
                                 val str = if (progress.percentage == null)
                                     context.getString(R.string.refreshing_wait)
-                                else context.getString(R.string.still_refreshing, progress.step.ordinal,
-                                    SdScanner.SimpleProgress.Step.DONE.ordinal - 1, "${progress.percentage}%")
+                                else context.getString(
+                                    R.string.still_refreshing,
+                                    progress.step.ordinal,
+                                    SdScanner.SimpleProgress.Step.DONE.ordinal - 1,
+                                    "${progress.percentage}%"
+                                )
                                 CoroutineScope(Dispatchers.Main).launch {
                                     Toast.makeText(context, str, Toast.LENGTH_SHORT).show()
                                 }
                                 return@scanEverything
                             }
                             activity.updateLibrary {
-                                showRefreshDoneSnackBar(playerLayout, runBlocking { activity.reader.songListFlow.first().size })
+                                showRefreshDoneSnackBar(
+                                    playerLayout,
+                                    runBlocking { activity.reader.songListFlow.first().size })
                             }
                         }
                     }
@@ -161,12 +169,13 @@ class ViewPagerFragment : BaseFragment(true) {
 
                 R.id.shuffle -> {
                     val controller = activity.getPlayer()
-                    runBlocking { activity.reader.songListFlow.first() }.takeIf { it.isNotEmpty() }?.also {
-                        controller?.shuffleModeEnabled = true
-                        controller?.setMediaItems(it)
-                        controller?.prepare()
-                        controller?.play()
-                    } ?: controller?.setMediaItems(listOf())
+                    runBlocking { activity.reader.songListFlow.first() }.takeIf { it.isNotEmpty() }
+                        ?.also {
+                            controller?.shuffleModeEnabled = true
+                            controller?.setMediaItems(it)
+                            controller?.prepare()
+                            controller?.play()
+                        } ?: controller?.setMediaItems(listOf())
                 }
 
                 else -> throw IllegalStateException()

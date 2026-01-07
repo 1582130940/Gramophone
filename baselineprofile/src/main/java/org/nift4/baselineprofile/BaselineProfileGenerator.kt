@@ -44,76 +44,77 @@ import java.io.FileOutputStream
 @LargeTest
 class BaselineProfileGenerator {
 
-	@get:Rule
-	val rule = BaselineProfileRule()
+    @get:Rule
+    val rule = BaselineProfileRule()
 
-	@SuppressLint("SdCardPath")
-	@Test
-	fun generate() {
-		val ctx = InstrumentationRegistry.getInstrumentation().context
-		val musicDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC)
-		val testDir = File(musicDir, "gp_baseline")
-		val files = listOf("test1.mp3", "test2.flac", "test3.wav", "test4.ogg", "test5.opus")
-		if (testDir.exists())
-			testDir.deleteRecursively()
-		testDir.mkdir()
-		for (i in files) {
-			ctx.assets.open(i).use {
-				try {
-					FileOutputStream(File(testDir, i)).use { o ->
-						it.copyTo(o)
-					}
-				} catch (e: FileNotFoundException) {
-					// scoped storage, files are there, ignore it
-				}
-			}
-		}
-		MediaScannerConnection.scanFile(
-			ctx,
-			files.map { File(testDir, it).absolutePath }.toTypedArray(),
-			null) { _: String, _: Uri -> }
-		val ae = InstrumentationRegistry.getInstrumentation().uiAutomation
-		ae.executeShellCommand("pm clear org.akanework.gramophone")
-		Thread.sleep(1000) // let device settle a bit
-		// The application id for the running build variant is read from the instrumentation arguments.
-		rule.collect(
-			packageName = InstrumentationRegistry.getArguments().getString("targetAppId")
-				?: throw Exception("targetAppId not passed as instrumentation runner arg"),
+    @SuppressLint("SdCardPath")
+    @Test
+    fun generate() {
+        val ctx = InstrumentationRegistry.getInstrumentation().context
+        val musicDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC)
+        val testDir = File(musicDir, "gp_baseline")
+        val files = listOf("test1.mp3", "test2.flac", "test3.wav", "test4.ogg", "test5.opus")
+        if (testDir.exists())
+            testDir.deleteRecursively()
+        testDir.mkdir()
+        for (i in files) {
+            ctx.assets.open(i).use {
+                try {
+                    FileOutputStream(File(testDir, i)).use { o ->
+                        it.copyTo(o)
+                    }
+                } catch (e: FileNotFoundException) {
+                    // scoped storage, files are there, ignore it
+                }
+            }
+        }
+        MediaScannerConnection.scanFile(
+            ctx,
+            files.map { File(testDir, it).absolutePath }.toTypedArray(),
+            null
+        ) { _: String, _: Uri -> }
+        val ae = InstrumentationRegistry.getInstrumentation().uiAutomation
+        ae.executeShellCommand("pm clear org.akanework.gramophone")
+        Thread.sleep(1000) // let device settle a bit
+        // The application id for the running build variant is read from the instrumentation arguments.
+        rule.collect(
+            packageName = InstrumentationRegistry.getArguments().getString("targetAppId")
+                ?: throw Exception("targetAppId not passed as instrumentation runner arg"),
 
-			// See: https://d.android.com/topic/performance/baselineprofiles/dex-layout-optimizations
-			includeInStartupProfile = true
-		) {
-			// This block defines the app's critical user journey. Here we are interested in
-			// optimizing for app startup. But you can also navigate and scroll through your most important UI.
+            // See: https://d.android.com/topic/performance/baselineprofiles/dex-layout-optimizations
+            includeInStartupProfile = true
+        ) {
+            // This block defines the app's critical user journey. Here we are interested in
+            // optimizing for app startup. But you can also navigate and scroll through your most important UI.
 
-			// Start default activity for your app
-			pressHome()
-			ae.executeShellCommand("pm grant org.akanework.gramophone android.permission.READ_MEDIA_AUDIO")
-			startActivityAndWait()
+            // Start default activity for your app
+            pressHome()
+            ae.executeShellCommand("pm grant org.akanework.gramophone android.permission.READ_MEDIA_AUDIO")
+            startActivityAndWait()
 
-			// More interactions to optimize advanced journeys of your app.
-			// 1. Wait until the content is asynchronously loaded
-			device.wait(Until.findObject(By.text("5 Songs")), 30L)
-			// 2. Scroll the tabs
-			device.swipe(800, 1000, 200, 1000, 20)
-			device.waitForIdle(20L)
-			device.swipe(200, 1000, 800, 1000, 20)
-			device.waitForIdle(20L)
-			// 3. Play a song
-			device.findObject(By.text("Ending / Credits")).click()
-			Thread.sleep(2000)
-			device.findObject(By.text("test3")).click()
-			Thread.sleep(2000)
-			device.findObject(By.text("Level 1")).click()
-			Thread.sleep(2000)
-			device.findObject(By.text("Level 2")).click()
-			Thread.sleep(2000)
-			device.findObject(By.text("Level 3")).click()
-			Thread.sleep(2000)
+            // More interactions to optimize advanced journeys of your app.
+            // 1. Wait until the content is asynchronously loaded
+            device.wait(Until.findObject(By.text("5 Songs")), 30L)
+            // 2. Scroll the tabs
+            device.swipe(800, 1000, 200, 1000, 20)
+            device.waitForIdle(20L)
+            device.swipe(200, 1000, 800, 1000, 20)
+            device.waitForIdle(20L)
+            // 3. Play a song
+            device.findObject(By.text("Ending / Credits")).click()
+            Thread.sleep(2000)
+            device.findObject(By.text("test3")).click()
+            Thread.sleep(2000)
+            device.findObject(By.text("Level 1")).click()
+            Thread.sleep(2000)
+            device.findObject(By.text("Level 2")).click()
+            Thread.sleep(2000)
+            device.findObject(By.text("Level 3")).click()
+            Thread.sleep(2000)
 
 
-			// Check UiAutomator documentation for more information how to interact with the app.
-			// https://d.android.com/training/testing/other-components/ui-automator
-		}
-	}
+            // Check UiAutomator documentation for more information how to interact with the app.
+            // https://d.android.com/training/testing/other-components/ui-automator
+        }
+    }
 }

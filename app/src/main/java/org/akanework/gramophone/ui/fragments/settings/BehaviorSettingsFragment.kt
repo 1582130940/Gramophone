@@ -31,7 +31,8 @@ import org.akanework.gramophone.ui.fragments.BasePreferenceFragment
 import org.akanework.gramophone.ui.fragments.BaseSettingsActivity
 
 
-class BehaviorSettingsActivity : BaseSettingsActivity(R.string.settings_category_behavior,
+class BehaviorSettingsActivity : BaseSettingsActivity(
+    R.string.settings_category_behavior,
     { BehaviorSettingsFragment() })
 
 class BehaviorSettingsFragment : BasePreferenceFragment() {

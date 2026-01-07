@@ -41,12 +41,12 @@
         android:ellipsize="end"
         android:fontFamily="sans-serif"
         android:textColor="?attr/colorOnSurface"
-        app:textFontWeight="400"
         android:textSize="15sp"
         app:layout_constraintBottom_toTopOf="@id/artist_text_view"
         app:layout_constraintEnd_toStartOf="@id/play_pause_replay_button"
         app:layout_constraintStart_toEndOf="@id/coverCardView"
         app:layout_constraintTop_toTopOf="@id/coverCardView"
+        app:textFontWeight="400"
         tools:ignore="SpeakableTextPresentCheck" />
 
     <org.akanework.gramophone.ui.components.MarqueeTextView
@@ -57,13 +57,13 @@
         android:ellipsize="end"
         android:fontFamily="sans-serif"
         android:textColor="?attr/colorOnSurfaceVariant"
-        app:textFontWeight="400"
         android:textSize="12sp"
         app:layout_constraintBottom_toBottomOf="@id/coverCardView"
         app:layout_constraintEnd_toStartOf="@id/play_pause_replay_button"
         app:layout_constraintStart_toEndOf="@id/coverCardView"
         app:layout_constraintTop_toBottomOf="@id/title_text_view"
         app:layout_constraintVertical_chainStyle="packed"
+        app:textFontWeight="400"
         tools:ignore="SpeakableTextPresentCheck" />
 
     <com.google.android.material.button.MaterialButton
@@ -72,14 +72,13 @@
         android:layout_height="48dp"
         android:layout_marginEnd="16dp"
         android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/play"
         android:insetLeft="0dp"
         android:insetTop="0dp"
         android:insetRight="0dp"
         android:insetBottom="0dp"
         android:padding="4dp"
         android:src="@drawable/ic_play_arrow"
-        app:tooltipText="@string/play"
-        android:contentDescription="@string/play"
         app:icon="@drawable/play_anim"
         app:iconGravity="textStart"
         app:iconPadding="0dp"
@@ -87,7 +86,8 @@
         app:iconTint="?attr/colorOnSecondaryContainer"
         app:layout_constraintBottom_toBottomOf="@id/coverCardView"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@id/coverCardView" />
+        app:layout_constraintTop_toTopOf="@id/coverCardView"
+        app:tooltipText="@string/play" />
 
     <SeekBar
         android:id="@+id/slider_squiggly"
@@ -112,8 +112,8 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:importantForAccessibility="yes"
-        android:visibility="gone"
         android:valueTo="1"
+        android:visibility="gone"
         app:labelBehavior="gone"
         app:layout_constraintBottom_toTopOf="@id/progress_barrier"
         app:layout_constraintEnd_toEndOf="parent"
@@ -158,9 +158,9 @@
         android:id="@+id/open_icon"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:src="@drawable/baseline_open_in_new_24"
         android:importantForAccessibility="no"
         android:padding="12dp"
+        android:src="@drawable/baseline_open_in_new_24"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/duration_text_view" />
@@ -169,11 +169,11 @@
         android:id="@+id/open_text_view"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:text="@string/open_in_gramophone"
         android:gravity="start|center_vertical"
-        app:layout_constraintTop_toTopOf="@id/open_icon"
+        android:text="@string/open_in_gramophone"
         app:layout_constraintBottom_toBottomOf="@id/open_icon"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/open_icon"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintTop_toTopOf="@id/open_icon" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

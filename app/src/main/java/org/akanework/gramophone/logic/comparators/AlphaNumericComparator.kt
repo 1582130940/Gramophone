@@ -136,16 +136,19 @@ class AlphaNumericComparator : Comparator<String?> {
         var ss1 = s1
         var ss2 = s2
         if ((ss1 == null || ss1.trim()
-                .isEmpty()) && ss2 != null && ss2.trim().isNotEmpty()) {
+                .isEmpty()) && ss2 != null && ss2.trim().isNotEmpty()
+        ) {
             return 1
         }
         if ((ss2 == null || ss2.trim()
-                .isEmpty()) && ss1 != null && ss1.trim().isNotEmpty()) {
+                .isEmpty()) && ss1 != null && ss1.trim().isNotEmpty()
+        ) {
             return -1
         }
         if ((ss1 == null || ss1.trim()
                 .isEmpty()) && (ss2 == null || ss2.trim()
-                .isEmpty())) {
+                .isEmpty())
+        ) {
             return 0
         }
         assert(ss1 != null)

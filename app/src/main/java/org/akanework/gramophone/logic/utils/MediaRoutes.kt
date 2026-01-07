@@ -9,9 +9,9 @@ import android.media.MediaRoute2Info
 import android.media.MediaRouter2
 import android.os.Build
 import android.text.TextUtils
-import androidx.media3.common.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
+import androidx.media3.common.util.Log
 import androidx.mediarouter.media.MediaRouter
 
 object MediaRoutes {
@@ -153,64 +153,116 @@ object MediaRoutes {
         }
         // TODO: can we get type from hidden API instead and use above code path?
         try {
-            if (TextUtils.equals(Resources.getSystem().getText(Resources.getSystem()
-                    .getIdentifier("bluetooth_a2dp_audio_route_name", "string", "android")), description))
+            if (TextUtils.equals(
+                    Resources.getSystem().getText(
+                        Resources.getSystem()
+                            .getIdentifier("bluetooth_a2dp_audio_route_name", "string", "android")
+                    ), description
+                )
+            )
                 return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
-                    audioManager.firstOutputDeviceByType(AudioDeviceInfo.TYPE_HEARING_AID,
+                    audioManager.firstOutputDeviceByType(
+                        AudioDeviceInfo.TYPE_HEARING_AID,
                         AudioDeviceInfo.TYPE_BLE_HEADSET, AudioDeviceInfo.TYPE_BLE_SPEAKER,
-                        AudioDeviceInfo.TYPE_BLE_BROADCAST, AudioDeviceInfo.TYPE_BLUETOOTH_A2DP)
+                        AudioDeviceInfo.TYPE_BLE_BROADCAST, AudioDeviceInfo.TYPE_BLUETOOTH_A2DP
+                    )
                 else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
-                    audioManager.firstOutputDeviceByType(AudioDeviceInfo.TYPE_HEARING_AID,
+                    audioManager.firstOutputDeviceByType(
+                        AudioDeviceInfo.TYPE_HEARING_AID,
                         AudioDeviceInfo.TYPE_BLE_HEADSET, AudioDeviceInfo.TYPE_BLE_SPEAKER,
-                        AudioDeviceInfo.TYPE_BLUETOOTH_A2DP)
+                        AudioDeviceInfo.TYPE_BLUETOOTH_A2DP
+                    )
                 else
-                    audioManager.firstOutputDeviceByType(AudioDeviceInfo.TYPE_HEARING_AID,
-                        AudioDeviceInfo.TYPE_BLUETOOTH_A2DP)
+                    audioManager.firstOutputDeviceByType(
+                        AudioDeviceInfo.TYPE_HEARING_AID,
+                        AudioDeviceInfo.TYPE_BLUETOOTH_A2DP
+                    )
         } catch (t: Resources.NotFoundException) {
             Log.w(TAG, "Failed to check if $this is bluetooth", t)
         }
         try {
-            if (TextUtils.equals(Resources.getSystem().getText(Resources.getSystem()
-                    .getIdentifier("default_audio_route_name_hdmi", "string", "android")), name))
+            if (TextUtils.equals(
+                    Resources.getSystem().getText(
+                        Resources.getSystem()
+                            .getIdentifier("default_audio_route_name_hdmi", "string", "android")
+                    ), name
+                )
+            )
                 return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
-                    audioManager.firstOutputDeviceByType(AudioDeviceInfo.TYPE_HDMI,
-                        AudioDeviceInfo.TYPE_HDMI_ARC, AudioDeviceInfo.TYPE_HDMI_EARC)
+                    audioManager.firstOutputDeviceByType(
+                        AudioDeviceInfo.TYPE_HDMI,
+                        AudioDeviceInfo.TYPE_HDMI_ARC, AudioDeviceInfo.TYPE_HDMI_EARC
+                    )
                 else
-                    audioManager.firstOutputDeviceByType(AudioDeviceInfo.TYPE_HDMI,
-                        AudioDeviceInfo.TYPE_HDMI_ARC)
+                    audioManager.firstOutputDeviceByType(
+                        AudioDeviceInfo.TYPE_HDMI,
+                        AudioDeviceInfo.TYPE_HDMI_ARC
+                    )
         } catch (t: Resources.NotFoundException) {
             Log.w(TAG, "Failed to check if $this is hdmi", t)
         }
         try {
-            if (TextUtils.equals(Resources.getSystem().getText(Resources.getSystem()
-                    .getIdentifier("default_audio_route_name_usb", "string", "android")), name))
-                return audioManager.firstOutputDeviceByType(AudioDeviceInfo.TYPE_USB_DEVICE,
-                    AudioDeviceInfo.TYPE_USB_HEADSET)
+            if (TextUtils.equals(
+                    Resources.getSystem().getText(
+                        Resources.getSystem()
+                            .getIdentifier("default_audio_route_name_usb", "string", "android")
+                    ), name
+                )
+            )
+                return audioManager.firstOutputDeviceByType(
+                    AudioDeviceInfo.TYPE_USB_DEVICE,
+                    AudioDeviceInfo.TYPE_USB_HEADSET
+                )
         } catch (t: Resources.NotFoundException) {
             Log.w(TAG, "Failed to check if $this is usb", t)
         }
         try {
-            if (TextUtils.equals(Resources.getSystem().getText(Resources.getSystem()
-                    .getIdentifier("default_audio_route_name_headphones", "string", "android")), name))
-                return audioManager.firstOutputDeviceByType(AudioDeviceInfo.TYPE_WIRED_HEADSET,
-                    AudioDeviceInfo.TYPE_WIRED_HEADPHONES, AudioDeviceInfo.TYPE_LINE_ANALOG)
+            if (TextUtils.equals(
+                    Resources.getSystem().getText(
+                        Resources.getSystem()
+                            .getIdentifier(
+                                "default_audio_route_name_headphones",
+                                "string",
+                                "android"
+                            )
+                    ), name
+                )
+            )
+                return audioManager.firstOutputDeviceByType(
+                    AudioDeviceInfo.TYPE_WIRED_HEADSET,
+                    AudioDeviceInfo.TYPE_WIRED_HEADPHONES, AudioDeviceInfo.TYPE_LINE_ANALOG
+                )
         } catch (t: Resources.NotFoundException) {
             Log.w(TAG, "Failed to check if $this is wired headphone", t)
         }
         try {
-            if (TextUtils.equals(Resources.getSystem().getText(Resources.getSystem()
-                    .getIdentifier("default_audio_route_name_dock_speakers", "string", "android")), name))
+            if (TextUtils.equals(
+                    Resources.getSystem().getText(
+                        Resources.getSystem()
+                            .getIdentifier(
+                                "default_audio_route_name_dock_speakers",
+                                "string",
+                                "android"
+                            )
+                    ), name
+                )
+            )
                 return audioManager.firstOutputDeviceByType(AudioDeviceInfo.TYPE_DOCK)
         } catch (t: Resources.NotFoundException) {
             Log.w(TAG, "Failed to check if $this is dock", t)
         }
         try {
-            if (TextUtils.equals(Resources.getSystem().getText(Resources.getSystem()
-                    .getIdentifier("default_audio_route_name", "string", "android")), name))
+            if (TextUtils.equals(
+                    Resources.getSystem().getText(
+                        Resources.getSystem()
+                            .getIdentifier("default_audio_route_name", "string", "android")
+                    ), name
+                )
+            )
             // TODO: It seems like speaker is the default fallback for anything. So filtering
             //  for speaker will not work well.
             // https://cs.android.com/android/platform/superproject/+/android10-release:frameworks/base/services/core/java/com/android/server/audio/AudioDeviceInventory.java;l=863;drc=f7345252b8b33fe7cf69622f55e4226b6ef0100d
-            return audioManager.firstOutputDeviceByType(AudioDeviceInfo.TYPE_BUILTIN_SPEAKER)
+                return audioManager.firstOutputDeviceByType(AudioDeviceInfo.TYPE_BUILTIN_SPEAKER)
         } catch (t: Resources.NotFoundException) {
             Log.w(TAG, "Failed to check if $this is speaker", t)
         }
@@ -226,51 +278,87 @@ object MediaRoutes {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R)
             throw IllegalStateException("getAudioDeviceForRoute must not be called on R+")
         if (!isSystemRoute) { // MediaRouteProviderService, but shouldn't get selected by itself
-            Log.e(TAG, "Route is not flagged as system route, however Gramophone only supports system routes?")
+            Log.e(
+                TAG,
+                "Route is not flagged as system route, however Gramophone only supports system routes?"
+            )
             return null
         }
         val audioManager = ContextCompat.getSystemService(context, AudioManager::class.java)!!
         if (isBluetooth) {
             return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P)
-                audioManager.firstOutputDeviceByType(AudioDeviceInfo.TYPE_HEARING_AID,
-                    AudioDeviceInfo.TYPE_BLUETOOTH_A2DP, name = name)
+                audioManager.firstOutputDeviceByType(
+                    AudioDeviceInfo.TYPE_HEARING_AID,
+                    AudioDeviceInfo.TYPE_BLUETOOTH_A2DP, name = name
+                )
             else
-                audioManager.firstOutputDeviceByType(AudioDeviceInfo.TYPE_BLUETOOTH_A2DP, name = name)
+                audioManager.firstOutputDeviceByType(
+                    AudioDeviceInfo.TYPE_BLUETOOTH_A2DP,
+                    name = name
+                )
         }
         if (!isDefault) {
-            Log.e(TAG, "Non-default non-bluetooth system route selected, but remote display routes are hidden. $this cannot exist.")
+            Log.e(
+                TAG,
+                "Non-default non-bluetooth system route selected, but remote display routes are hidden. $this cannot exist."
+            )
             return null
         }
         try {
-            if (TextUtils.equals(Resources.getSystem().getText(Resources.getSystem()
-                .getIdentifier("default_audio_route_name_hdmi", "string", "android")), name))
-                return audioManager.firstOutputDeviceByType(AudioDeviceInfo.TYPE_HDMI,
-                    AudioDeviceInfo.TYPE_HDMI_ARC)
+            if (TextUtils.equals(
+                    Resources.getSystem().getText(
+                        Resources.getSystem()
+                            .getIdentifier("default_audio_route_name_hdmi", "string", "android")
+                    ), name
+                )
+            )
+                return audioManager.firstOutputDeviceByType(
+                    AudioDeviceInfo.TYPE_HDMI,
+                    AudioDeviceInfo.TYPE_HDMI_ARC
+                )
         } catch (t: Resources.NotFoundException) {
             Log.w(TAG, "Failed to check if $this is hdmi", t)
         }
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q &&
-                TextUtils.equals(Resources.getSystem().getText(Resources.getSystem()
-                    .getIdentifier("default_audio_route_name_usb", "string", "android")), name))
-                return audioManager.firstOutputDeviceByType(AudioDeviceInfo.TYPE_USB_DEVICE,
-                    AudioDeviceInfo.TYPE_USB_HEADSET)
+                TextUtils.equals(
+                    Resources.getSystem().getText(
+                        Resources.getSystem()
+                            .getIdentifier("default_audio_route_name_usb", "string", "android")
+                    ), name
+                )
+            )
+                return audioManager.firstOutputDeviceByType(
+                    AudioDeviceInfo.TYPE_USB_DEVICE,
+                    AudioDeviceInfo.TYPE_USB_HEADSET
+                )
         } catch (t: Resources.NotFoundException) {
             Log.w(TAG, "Failed to check if $this is usb", t)
         }
         try {
-            if (TextUtils.equals(Resources.getSystem().getText(Resources.getSystem()
-                    .getIdentifier("default_audio_route_name_headphones", "string", "android")), name))
-                return audioManager.firstOutputDeviceByType(AudioDeviceInfo.TYPE_WIRED_HEADSET,
-                    AudioDeviceInfo.TYPE_WIRED_HEADPHONES, AudioDeviceInfo.TYPE_LINE_ANALOG)
+            if (TextUtils.equals(
+                    Resources.getSystem().getText(
+                        Resources.getSystem()
+                            .getIdentifier(
+                                "default_audio_route_name_headphones",
+                                "string",
+                                "android"
+                            )
+                    ), name
+                )
+            )
+                return audioManager.firstOutputDeviceByType(
+                    AudioDeviceInfo.TYPE_WIRED_HEADSET,
+                    AudioDeviceInfo.TYPE_WIRED_HEADPHONES, AudioDeviceInfo.TYPE_LINE_ANALOG
+                )
         } catch (t: Resources.NotFoundException) {
             Log.w(TAG, "Failed to check if $this is wired headphone", t)
         }
         try {
             if (isDeviceSpeaker)
-                // TODO: It seems like speaker is the default fallback for anything. So filtering
-                //  for speaker will not work well.
-                // https://cs.android.com/android/platform/superproject/+/android10-release:frameworks/base/services/core/java/com/android/server/audio/AudioDeviceInventory.java;l=863;drc=f7345252b8b33fe7cf69622f55e4226b6ef0100d
+            // TODO: It seems like speaker is the default fallback for anything. So filtering
+            //  for speaker will not work well.
+            // https://cs.android.com/android/platform/superproject/+/android10-release:frameworks/base/services/core/java/com/android/server/audio/AudioDeviceInventory.java;l=863;drc=f7345252b8b33fe7cf69622f55e4226b6ef0100d
                 return audioManager.firstOutputDeviceByType(AudioDeviceInfo.TYPE_BUILTIN_SPEAKER)
         } catch (t: Resources.NotFoundException) {
             Log.w(TAG, "Failed to check if $this is speaker", t)
@@ -280,7 +368,11 @@ object MediaRoutes {
     }
 
     @RequiresApi(Build.VERSION_CODES.M)
-    private fun AudioManager.firstOutputDeviceByType(vararg type: Int, name: CharSequence? = null, address: CharSequence? = null): AudioDeviceInfo? {
+    private fun AudioManager.firstOutputDeviceByType(
+        vararg type: Int,
+        name: CharSequence? = null,
+        address: CharSequence? = null
+    ): AudioDeviceInfo? {
         val devices = getDevices(AudioManager.GET_DEVICES_OUTPUTS)
         val devicesByType = devices.filter { type.contains(it.type) }
         if (devicesByType.isEmpty()) {
@@ -292,7 +384,8 @@ object MediaRoutes {
         if (name == null && address == null)
             return devicesByType.find { type[0] == it.type } ?: devicesByType.first()
         val devicesByName = (if (address != null && address != "null" &&
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.P
+        ) {
             val devicesByAddress = devicesByType.filter {
                 it.address == address
                         // BT MAC addresses are censored by AudioManager but not MediaRouter2
@@ -304,13 +397,16 @@ object MediaRoutes {
             else if (devicesByAddress.size > 1) {
                 val devicesByAddressAndName = devicesByAddress.filter {
                     it.productName.contentEquals(name)
-                            || it.cleanUpProductName().contentEquals(name) }
+                            || it.cleanUpProductName().contentEquals(name)
+                }
                 if (devicesByAddressAndName.size == 1)
                     return devicesByAddressAndName[0]
                 else devicesByAddressAndName.ifEmpty { null }
             } else null
-        } else null) ?: devicesByType.filter { it.productName.contentEquals(name)
-                || it.cleanUpProductName().contentEquals(name) }
+        } else null) ?: devicesByType.filter {
+            it.productName.contentEquals(name)
+                    || it.cleanUpProductName().contentEquals(name)
+        }
         if (devicesByName.size == 1)
             return devicesByName[0]
         if (devicesByName.size > 1) {
@@ -321,18 +417,20 @@ object MediaRoutes {
                             theDevice.audioProfiles == device.audioProfiles) &&
                             (Build.VERSION.SDK_INT < Build.VERSION_CODES.R ||
                                     (theDevice.encapsulationModes.contentEquals(device.encapsulationModes) &&
-		                                    theDevice.encapsulationMetadataTypes.contentEquals(
-			                                    device.encapsulationMetadataTypes
-		                                    ))) &&
-			                theDevice.channelCounts.contentEquals(device.channelCounts) &&
-			                theDevice.encodings.contentEquals(device.encodings) &&
-			                theDevice.sampleRates.contentEquals(device.sampleRates) &&
-			                theDevice.channelMasks.contentEquals(device.channelMasks) &&
-			                theDevice.channelIndexMasks.contentEquals(device.channelIndexMasks) &&
+                                            theDevice.encapsulationMetadataTypes.contentEquals(
+                                                device.encapsulationMetadataTypes
+                                            ))) &&
+                            theDevice.channelCounts.contentEquals(device.channelCounts) &&
+                            theDevice.encodings.contentEquals(device.encodings) &&
+                            theDevice.sampleRates.contentEquals(device.sampleRates) &&
+                            theDevice.channelMasks.contentEquals(device.channelMasks) &&
+                            theDevice.channelIndexMasks.contentEquals(device.channelIndexMasks) &&
                             theDevice.type == device.type)
                 ) {
-                    Log.e(TAG, "Weird, got more than one AudioDeviceInfo with same name but not " +
-                            "same content?")
+                    Log.e(
+                        TAG, "Weird, got more than one AudioDeviceInfo with same name but not " +
+                                "same content?"
+                    )
                     return null
                 }
             }
@@ -340,11 +438,15 @@ object MediaRoutes {
             // (probably) doesn't matter which one we look at.
             return theDevice
         }
-        Log.e(TAG, "Weird, got more than one AudioDeviceInfo for type but none match desired " +
-                "name? desired name: $name")
+        Log.e(
+            TAG, "Weird, got more than one AudioDeviceInfo for type but none match desired " +
+                    "name? desired name: $name"
+        )
         devicesByType.forEach {
-            Log.e(TAG, "This device does not match desired name $name because it's actually " +
-                    it.productName)
+            Log.e(
+                TAG, "This device does not match desired name $name because it's actually " +
+                        it.productName
+            )
         }
         return devicesByType[0]
     }

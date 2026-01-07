@@ -25,20 +25,23 @@ object IsLandHelp {
         val param = JSONObject()
         val paramV2 = JSONObject()
         val island = JSONObject()
-        island.put("shareData", shareData(
-            title = title,
-            content = content,
-            pic = pic,
-            sharePic = sharePic,
-            shareContent = shareContent
-        )
+        island.put(
+            "shareData", shareData(
+                title = title,
+                content = content,
+                pic = pic,
+                sharePic = sharePic,
+                shareContent = shareContent
+            )
         )
 
-        paramV2.put("param_island",island)
-        param.put("param_v2",paramV2)
+        paramV2.put("param_island", island)
+        param.put("param_v2", paramV2)
 
-        if (addpic != null ){ nfBundle.putBundle("miui.focus.pics", addpic) }
-        nfBundle.putString("miui.focus.param.media",param.toString())
+        if (addpic != null) {
+            nfBundle.putBundle("miui.focus.pics", addpic)
+        }
+        nfBundle.putString("miui.focus.param.media", param.toString())
         return nfBundle
     }
 
@@ -57,12 +60,12 @@ object IsLandHelp {
         pic: String,
         shareContent: String,
         sharePic: String? = null,
-    ): JSONObject{
+    ): JSONObject {
         val json = JSONObject()
-        json.put("content",content)
-        json.put("title",title)
-        json.put("pic",pic)
-        json.put("shareContent",shareContent)
+        json.put("content", content)
+        json.put("title", title)
+        json.put("pic", pic)
+        json.put("shareContent", shareContent)
         sharePic?.let { json.put("sharePic", it) }
         return json
     }

@@ -20,7 +20,6 @@ package org.akanework.gramophone.ui.adapters
 import android.annotation.SuppressLint
 import android.content.res.Configuration
 import android.net.Uri
-import androidx.media3.common.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -30,6 +29,7 @@ import androidx.appcompat.widget.PopupMenu
 import androidx.core.view.doOnLayout
 import androidx.core.view.updateLayoutParams
 import androidx.fragment.app.Fragment
+import androidx.media3.common.util.Log
 import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.DiffUtil
@@ -100,8 +100,11 @@ abstract class BaseAdapter<T : Any>(
     private var lockedInGridSize = false
     private val sorter = Sorter(sortHelper, naturalOrderHelper, rawOrderExposed)
     val decorAdapter by lazy { createDecorAdapter() }
-    override val concatAdapter by lazy { ConcatAdapter(
-        ConcatAdapter.Config.Builder().setIsolateViewTypes(false).build(), decorAdapter, this) }
+    override val concatAdapter by lazy {
+        ConcatAdapter(
+            ConcatAdapter.Config.Builder().setIsolateViewTypes(false).build(), decorAdapter, this
+        )
+    }
     override val itemHeightHelper by lazy {
         DefaultItemHeightHelper.concatItemHeightHelper(decorAdapter, { 1 }, this)
     }
@@ -123,6 +126,7 @@ abstract class BaseAdapter<T : Any>(
             notifyDataSetChanged() // we change view type for all items
         }
     override lateinit var sortType: MutableStateFlow<Sorter.Type>
+
     @OptIn(ExperimentalCoroutinesApi::class)
     private val flow by lazy {
         liveDataAgent.flatMapLatest { it }
@@ -163,7 +167,9 @@ abstract class BaseAdapter<T : Any>(
                         LayoutType.NONE.toString()
                     )!!
                 )
-            } catch (_: IllegalArgumentException) { LayoutType.NONE }
+            } catch (_: IllegalArgumentException) {
+                LayoutType.NONE
+            }
         layoutType =
             if (prefLayoutType != LayoutType.NONE && prefLayoutType != defaultLayoutType)
                 prefLayoutType
@@ -177,7 +183,9 @@ abstract class BaseAdapter<T : Any>(
                         Sorter.Type.None.toString()
                     )!!
                 )
-            } catch (_: IllegalArgumentException) { Sorter.Type.None }
+            } catch (_: IllegalArgumentException) {
+                Sorter.Type.None
+            }
             else Sorter.Type.None
         sortType = MutableStateFlow(
             if (prefSortType != Sorter.Type.None && sortTypes.contains(prefSortType))
@@ -190,18 +198,19 @@ abstract class BaseAdapter<T : Any>(
         var onListLoadedCompleter = if (mayBlock)
             CompletableDeferred<Pair<Pair<List<T>, List<T>>, Pair<DiffUtil.DiffResult?, Boolean>>>() else null
         val deferred = if (mayBlock) onListLoadedCompleter else null
-        val onListLoaded = { it: Pair<List<T>, List<T>>, diff: DiffUtil.DiffResult?, sizeChanged: Boolean ->
-            list = it
-            if (diff != null)
-                diff.dispatchUpdatesTo(this@BaseAdapter)
-            else
-                @SuppressLint("NotifyDataSetChanged") notifyDataSetChanged()
-            if (sizeChanged) decorAdapter.updateSongCounter()
-            onListUpdated()
-            recyclerView?.doOnLayout {
-                recyclerView?.postOnAnimation { reportFullyDrawn() }
+        val onListLoaded =
+            { it: Pair<List<T>, List<T>>, diff: DiffUtil.DiffResult?, sizeChanged: Boolean ->
+                list = it
+                if (diff != null)
+                    diff.dispatchUpdatesTo(this@BaseAdapter)
+                else
+                    @SuppressLint("NotifyDataSetChanged") notifyDataSetChanged()
+                if (sizeChanged) decorAdapter.updateSongCounter()
+                onListUpdated()
+                recyclerView?.doOnLayout {
+                    recyclerView?.postOnAnimation { reportFullyDrawn() }
+                }
             }
-        }
         repeatPausingWithLifecycle(fragment.viewLifecycleOwner, Dispatchers.Default) {
             flow.collectLatest {
                 val old = list
@@ -211,7 +220,12 @@ abstract class BaseAdapter<T : Any>(
                 val diff = if ((old?.second?.isNotEmpty() == true && it.second.isNotEmpty())
                     || allowDiffUtils
                 )
-                    DiffUtil.calculateDiff(SongDiffCallback(old?.second?.toList() ?: emptyList(), it.second.toList()))
+                    DiffUtil.calculateDiff(
+                        SongDiffCallback(
+                            old?.second?.toList() ?: emptyList(),
+                            it.second.toList()
+                        )
+                    )
                 else null
                 val sizeChanged = (old?.second?.size ?: 0) != it.second.size
                 val mutex = blockMutex
@@ -220,7 +234,8 @@ abstract class BaseAdapter<T : Any>(
                         val deferred2 = onListLoadedCompleter
                         if (deferred2 != null) {
                             deferred2.complete(it to (diff to sizeChanged))
-                            onListLoadedCompleter = null // TODO: how is this never read? makes no sense to me
+                            onListLoadedCompleter =
+                                null // TODO: how is this never read? makes no sense to me
                         } else {
                             withContext(Dispatchers.Main + NonCancellable) {
                                 onListLoaded(it, diff, sizeChanged)
@@ -481,8 +496,10 @@ abstract class BaseAdapter<T : Any>(
         // lib only ever gets popup text for what RecyclerView believes to be the first view
         val daic = decorAdapter.itemCount
         return (if (position >= daic)
-            sorter.getFastScrollHintFor(list!!.second[position - daic],
-                position - daic, sortType.value)
+            sorter.getFastScrollHintFor(
+                list!!.second[position - daic],
+                position - daic, sortType.value
+            )
         else null) ?: "-"
     }
 

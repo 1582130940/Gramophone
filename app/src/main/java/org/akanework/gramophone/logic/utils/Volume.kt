@@ -31,58 +31,62 @@ import java.util.UUID
  */
 @Suppress("unused")
 class Volume(priority: Int, audioSession: Int) : ReflectionAudioEffect(
-	EFFECT_TYPE_VOLUME, EFFECT_TYPE_NULL, priority, audioSession) {
-	companion object {
-		private val EFFECT_TYPE_VOLUME =
-			UUID.fromString("09e8ede0-ddde-11db-b4f6-0002a5d5c51b")
-		fun isAvailable() = isEffectTypeAvailable(EFFECT_TYPE_VOLUME, EFFECT_TYPE_NULL)
-		fun isOffloadable() = isEffectTypeOffloadable(EFFECT_TYPE_VOLUME, EFFECT_TYPE_NULL)
-	}
+    EFFECT_TYPE_VOLUME, EFFECT_TYPE_NULL, priority, audioSession
+) {
+    companion object {
+        private val EFFECT_TYPE_VOLUME =
+            UUID.fromString("09e8ede0-ddde-11db-b4f6-0002a5d5c51b")
 
-	var level: Short // SLmillibel
-		get() = getShortParameter(0)
-		set(value) {
-			setParameter(0, value)
-		}
-	val maxLevel: Short // SLmillibel
-		get() = getShortParameter(1)
-	var mute: Boolean
-		get() = getBoolParameter(2)
-		set(value) {
-			setParameter(2, value)
-		}
-	var enableStereoPosition: Boolean
-		get() = getBoolParameter(3)
-		set(value) {
-			setParameter(3, value)
-		}
-	var stereoPosition: Short // SLpermille
-		get() = getShortParameter(4)
-		set(value) {
-			setParameter(4, value)
-		}
+        fun isAvailable() = isEffectTypeAvailable(EFFECT_TYPE_VOLUME, EFFECT_TYPE_NULL)
+        fun isOffloadable() = isEffectTypeOffloadable(EFFECT_TYPE_VOLUME, EFFECT_TYPE_NULL)
+    }
 
-	fun setParameterListener(listener: (Int, Int) -> Unit) {
-		setBaseParameterListener { _, status, param, value ->
-			val paramI = ByteBuffer.wrap(param).order(ByteOrder.nativeOrder())
-				.asIntBuffer().get()
-			if (status == AudioEffect.SUCCESS) {
-				when (paramI) {
-					0, 1, 4 -> {
-						val valueS = ByteBuffer.wrap(param)
-							.order(ByteOrder.nativeOrder()).asShortBuffer().get()
-						listener(paramI, valueS.toInt())
-					}
-					2, 3 -> {
-						val valueB = ByteBuffer.wrap(param)
-							.order(ByteOrder.nativeOrder()).asIntBuffer().get() != 0
-						listener(paramI, if (valueB) 1 else 0)
-					}
-					else -> Log.e("Volume", "unknown param $paramI changed")
-				}
-			} else {
-				Log.e("Volume", "param $paramI change failed? $status")
-			}
-		}
-	}
+    var level: Short // SLmillibel
+        get() = getShortParameter(0)
+        set(value) {
+            setParameter(0, value)
+        }
+    val maxLevel: Short // SLmillibel
+        get() = getShortParameter(1)
+    var mute: Boolean
+        get() = getBoolParameter(2)
+        set(value) {
+            setParameter(2, value)
+        }
+    var enableStereoPosition: Boolean
+        get() = getBoolParameter(3)
+        set(value) {
+            setParameter(3, value)
+        }
+    var stereoPosition: Short // SLpermille
+        get() = getShortParameter(4)
+        set(value) {
+            setParameter(4, value)
+        }
+
+    fun setParameterListener(listener: (Int, Int) -> Unit) {
+        setBaseParameterListener { _, status, param, value ->
+            val paramI = ByteBuffer.wrap(param).order(ByteOrder.nativeOrder())
+                .asIntBuffer().get()
+            if (status == AudioEffect.SUCCESS) {
+                when (paramI) {
+                    0, 1, 4 -> {
+                        val valueS = ByteBuffer.wrap(param)
+                            .order(ByteOrder.nativeOrder()).asShortBuffer().get()
+                        listener(paramI, valueS.toInt())
+                    }
+
+                    2, 3 -> {
+                        val valueB = ByteBuffer.wrap(param)
+                            .order(ByteOrder.nativeOrder()).asIntBuffer().get() != 0
+                        listener(paramI, if (valueB) 1 else 0)
+                    }
+
+                    else -> Log.e("Volume", "unknown param $paramI changed")
+                }
+            } else {
+                Log.e("Volume", "param $paramI change failed? $status")
+            }
+        }
+    }
 }

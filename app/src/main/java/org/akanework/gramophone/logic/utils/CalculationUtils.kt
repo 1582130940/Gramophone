@@ -19,7 +19,7 @@ package org.akanework.gramophone.logic.utils
 
 import androidx.annotation.ColorInt
 import androidx.annotation.IntRange
-import java.text.Format
+import org.akanework.gramophone.logic.utils.CalculationUtils.convertDurationToTimeStamp
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -100,4 +100,5 @@ object CalculationUtils {
 
 }
 
-fun Long.convertDurationToTimeStamp(zero: Boolean = false) = CalculationUtils.convertDurationToTimeStamp(this, zero)
+fun Long.convertDurationToTimeStamp(zero: Boolean = false) =
+    CalculationUtils.convertDurationToTimeStamp(this, zero)

@@ -24,7 +24,6 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.appcompat.widget.PopupMenu
 import androidx.core.content.edit
-import androidx.media3.common.C
 import androidx.media3.common.Player.REPEAT_MODE_OFF
 import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.LinearSmoothScroller
@@ -197,7 +196,7 @@ open class BaseDecorAdapter<T : AdapterFragment.BaseInterface<*>>(
                 controller?.repeatMode = REPEAT_MODE_OFF
                 controller?.shuffleModeEnabled = false
                 list.takeIf { it.isNotEmpty() }?.also { albums ->
-	                controller?.setMediaItems(albums.shuffled().flatMap { it.songList })
+                    controller?.setMediaItems(albums.shuffled().flatMap { it.songList })
                     controller?.prepare()
                     controller?.play()
                 } ?: controller?.setMediaItems(listOf())

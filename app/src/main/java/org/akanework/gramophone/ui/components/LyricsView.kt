@@ -69,7 +69,12 @@ class LyricsView(context: Context, attrs: AttributeSet?) : FrameLayout(context, 
         } else {
             inflate(context, R.layout.lyric_view, this)
             recyclerView = findViewById(R.id.recycler_view)
-            recyclerView?.setPadding(oldPaddingLeft, oldPaddingTop, oldPaddingRight, oldPaddingBottom)
+            recyclerView?.setPadding(
+                oldPaddingLeft,
+                oldPaddingTop,
+                oldPaddingRight,
+                oldPaddingBottom
+            )
             recyclerView!!.adapter = LegacyLyricsAdapter(context).also {
                 it.updateTextColor(defaultTextColor, highlightTextColor)
             }
@@ -94,7 +99,8 @@ class LyricsView(context: Context, attrs: AttributeSet?) : FrameLayout(context, 
         if (key == "lyric_center" || key == "lyric_bold")
             adapter?.onPrefsChanged()
         if (key == "lyric_center" || key == "lyric_bold" || key == "lyric_no_animation" ||
-            key == "translation_auto_word")
+            key == "translation_auto_word"
+        )
             newView?.onPrefsChanged(key)
         else if (key == "lyric_ui")
             createView()

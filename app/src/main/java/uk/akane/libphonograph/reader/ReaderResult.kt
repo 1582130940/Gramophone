@@ -27,7 +27,8 @@ data class ReaderResult(
             listOf(), listOf(), listOf(), listOf(), listOf(), listOf(),
             mapOf(), mapOf(),
             EmptyFileNode, EmptyFileNode,
-            setOf())
+            setOf()
+        )
     }
 }
 

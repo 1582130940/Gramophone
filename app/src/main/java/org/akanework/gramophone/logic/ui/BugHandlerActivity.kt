@@ -28,7 +28,6 @@ import android.os.Bundle
 import android.os.StrictMode
 import android.text.Editable
 import android.text.TextWatcher
-import androidx.media3.common.util.Log
 import android.util.Patterns
 import android.view.View
 import android.widget.Button
@@ -47,6 +46,7 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.marginBottom
 import androidx.core.view.marginLeft
 import androidx.core.view.marginRight
+import androidx.media3.common.util.Log
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
@@ -202,21 +202,24 @@ class BugHandlerActivity : BaseActivity() {
 
     private fun sendEmail() {
         Log.w("Gramophone", "Exporting logs due to crash...")
-	    val policy = StrictMode.allowThreadDiskWrites()
-	    val crashLogDir: File
-	    val f: File
-	    try {
-		    crashLogDir = File(cacheDir, "CrashLog")
-		    f = File(crashLogDir, "GramophoneLog${System.currentTimeMillis()}.txt")
-	    } finally {
-		    StrictMode.setThreadPolicy(policy)
-		}
+        val policy = StrictMode.allowThreadDiskWrites()
+        val crashLogDir: File
+        val f: File
+        try {
+            crashLogDir = File(cacheDir, "CrashLog")
+            f = File(crashLogDir, "GramophoneLog${System.currentTimeMillis()}.txt")
+        } finally {
+            StrictMode.setThreadPolicy(policy)
+        }
         val d = MaterialAlertDialogBuilder(this)
             .setTitle(R.string.crash_report)
             .setView(R.layout.crash_dialog_content)
             .setCancelable(false)
             .setPositiveButton(R.string.send_email) { d, _ ->
-                val et = DialogCompat.requireViewById(d as AlertDialog, R.id.editText) as TextInputEditText
+                val et = DialogCompat.requireViewById(
+                    d as AlertDialog,
+                    R.id.editText
+                ) as TextInputEditText
                 val desc = et.editableText.toString().takeIf { it.isNotBlank() }
                 val mailText = "Hi Nick,\n\nGramophone crashed!\nI was doing:\n\n" +
                         "${desc ?: "--INSERT DESCRIPTION HERE--"}\n\nIt crashed with this" +
@@ -230,8 +233,10 @@ class BugHandlerActivity : BaseActivity() {
                         .start()
                     try {
                         withTimeout(1500) {
-                            val stdout = p.inputStream.readBytes().toString(Charset.defaultCharset())
-                            val stderr = p.errorStream.readBytes().toString(Charset.defaultCharset())
+                            val stdout =
+                                p.inputStream.readBytes().toString(Charset.defaultCharset())
+                            val stderr =
+                                p.errorStream.readBytes().toString(Charset.defaultCharset())
                             runInterruptible {
                                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                                     p.waitFor(1, TimeUnit.SECONDS)
@@ -241,31 +246,49 @@ class BugHandlerActivity : BaseActivity() {
                             }
                             f.writeText("$stdout\n$stderr\n\n\n==MAIL TEXT==\n\n\n$mailText")
                         }
-                    } catch (_: TimeoutCancellationException) {}
+                    } catch (_: TimeoutCancellationException) {
+                    }
                     withContext(Dispatchers.Main) {
                         try {
                             startActivity(Intent(Intent.ACTION_SEND).apply {
-                                selector = Intent(Intent.ACTION_SENDTO).apply { setData("mailto:nift4dev@gmail.com".toUri()) }
+                                selector =
+                                    Intent(Intent.ACTION_SENDTO).apply { setData("mailto:nift4dev@gmail.com".toUri()) }
                                 putExtra(Intent.EXTRA_EMAIL, arrayOf("nift4dev@gmail.com"))
                                 putExtra(
                                     Intent.EXTRA_SUBJECT,
                                     "Gramophone ${BuildConfig.MY_VERSION_NAME} crashed"
                                 )
                                 putExtra(Intent.EXTRA_TEXT, mailText)
-                                putExtra(Intent.EXTRA_STREAM,
-                                    FileProvider.getUriForFile(this@BugHandlerActivity, "${this@BugHandlerActivity.packageName}.fileProvider", f))
+                                putExtra(
+                                    Intent.EXTRA_STREAM,
+                                    FileProvider.getUriForFile(
+                                        this@BugHandlerActivity,
+                                        "${this@BugHandlerActivity.packageName}.fileProvider",
+                                        f
+                                    )
+                                )
                                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                             })
                         } catch (_: ActivityNotFoundException) {
-                            Toast.makeText(this@BugHandlerActivity, R.string.send_email_manually, Toast.LENGTH_LONG).show()
-                            val clipboard: ClipboardManager = getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
-                            val clip = ClipData.newPlainText("email text",
+                            Toast.makeText(
+                                this@BugHandlerActivity,
+                                R.string.send_email_manually,
+                                Toast.LENGTH_LONG
+                            ).show()
+                            val clipboard: ClipboardManager =
+                                getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
+                            val clip = ClipData.newPlainText(
+                                "email text",
                                 "Send below text to nift4dev@gmail.com:\n\n\n$mailText"
                             )
                             allowDiskAccessInStrictMode {
                                 clipboard.setPrimaryClip(clip)
                             }
-                            Toast.makeText(this@BugHandlerActivity, R.string.email_clipboard, Toast.LENGTH_LONG).show()
+                            Toast.makeText(
+                                this@BugHandlerActivity,
+                                R.string.email_clipboard,
+                                Toast.LENGTH_LONG
+                            ).show()
                         }
                     }
                 }

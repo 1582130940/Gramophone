@@ -44,9 +44,11 @@ abstract class EditSongAdapter(
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val item = getItem(position)
         holder.songName.text = item.mediaMetadata.title
-        holder.songArtist.text = context.getString(R.string.artist_time,
+        holder.songArtist.text = context.getString(
+            R.string.artist_time,
             item.mediaMetadata.durationMs?.convertDurationToTimeStamp(),
-            item.mediaMetadata.artist ?: context.getString(R.string.unknown_artist))
+            item.mediaMetadata.artist ?: context.getString(R.string.unknown_artist)
+        )
         holder.songCover.load(item.mediaMetadata.artworkUri) {
             placeholderScaleToFit(R.drawable.ic_default_cover)
             crossfade(true)
@@ -90,8 +92,10 @@ abstract class EditSongAdapter(
     abstract fun removeItem(pos: Int) // must call notifyItemRemoved() if actually removing
 
     inner class PlaylistCardMoveCallback() :
-        ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP or ItemTouchHelper.DOWN,
-            ItemTouchHelper.START or ItemTouchHelper.END) {
+        ItemTouchHelper.SimpleCallback(
+            ItemTouchHelper.UP or ItemTouchHelper.DOWN,
+            ItemTouchHelper.START or ItemTouchHelper.END
+        ) {
         override fun isLongPressDragEnabled(): Boolean {
             return true
         }
@@ -131,6 +135,7 @@ abstract class EditSongAdapter(
         val nowPlaying: ImageView = view.findViewById(R.id.now_playing)
         val closeButton: MaterialButton = view.findViewById(R.id.more)
         val dragHandle = ImageView(view.context)
+
         init {
             // don't want the hundreds of other ViewHolders using this layout to inflate view it
             // will never use, and also don't want to diverge layout for 1 view (it was diverged
@@ -140,20 +145,25 @@ abstract class EditSongAdapter(
             val dp8 = 8.dpToPx(view.context)
             dragHandle.setPaddingRelative(10.dpToPx(view.context), dp8, 0, dp8)
             dragHandle.setImageResource(R.drawable.baseline_drag_handle_24)
-            view.addView(dragHandle, ConstraintLayout.LayoutParams(
-                ConstraintLayout.LayoutParams.WRAP_CONTENT,
-                ConstraintLayout.LayoutParams.MATCH_CONSTRAINT).apply {
-                startToStart = ConstraintLayout.LayoutParams.PARENT_ID
-                topToTop = ConstraintLayout.LayoutParams.PARENT_ID
-                bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
-            })
-            view.findViewById<View>(R.id.coverCardView).updateLayoutParams<ConstraintLayout.LayoutParams> {
-                startToStart = ConstraintLayout.LayoutParams.UNSET
-                startToEnd = R.id.dragHandle
-            }
+            view.addView(
+                dragHandle, ConstraintLayout.LayoutParams(
+                    ConstraintLayout.LayoutParams.WRAP_CONTENT,
+                    ConstraintLayout.LayoutParams.MATCH_CONSTRAINT
+                ).apply {
+                    startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+                    topToTop = ConstraintLayout.LayoutParams.PARENT_ID
+                    bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
+                })
+            view.findViewById<View>(R.id.coverCardView)
+                .updateLayoutParams<ConstraintLayout.LayoutParams> {
+                    startToStart = ConstraintLayout.LayoutParams.UNSET
+                    startToEnd = R.id.dragHandle
+                }
             closeButton.setIconResource(R.drawable.outline_close_24)
-            TooltipCompat.setTooltipText(closeButton,
-                closeButton.context.getString(R.string.remove))
+            TooltipCompat.setTooltipText(
+                closeButton,
+                closeButton.context.getString(R.string.remove)
+            )
             closeButton.contentDescription = closeButton.context.getString(R.string.remove)
         }
     }

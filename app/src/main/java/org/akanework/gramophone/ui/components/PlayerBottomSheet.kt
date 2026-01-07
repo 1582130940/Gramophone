@@ -25,48 +25,32 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.util.AttributeSet
-import androidx.media3.common.util.Log
 import android.view.View
 import android.view.WindowInsets
 import android.widget.FrameLayout
-import android.widget.ImageView
-import android.widget.TextView
 import androidx.activity.BackEventCompat
 import androidx.activity.OnBackPressedCallback
-import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.graphics.Insets
-import androidx.core.view.HapticFeedbackConstantsCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.doOnLayout
 import androidx.core.view.doOnNextLayout
 import androidx.core.view.isVisible
-import androidx.fragment.app.Fragment
-import androidx.fragment.app.findFragment
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
+import androidx.media3.common.util.Log
 import androidx.media3.session.MediaController
 import androidx.preference.PreferenceManager
-import coil3.asDrawable
-import coil3.imageLoader
-import coil3.request.Disposable
-import coil3.request.ImageRequest
-import coil3.request.error
-import coil3.size.Scale
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetBehavior.BottomSheetCallback
-import com.google.android.material.button.MaterialButton
 import com.google.android.material.motion.MaterialBottomContainerBackHelper
 import org.akanework.gramophone.BuildConfig
 import org.akanework.gramophone.R
 import org.akanework.gramophone.logic.clone
-import org.akanework.gramophone.logic.fadInAnimation
 import org.akanework.gramophone.logic.fadOutAnimation
 import org.akanework.gramophone.logic.getBooleanStrict
-import org.akanework.gramophone.logic.playOrPause
-import org.akanework.gramophone.logic.startAnimation
 import org.akanework.gramophone.logic.ui.MyBottomSheetBehavior
 import org.akanework.gramophone.ui.MainActivity
 
@@ -83,6 +67,7 @@ class PlayerBottomSheet private constructor(
     }
 
     private var standardBottomSheetBehavior: MyBottomSheetBehavior<FrameLayout>? = null
+
     @SuppressLint("RestrictedApi")
     private var lyricsBackHelper: MaterialBottomContainerBackHelper? = null
     private var bottomSheetBackCallback: OnBackPressedCallback? = null
@@ -209,7 +194,8 @@ class PlayerBottomSheet private constructor(
                 standardBottomSheetBehavior!!.state = BottomSheetBehavior.STATE_COLLAPSED
             }
             @SuppressLint("RestrictedApi")
-            lyricsBackHelper = MaterialBottomContainerBackHelper(fullPlayer.bottomSheetFullLyricView)
+            lyricsBackHelper =
+                MaterialBottomContainerBackHelper(fullPlayer.bottomSheetFullLyricView)
             bottomSheetBackCallback = object : OnBackPressedCallback(enabled = false) {
                 override fun handleOnBackStarted(backEvent: BackEventCompat) {
                     if (fullPlayer.bottomSheetFullLyricView.isVisible) {
@@ -234,16 +220,19 @@ class PlayerBottomSheet private constructor(
                         @SuppressLint("RestrictedApi")
                         val backEvent = lyricsBackHelper!!.onHandleBackInvoked()
                         if (backEvent == null || backEvent.progress == 0f
-                            || Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                            || Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE
+                        ) {
                             fullPlayer.bottomSheetFullLyricView.fadOutAnimation(FullBottomSheet.LYRIC_FADE_TRANSITION_SEC)
                             return
                         }
                         @SuppressLint("RestrictedApi")
-                        lyricsBackHelper!!.finishBackProgressNotPersistent(backEvent, object : AnimatorListenerAdapter() {
-                            override fun onAnimationEnd(animation: Animator) {
-                                fullPlayer.bottomSheetFullLyricView.visibility = INVISIBLE
-                            }
-                        })
+                        lyricsBackHelper!!.finishBackProgressNotPersistent(
+                            backEvent,
+                            object : AnimatorListenerAdapter() {
+                                override fun onAnimationEnd(animation: Animator) {
+                                    fullPlayer.bottomSheetFullLyricView.visibility = INVISIBLE
+                                }
+                            })
                     } else {
                         standardBottomSheetBehavior!!.handleBackInvoked()
                     }

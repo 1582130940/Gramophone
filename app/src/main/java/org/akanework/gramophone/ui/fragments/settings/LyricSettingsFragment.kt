@@ -22,7 +22,8 @@ import org.akanework.gramophone.R
 import org.akanework.gramophone.ui.fragments.BasePreferenceFragment
 import org.akanework.gramophone.ui.fragments.BaseSettingsActivity
 
-class LyricSettingsActivity : BaseSettingsActivity(R.string.settings_lyric,
+class LyricSettingsActivity : BaseSettingsActivity(
+    R.string.settings_lyric,
     { LyricSettingsFragment() })
 
 class LyricSettingsFragment : BasePreferenceFragment() {

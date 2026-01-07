@@ -3,7 +3,6 @@ package org.akanework.gramophone.logic.utils.exoplayer
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
-import androidx.core.util.Supplier
 import androidx.media3.common.Format
 import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.audio.AudioProcessor
@@ -14,7 +13,6 @@ import androidx.media3.exoplayer.audio.AudioRendererEventListener
 import androidx.media3.exoplayer.audio.AudioSink
 import androidx.media3.exoplayer.audio.DefaultAudioSink
 import androidx.media3.exoplayer.audio.ForwardingAudioSink
-import androidx.media3.exoplayer.audio.ToFloatPcmAudioProcessor
 import androidx.media3.exoplayer.mediacodec.MediaCodecSelector
 import androidx.media3.exoplayer.text.TextOutput
 import androidx.media3.exoplayer.video.VideoRendererEventListener
@@ -22,10 +20,12 @@ import org.akanework.gramophone.logic.utils.PostAmpAudioSink
 import org.akanework.gramophone.logic.utils.ReplayGainAudioProcessor
 import org.nift4.alacdecoder.AlacRenderer
 
-class GramophoneRenderFactory(context: Context,
-                              private val rgAp: ReplayGainAudioProcessor,
-                              private val configurationListener: (Format?) -> Unit,
-                              private val audioSinkListener: (DefaultAudioSink) -> Unit) :
+class GramophoneRenderFactory(
+    context: Context,
+    private val rgAp: ReplayGainAudioProcessor,
+    private val configurationListener: (Format?) -> Unit,
+    private val audioSinkListener: (DefaultAudioSink) -> Unit
+) :
     DefaultRenderersFactory(context) {
     override fun buildTextRenderers(
         context: Context,

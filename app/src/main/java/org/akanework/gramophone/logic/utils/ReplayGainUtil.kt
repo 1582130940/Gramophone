@@ -1,9 +1,7 @@
 package org.akanework.gramophone.logic.utils
 
 import android.os.Bundle
-import androidx.media3.common.C
 import androidx.media3.common.Format
-import androidx.media3.common.MimeTypes
 import androidx.media3.common.util.Log
 import androidx.media3.common.util.ParsableByteArray
 import androidx.media3.extractor.metadata.id3.BinaryFrame
@@ -376,7 +374,8 @@ sealed class ReplayGainUtil {
             val gainL = log10(soundcheck[0] / 1000.0f) * -10
             val gainR = if (soundcheck[1] == 0) gainL else log10(soundcheck[1] / 1000.0f) * -10
             val gainAltL = log10(soundcheck[2] / 2500.0f) * -10
-            val gainAltR = if (soundcheck[3] == 0) gainAltL else log10(soundcheck[3] / 2500.0f) * -10
+            val gainAltR =
+                if (soundcheck[3] == 0) gainAltL else log10(soundcheck[3] / 2500.0f) * -10
             val unk1 = soundcheck[4]
             val unk2 = soundcheck[5]
             val peakL = soundcheck[6] / 32768.0f
@@ -475,11 +474,12 @@ sealed class ReplayGainUtil {
                     })
                 } // Modern-day ReplayGain for ID3
             inputFormat.metadata!!.getMatchingEntries(CommentFrame::class.java)
-            { it.description.startsWith("RVA", ignoreCase = true)
-                    || // MEDIA JUKEBOX = JRiver Media Center
-                    it.description.equals("MEDIA JUKEBOX: REPLAY GAIN", ignoreCase = true)
-                    || it.description.equals("MEDIA JUKEBOX: ALBUM GAIN", ignoreCase = true)
-                    || it.description.equals("MEDIA JUKEBOX: PEAK LEVEL", ignoreCase = true)
+            {
+                it.description.startsWith("RVA", ignoreCase = true)
+                        || // MEDIA JUKEBOX = JRiver Media Center
+                        it.description.equals("MEDIA JUKEBOX: REPLAY GAIN", ignoreCase = true)
+                        || it.description.equals("MEDIA JUKEBOX: ALBUM GAIN", ignoreCase = true)
+                        || it.description.equals("MEDIA JUKEBOX: PEAK LEVEL", ignoreCase = true)
             }
                 .let {
                     metadata.addAll(it.mapNotNull { frame ->
@@ -532,12 +532,13 @@ sealed class ReplayGainUtil {
                         frame.copy(channels = frame.channels.map { ch ->
                             ch.copy(
                                 volumeAdjustment = ch.volumeAdjustment + (iTunNorm
-                                .firstOrNull()?.let { f -> (f.gainL + f.gainR) / 2 } ?: 0f),
+                                    .firstOrNull()?.let { f -> (f.gainL + f.gainR) / 2 } ?: 0f),
                                 peakVolume = (iTunNorm.firstOrNull()?.let { f ->
-                                    max(f.peakL, f.peakR) }).let { iTunesPeak ->
-                                        if (iTunesPeak != null && ch.peakVolume != null)
-                                            max(iTunesPeak, ch.peakVolume)
-                                        else iTunesPeak ?: ch.peakVolume
+                                    max(f.peakL, f.peakR)
+                                }).let { iTunesPeak ->
+                                    if (iTunesPeak != null && ch.peakVolume != null)
+                                        max(iTunesPeak, ch.peakVolume)
+                                    else iTunesPeak ?: ch.peakVolume
                                 })
                         })
                     })

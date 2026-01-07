@@ -11,12 +11,7 @@ package android.media.audio.common;
 import android.annotation.SuppressLint;
 
 @SuppressLint("NewApi")
-public class AudioVolumeGroupChangeEvent implements android.os.Parcelable
-{
-    public int groupId = 0;
-    public int volumeIndex = 0;
-    public boolean muted = false;
-    public int flags = 0;
+public class AudioVolumeGroupChangeEvent implements android.os.Parcelable {
     public static final android.os.Parcelable.Creator<AudioVolumeGroupChangeEvent> CREATOR = new android.os.Parcelable.Creator<AudioVolumeGroupChangeEvent>() {
         @Override
         public AudioVolumeGroupChangeEvent createFromParcel(android.os.Parcel _aidl_source) {
@@ -24,13 +19,19 @@ public class AudioVolumeGroupChangeEvent implements android.os.Parcelable
             _aidl_out.readFromParcel(_aidl_source);
             return _aidl_out;
         }
+
         @Override
         public AudioVolumeGroupChangeEvent[] newArray(int _aidl_size) {
             return new AudioVolumeGroupChangeEvent[_aidl_size];
         }
     };
-    @Override public final void writeToParcel(android.os.Parcel _aidl_parcel, int _aidl_flag)
-    {
+    public int groupId = 0;
+    public int volumeIndex = 0;
+    public boolean muted = false;
+    public int flags = 0;
+
+    @Override
+    public final void writeToParcel(android.os.Parcel _aidl_parcel, int _aidl_flag) {
         int _aidl_start_pos = _aidl_parcel.dataPosition();
         _aidl_parcel.writeInt(0);
         _aidl_parcel.writeInt(groupId);
@@ -42,12 +43,14 @@ public class AudioVolumeGroupChangeEvent implements android.os.Parcelable
         _aidl_parcel.writeInt(_aidl_end_pos - _aidl_start_pos);
         _aidl_parcel.setDataPosition(_aidl_end_pos);
     }
-    public final void readFromParcel(android.os.Parcel _aidl_parcel)
-    {
+
+    public final void readFromParcel(android.os.Parcel _aidl_parcel) {
         int _aidl_start_pos = _aidl_parcel.dataPosition();
         int _aidl_parcelable_size = _aidl_parcel.readInt();
         try {
-            if (_aidl_parcelable_size < 4) throw new android.os.BadParcelableException("Parcelable too small");;
+            if (_aidl_parcelable_size < 4)
+                throw new android.os.BadParcelableException("Parcelable too small");
+            ;
             if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
             groupId = _aidl_parcel.readInt();
             if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
@@ -63,6 +66,7 @@ public class AudioVolumeGroupChangeEvent implements android.os.Parcelable
             _aidl_parcel.setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
         }
     }
+
     @Override
     public String toString() {
         java.util.StringJoiner _aidl_sj = new java.util.StringJoiner(", ", "{", "}");
@@ -72,6 +76,7 @@ public class AudioVolumeGroupChangeEvent implements android.os.Parcelable
         _aidl_sj.add("flags: " + (flags));
         return "AudioVolumeGroupChangeEvent" + _aidl_sj;
     }
+
     @Override
     public boolean equals(Object other) {
         if (this == other) return true;
@@ -87,6 +92,7 @@ public class AudioVolumeGroupChangeEvent implements android.os.Parcelable
     public int hashCode() {
         return java.util.Arrays.deepHashCode(java.util.Arrays.asList(groupId, volumeIndex, muted, flags).toArray());
     }
+
     @Override
     public int describeContents() {
         return 0;

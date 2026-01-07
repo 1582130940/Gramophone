@@ -82,17 +82,22 @@ class DetailedFolderAdapter(
                 Sorter.Type.None.toString()
             )!!
         )
-    } catch (_: IllegalArgumentException) { Sorter.Type.None }
-    override val sortTypes = setOf(Sorter.Type.ByFilePathAscending, Sorter.Type.BySizeDescending,
-        Sorter.Type.ByAddDateDescending, Sorter.Type.ByModifiedDateDescending)
+    } catch (_: IllegalArgumentException) {
+        Sorter.Type.None
+    }
+    override val sortTypes = setOf(
+        Sorter.Type.ByFilePathAscending, Sorter.Type.BySizeDescending,
+        Sorter.Type.ByAddDateDescending, Sorter.Type.ByModifiedDateDescending
+    )
     override val sortType = MutableStateFlow(
         if (prefSortType != Sorter.Type.None && sortTypes.contains(prefSortType))
-        prefSortType
-    else
-        Sorter.Type.ByFilePathAscending)
+            prefSortType
+        else
+            Sorter.Type.ByFilePathAscending
+    )
     private var fileNodePath = MutableStateFlow<List<String>?>(null)
     private val liveData = if (isDetailed) mainActivity.reader.folderStructureFlow
-        else mainActivity.reader.shallowFolderFlow
+    else mainActivity.reader.shallowFolderFlow
     private val dataFlow = liveData.combineTransform(fileNodePath) { root, path ->
         var item: FileNode? = null
         if (path != null) {
@@ -124,12 +129,15 @@ class DetailedFolderAdapter(
             Sorter.Type.BySizeDescending -> item.folderList.values.sortedByDescending {
                 it.folderList.size + it.songList.size
             }
+
             Sorter.Type.ByAddDateDescending -> item.folderList.values.sortedByDescending {
                 it.addDate ?: Long.MIN_VALUE
             }
+
             Sorter.Type.ByModifiedDateDescending -> item.folderList.values.sortedByDescending {
                 it.modifiedDate ?: Long.MIN_VALUE
             }
+
             else -> item.folderList.values.sortedWith(
                 SupportComparator.createAlphanumericComparator(cnv = {
                     it.folderName
@@ -141,24 +149,36 @@ class DetailedFolderAdapter(
     private var scope: CoroutineScope? = null
     private val folderPopAdapter: FolderPopAdapter = FolderPopAdapter(this)
     private val folderAdapter: FolderListAdapter = FolderListAdapter(mainActivity, this)
-    private val decorAdapter = BaseDecorAdapter<DetailedFolderAdapter>(this, R.plurals.folders_plural)
+    private val decorAdapter =
+        BaseDecorAdapter<DetailedFolderAdapter>(this, R.plurals.folders_plural)
     private val songAdapter: SongAdapter =
         SongAdapter(fragment, dataFlow.map { it.songList }, folder = true).apply {
             onFullyDrawnListener = { reportFullyDrawn() }
             decorAdapter.jumpUpPos = { 0 }
         }
     override val concatAdapter: ConcatAdapter =
-        ConcatAdapter(ConcatAdapter.Config.Builder().setIsolateViewTypes(false).build(),
-            decorAdapter, this, folderPopAdapter, folderAdapter, songAdapter.concatAdapter)
+        ConcatAdapter(
+            ConcatAdapter.Config.Builder().setIsolateViewTypes(false).build(),
+            decorAdapter, this, folderPopAdapter, folderAdapter, songAdapter.concatAdapter
+        )
     override val itemHeightHelper by lazy {
-        DefaultItemHeightHelper.concatItemHeightHelper(decorAdapter, { decorAdapter.itemCount },
-            DefaultItemHeightHelper.concatItemHeightHelper(folderPopAdapter, { folderPopAdapter.itemCount },
-            DefaultItemHeightHelper.concatItemHeightHelper(folderAdapter,
-                { folderAdapter.itemCount }, songAdapter.itemHeightHelper)))
+        DefaultItemHeightHelper.concatItemHeightHelper(
+            decorAdapter, { decorAdapter.itemCount },
+            DefaultItemHeightHelper.concatItemHeightHelper(
+                folderPopAdapter,
+                { folderPopAdapter.itemCount },
+                DefaultItemHeightHelper.concatItemHeightHelper(
+                    folderAdapter,
+                    { folderAdapter.itemCount }, songAdapter.itemHeightHelper
+                )
+            )
+        )
     }
     private var recyclerView: MyRecyclerView? = null
+
     init {
-        decorAdapter.jumpDownPos = { decorAdapter.itemCount + folderPopAdapter.itemCount + folderAdapter.itemCount }
+        decorAdapter.jumpDownPos =
+            { decorAdapter.itemCount + folderPopAdapter.itemCount + folderAdapter.itemCount }
     }
 
     override fun onAttachedToRecyclerView(recyclerView: MyRecyclerView) {
@@ -171,7 +191,8 @@ class DetailedFolderAdapter(
                 val canDiff = this@DetailedFolderAdapter.recyclerView != null
                         && folderAdapter.onFullyDrawnListener == null /* not changing folder */
                 val diffResult = if (canDiff) DiffUtil.calculateDiff(
-                    DiffCallback(oldList, newList)) else null
+                    DiffCallback(oldList, newList)
+                ) else null
                 withContext(Dispatchers.Main) {
                     folderList = newList.toImmutableList()
                     if (diffResult != null)
@@ -347,7 +368,8 @@ class DetailedFolderAdapter(
         }
     }
 
-    private class FolderPopAdapter(private val frag: DetailedFolderAdapter) : FolderCardAdapter(frag) {
+    private class FolderPopAdapter(private val frag: DetailedFolderAdapter) :
+        FolderCardAdapter(frag) {
 
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
             holder.folderName.text = frag.mainActivity.getString(R.string.upper_folder)

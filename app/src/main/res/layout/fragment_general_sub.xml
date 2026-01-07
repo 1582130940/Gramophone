@@ -15,13 +15,13 @@
             style="?attr/collapsingToolbarLayoutLargeStyle"
             android:layout_width="match_parent"
             android:layout_height="?attr/collapsingToolbarLayoutLargeSize"
-            app:collapsedTitleTextColor="?attr/colorOnSurface"
             app:collapsedTitleTextAppearance="?textAppearanceTitleLarge"
-            app:expandedTitleTextColor="?attr/colorOnSurface"
+            app:collapsedTitleTextColor="?attr/colorOnSurface"
+            app:expandedTitleMarginStart="24dp"
             app:expandedTitleTextAppearance="?textAppearanceHeadlineLarge"
+            app:expandedTitleTextColor="?attr/colorOnSurface"
             app:layout_scrollFlags="scroll|exitUntilCollapsed|snap"
-            app:maxLines="2"
-            app:expandedTitleMarginStart="24dp">
+            app:maxLines="2">
 
             <com.google.android.material.appbar.MaterialToolbar
                 android:id="@+id/topAppBar"

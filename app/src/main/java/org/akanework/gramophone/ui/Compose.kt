@@ -38,8 +38,10 @@ abstract class BaseComposeActivity : AppCompatActivity() {
             awaitClose {
                 prefs.unregisterOnSharedPreferenceChangeListener(cb)
             }
-        }.stateIn(lifecycleScope, WhileSubscribed(),
-            prefs.getBooleanStrict("pureDark", false))
+        }.stateIn(
+            lifecycleScope, WhileSubscribed(),
+            prefs.getBooleanStrict("pureDark", false)
+        )
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

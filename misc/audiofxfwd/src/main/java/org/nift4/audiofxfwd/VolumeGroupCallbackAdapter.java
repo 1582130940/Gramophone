@@ -12,11 +12,6 @@ import java.util.concurrent.Executor;
         this.delegate = delegate;
     }
 
-    @Override
-    public void onAudioVolumeGroupChanged(int group, int flags) {
-        delegate.onAudioVolumeGroupChanged(group, flags);
-    }
-
     @SuppressWarnings("PrivateApi")
     public static Method getAdd() throws NoSuchMethodException {
         return AudioManager.class.getDeclaredMethod("registerVolumeGroupCallback",
@@ -27,5 +22,10 @@ import java.util.concurrent.Executor;
     public static Method getRemove() throws NoSuchMethodException {
         return AudioManager.class.getDeclaredMethod("unregisterVolumeGroupCallback",
                 AudioManager.VolumeGroupCallback.class);
+    }
+
+    @Override
+    public void onAudioVolumeGroupChanged(int group, int flags) {
+        delegate.onAudioVolumeGroupChanged(group, flags);
     }
 }

@@ -14,14 +14,16 @@ import android.content.pm.PackageManager
 import android.media.AudioFormat
 import android.os.Build
 import android.os.Parcelable
-import androidx.media3.common.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
+import androidx.media3.common.util.Log
 import kotlinx.parcelize.Parcelize
 
 @Parcelize
-data class BtCodecInfo(val codec: String?, val sampleRateHz: Int?, val channelConfig: Int?,
-                       val bitsPerSample: Int?, val quality: String?) : Parcelable {
+data class BtCodecInfo(
+    val codec: String?, val sampleRateHz: Int?, val channelConfig: Int?,
+    val bitsPerSample: Int?, val quality: String?
+) : Parcelable {
     companion object {
         private const val TAG = "BtCodecInfo"
 
@@ -63,8 +65,10 @@ data class BtCodecInfo(val codec: String?, val sampleRateHz: Int?, val channelCo
                     BluetoothCodecConfig.SAMPLE_RATE_176400 -> 176400
                     BluetoothCodecConfig.SAMPLE_RATE_192000 -> 192000
                     else -> {
-                        Log.e(TAG, "unknown sample rate flag " +
-                                (@SuppressLint("NewApi") codecConfig.sampleRate)); null
+                        Log.e(
+                            TAG, "unknown sample rate flag " +
+                                    (@SuppressLint("NewApi") codecConfig.sampleRate)
+                        ); null
                     }
                 }
                 return BtCodecInfo(
@@ -74,16 +78,20 @@ data class BtCodecInfo(val codec: String?, val sampleRateHz: Int?, val channelCo
                         BluetoothCodecConfig.CHANNEL_MODE_MONO -> AudioFormat.CHANNEL_OUT_MONO
                         BluetoothCodecConfig.CHANNEL_MODE_STEREO -> AudioFormat.CHANNEL_OUT_STEREO
                         else -> {
-                            Log.e(TAG, "unknown channel mode flag " +
-                                    (@SuppressLint("NewApi") codecConfig.channelMode)); null
+                            Log.e(
+                                TAG, "unknown channel mode flag " +
+                                        (@SuppressLint("NewApi") codecConfig.channelMode)
+                            ); null
                         }
                     }, when ((@SuppressLint("NewApi") codecConfig.bitsPerSample)) {
                         BluetoothCodecConfig.BITS_PER_SAMPLE_16 -> 16
                         BluetoothCodecConfig.BITS_PER_SAMPLE_24 -> 24
                         BluetoothCodecConfig.BITS_PER_SAMPLE_32 -> 32
                         else -> {
-                            Log.e(TAG, "unknown bit per sample flag " +
-                                    (@SuppressLint("NewApi") codecConfig.bitsPerSample)); null
+                            Log.e(
+                                TAG, "unknown bit per sample flag " +
+                                        (@SuppressLint("NewApi") codecConfig.bitsPerSample)
+                            ); null
                         }
                     }, (@SuppressLint("NewApi") if (codec == "LDAC") when {
                         codecConfig.codecSpecific1 == 1003L || codecConfig.codecSpecific1 == 0L -> "Auto"
@@ -105,14 +113,16 @@ data class BtCodecInfo(val codec: String?, val sampleRateHz: Int?, val channelCo
         private fun getCodecNameReflection(codecConfig: BluetoothCodecConfig): String? {
             return try {
                 @SuppressLint("NewApi")
-                BluetoothCodecConfig::class.java.getMethod("getCodecName").invoke(codecConfig) as String
+                BluetoothCodecConfig::class.java.getMethod("getCodecName")
+                    .invoke(codecConfig) as String
             } catch (_: Throwable) {
                 try {
                     @SuppressLint("NewApi")
-                    BluetoothCodecConfig::class.java.getMethod("getCodecName", Int::class.java).invoke(
-                        null,
-                        @Suppress("deprecation") codecConfig.codecType
-                    ) as String
+                    BluetoothCodecConfig::class.java.getMethod("getCodecName", Int::class.java)
+                        .invoke(
+                            null,
+                            @Suppress("deprecation") codecConfig.codecType
+                        ) as String
                 } catch (t: Throwable) {
                     Log.e(TAG, Log.getThrowableString(t)!!)
                     return null
@@ -122,8 +132,9 @@ data class BtCodecInfo(val codec: String?, val sampleRateHz: Int?, val channelCo
 
         @RequiresApi(Build.VERSION_CODES.O)
         fun getCodec(context: Context, callback: (BtCodecInfo?) -> Unit): Proxy? {
-            val adapter = ContextCompat.getSystemService(context, BluetoothManager::class.java)?.adapter
-                ?: return null
+            val adapter =
+                ContextCompat.getSystemService(context, BluetoothManager::class.java)?.adapter
+                    ?: return null
             val sl = Proxy(adapter, callback, context)
             if (!adapter.getProfileProxy(context, sl, BluetoothProfile.A2DP)) {
                 Log.e(TAG, "getProfileProxy error")
@@ -133,8 +144,10 @@ data class BtCodecInfo(val codec: String?, val sampleRateHz: Int?, val channelCo
             return sl
         }
 
-        class Proxy(val adapter: BluetoothAdapter, private val callback: (BtCodecInfo?) -> Unit,
-                    private val context: Context) : BluetoothProfile.ServiceListener {
+        class Proxy(
+            val adapter: BluetoothAdapter, private val callback: (BtCodecInfo?) -> Unit,
+            private val context: Context
+        ) : BluetoothProfile.ServiceListener {
             var a2dp: BluetoothA2dp? = null
             override fun onServiceConnected(profile: Int, proxy: BluetoothProfile) {
                 if (profile != BluetoothProfile.A2DP) {
@@ -145,14 +158,16 @@ data class BtCodecInfo(val codec: String?, val sampleRateHz: Int?, val channelCo
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && ContextCompat.checkSelfPermission(
                         context,
                         Manifest.permission.BLUETOOTH_CONNECT
-                    ) != PackageManager.PERMISSION_GRANTED) {
+                    ) != PackageManager.PERMISSION_GRANTED
+                ) {
                     Log.w(TAG, "missing bluetooth permission")
                     callback(null)
                     return
                 }
                 val cd = a2dp!!.connectedDevices
                 val device = if (cd.size <= 1) cd.firstOrNull() else try {
-                    BluetoothA2dp::class.java.getMethod("getActiveDevice").invoke(a2dp) as BluetoothDevice?
+                    BluetoothA2dp::class.java.getMethod("getActiveDevice")
+                        .invoke(a2dp) as BluetoothDevice?
                 } catch (t: Throwable) {
                     Log.e(TAG, Log.getThrowableString(t)!!)
                     callback(null)
@@ -161,7 +176,10 @@ data class BtCodecInfo(val codec: String?, val sampleRateHz: Int?, val channelCo
                 if (device == null) return
                 @SuppressLint("NewApi")
                 val codec = try {
-                    BluetoothA2dp::class.java.getMethod("getCodecStatus", BluetoothDevice::class.java)
+                    BluetoothA2dp::class.java.getMethod(
+                        "getCodecStatus",
+                        BluetoothDevice::class.java
+                    )
                         .invoke(a2dp, device) as BluetoothCodecStatus?
                 } catch (t: Throwable) {
                     Log.e(TAG, Log.getThrowableString(t)!!)

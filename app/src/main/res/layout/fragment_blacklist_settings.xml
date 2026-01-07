@@ -31,11 +31,11 @@
             style="?attr/collapsingToolbarLayoutLargeStyle"
             android:layout_width="match_parent"
             android:layout_height="?attr/collapsingToolbarLayoutLargeSize"
-            app:collapsedTitleTextColor="?attr/colorOnSurface"
             app:collapsedTitleTextAppearance="?textAppearanceTitleLarge"
-            app:expandedTitleTextColor="?attr/colorOnSurface"
-            app:expandedTitleTextAppearance="?textAppearanceHeadlineLarge"
+            app:collapsedTitleTextColor="?attr/colorOnSurface"
             app:expandedTitleMarginStart="24dp"
+            app:expandedTitleTextAppearance="?textAppearanceHeadlineLarge"
+            app:expandedTitleTextColor="?attr/colorOnSurface"
             app:layout_scrollFlags="scroll|exitUntilCollapsed|snap"
             app:title="@string/settings_blacklist">
 
@@ -60,10 +60,10 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:clipToPadding="false"
-        android:scrollbars="none"
-        android:paddingTop="4dp"
         android:contentDescription="@string/list"
-        app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior"
-        app:hasFixedSize="true"/>
+        android:paddingTop="4dp"
+        android:scrollbars="none"
+        app:hasFixedSize="true"
+        app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

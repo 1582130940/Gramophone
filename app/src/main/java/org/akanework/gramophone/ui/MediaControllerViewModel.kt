@@ -3,7 +3,6 @@ package org.akanework.gramophone.ui
 import android.app.Application
 import android.content.ComponentName
 import android.os.Bundle
-import androidx.media3.common.util.Log
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.DefaultLifecycleObserver
@@ -12,16 +11,17 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
 import androidx.media3.common.Player
+import androidx.media3.common.util.Log
 import androidx.media3.session.MediaBrowser
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionCommand
 import androidx.media3.session.SessionResult
 import androidx.media3.session.SessionToken
 import com.google.common.util.concurrent.ListenableFuture
-import java.util.concurrent.ExecutionException
 import org.akanework.gramophone.logic.GramophoneApplication
 import org.akanework.gramophone.logic.GramophonePlaybackService
 import org.akanework.gramophone.logic.utils.LifecycleCallbackListImpl
+import java.util.concurrent.ExecutionException
 
 class MediaControllerViewModel(application: Application) : AndroidViewModel(application),
     DefaultLifecycleObserver, MediaBrowser.Listener {
@@ -63,9 +63,11 @@ class MediaControllerViewModel(application: Application) : AndroidViewModel(appl
                                     throw e
                                 if (e.cause!!.message != "Session rejected the connection request.")
                                     throw e
-                                Log.w("MediaControllerViewMdel", "Session rejected the connection" +
-                                        " request. Maybe controller.release() was called before" +
-                                        " connecting was done?")
+                                Log.w(
+                                    "MediaControllerViewMdel", "Session rejected the connection" +
+                                            " request. Maybe controller.release() was called before" +
+                                            " connecting was done?"
+                                )
                                 null
                             }
                             if (this == controllerFuture && instance == null) {
@@ -103,14 +105,16 @@ class MediaControllerViewModel(application: Application) : AndroidViewModel(appl
         }
     }
 
-    fun addRecreationalPlayerListener(lifecycle: Lifecycle, listener: Player.Listener,
-                                      then: (MediaBrowser) -> Unit) {
+    fun addRecreationalPlayerListener(
+        lifecycle: Lifecycle, listener: Player.Listener,
+        then: (MediaBrowser) -> Unit
+    ) {
         addControllerCallback(lifecycle) { controller, controllerLifecycle ->
             controller.registerLifecycleCallback(
                 LifecycleIntersection(lifecycle, controllerLifecycle).lifecycle,
-	            listener
+                listener
             )
-	        then(controller)
+            then(controller)
         }
     }
 
