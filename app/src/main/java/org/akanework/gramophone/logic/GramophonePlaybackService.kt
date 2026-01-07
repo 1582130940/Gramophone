@@ -54,10 +54,6 @@ import androidx.media3.common.MimeTypes
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.Player
-import androidx.media3.common.Player.EVENT_SHUFFLE_MODE_ENABLED_CHANGED
-import androidx.media3.common.Player.MEDIA_ITEM_TRANSITION_REASON_AUTO
-import androidx.media3.common.Player.MEDIA_ITEM_TRANSITION_REASON_SEEK
-import androidx.media3.common.Player.REPEAT_MODE_ALL
 import androidx.media3.common.Rating
 import androidx.media3.common.Timeline
 import androidx.media3.common.TrackSelectionParameters
@@ -143,11 +139,6 @@ class GramophonePlaybackService : MediaLibraryService(), MediaSessionService.Lis
         private const val PENDING_INTENT_SESSION_ID = 0
         const val PENDING_INTENT_NOTIFY_ID = 1
         const val PENDING_INTENT_WIDGET_ID = 2
-        private const val PLAYBACK_SHUFFLE_ACTION_ON = "shuffle_on"
-        private const val PLAYBACK_SHUFFLE_ACTION_OFF = "shuffle_off"
-        private const val PLAYBACK_REPEAT_OFF = "repeat_off"
-        private const val PLAYBACK_REPEAT_ALL = "repeat_all"
-        private const val PLAYBACK_REPEAT_ONE = "repeat_one"
         const val SERVICE_SET_TIMER = "set_timer"
         const val SERVICE_QUERY_TIMER = "query_timer"
         const val SERVICE_GET_AUDIO_FORMAT = "get_audio_format"
@@ -298,33 +289,23 @@ class GramophonePlaybackService : MediaLibraryService(), MediaSessionService.Lis
             listOf(
                 CommandButton.Builder(CommandButton.ICON_SHUFFLE_OFF) // shuffle currently disabled, click will enable
                     .setDisplayName(getString(R.string.shuffle))
-                    .setSessionCommand(
-                        SessionCommand(PLAYBACK_SHUFFLE_ACTION_ON, Bundle.EMPTY)
-                    )
+                    .setPlayerCommand(Player.COMMAND_SET_SHUFFLE_MODE, true)
                     .build(),
                 CommandButton.Builder(CommandButton.ICON_SHUFFLE_ON) // shuffle currently enabled, click will disable
                     .setDisplayName(getString(R.string.shuffle))
-                    .setSessionCommand(
-                        SessionCommand(PLAYBACK_SHUFFLE_ACTION_OFF, Bundle.EMPTY)
-                    )
+                    .setPlayerCommand(Player.COMMAND_SET_SHUFFLE_MODE, false)
                     .build(),
                 CommandButton.Builder(CommandButton.ICON_REPEAT_OFF) // repeat currently disabled, click will repeat all
                     .setDisplayName(getString(R.string.repeat_mode))
-                    .setSessionCommand(
-                        SessionCommand(PLAYBACK_REPEAT_ALL, Bundle.EMPTY)
-                    )
+                    .setPlayerCommand(Player.COMMAND_SET_REPEAT_MODE, Player.REPEAT_MODE_ALL)
                     .build(),
                 CommandButton.Builder(CommandButton.ICON_REPEAT_ALL) // repeat all currently enabled, click will repeat one
                     .setDisplayName(getString(R.string.repeat_mode))
-                    .setSessionCommand(
-                        SessionCommand(PLAYBACK_REPEAT_ONE, Bundle.EMPTY)
-                    )
+                    .setPlayerCommand(Player.COMMAND_SET_REPEAT_MODE, Player.REPEAT_MODE_ONE)
                     .build(),
                 CommandButton.Builder(CommandButton.ICON_REPEAT_ONE) // repeat one currently enabled, click will disable
                     .setDisplayName(getString(R.string.repeat_mode))
-                    .setSessionCommand(
-                        SessionCommand(PLAYBACK_REPEAT_OFF, Bundle.EMPTY)
-                    )
+                    .setPlayerCommand(Player.COMMAND_SET_REPEAT_MODE, Player.REPEAT_MODE_OFF)
                     .build(),
             )
         afFormatTracker = AfFormatTracker(this, playbackHandler, handler)
@@ -681,14 +662,8 @@ class GramophonePlaybackService : MediaLibraryService(), MediaSessionService.Lis
             || session.isAutoCompanionController(controller)
             || session.isAutomotiveController(controller)
         ) {
-            // currently, all custom actions are only useful when used by notification
-            // other clients hopefully have repeat/shuffle buttons like MCT does
-            for (commandButton in customCommands) {
-                // Add custom command to available session commands.
-                commandButton.sessionCommand?.let { availableSessionCommands.add(it) }
-            }
             if (this.controller?.currentTimeline?.isEmpty == false) {
-                builder.setCustomLayout(
+                builder.setMediaButtonPreferences(
                     ImmutableList.of(
                         getRepeatCommand(),
                         getShufflingCommand()
@@ -820,16 +795,6 @@ class GramophonePlaybackService : MediaLibraryService(), MediaSessionService.Lis
     ): ListenableFuture<SessionResult> {
         return Futures.immediateFuture(
             when (customCommand.customAction) {
-                PLAYBACK_SHUFFLE_ACTION_ON -> {
-                    this.controller!!.shuffleModeEnabled = true
-                    SessionResult(SessionResult.RESULT_SUCCESS)
-                }
-
-                PLAYBACK_SHUFFLE_ACTION_OFF -> {
-                    this.controller!!.shuffleModeEnabled = false
-                    SessionResult(SessionResult.RESULT_SUCCESS)
-                }
-
                 SERVICE_SET_TIMER -> {
                     // 0 = clear timer; 0 with pauseOnEnd true will pause on end of current song
                     val duration = customCommand.customExtras.getInt("duration")
@@ -895,21 +860,6 @@ class GramophonePlaybackService : MediaLibraryService(), MediaSessionService.Lis
                     SessionResult(SessionResult.RESULT_SUCCESS).also {
                         it.extras.putParcelable("lyrics", lyrics)
                     }
-                }
-
-                PLAYBACK_REPEAT_OFF -> {
-                    this.controller!!.repeatMode = Player.REPEAT_MODE_OFF
-                    SessionResult(SessionResult.RESULT_SUCCESS)
-                }
-
-                PLAYBACK_REPEAT_ONE -> {
-                    this.controller!!.repeatMode = Player.REPEAT_MODE_ONE
-                    SessionResult(SessionResult.RESULT_SUCCESS)
-                }
-
-                PLAYBACK_REPEAT_ALL -> {
-                    this.controller!!.repeatMode = Player.REPEAT_MODE_ALL
-                    SessionResult(SessionResult.RESULT_SUCCESS)
                 }
 
                 else -> {
@@ -1198,8 +1148,8 @@ class GramophonePlaybackService : MediaLibraryService(), MediaSessionService.Lis
         // reshuffle queue when shuffle AND repeat all are enabled
         val player = endedWorkaroundPlayer
         if (player != null && player.currentMediaItemIndex == player.exoPlayer.shuffleOrder.lastIndex &&
-            (reason == MEDIA_ITEM_TRANSITION_REASON_AUTO || reason == MEDIA_ITEM_TRANSITION_REASON_SEEK) &&
-            player.shuffleModeEnabled && player.repeatMode == REPEAT_MODE_ALL
+            reason == Player.MEDIA_ITEM_TRANSITION_REASON_AUTO &&
+            player.shuffleModeEnabled && player.repeatMode == Player.REPEAT_MODE_ALL
         ) {
             player.exoPlayer.setShuffleOrder(
                 CircularShuffleOrder(
@@ -1231,7 +1181,7 @@ class GramophonePlaybackService : MediaLibraryService(), MediaSessionService.Lis
         super<Player.Listener>.onEvents(player, events)
         // if timeline changed, shuffle order is handled elsewhere instead (cloneAndInsert called by
         // ExoPlayer for common case and nextShuffleOrder for resumption case)
-        if (events.contains(EVENT_SHUFFLE_MODE_ENABLED_CHANGED)
+        if (events.contains(Player.EVENT_SHUFFLE_MODE_ENABLED_CHANGED)
             && !events.contains(Player.EVENT_TIMELINE_CHANGED)
         ) {
             // when enabling shuffle, re-shuffle lists so that the first index is up to date
@@ -1290,7 +1240,7 @@ class GramophonePlaybackService : MediaLibraryService(), MediaSessionService.Lis
                 || mediaSession!!.isAutoCompanionController(it)
                 || mediaSession!!.isAutomotiveController(it)
             ) {
-                mediaSession!!.setCustomLayout(
+                mediaSession!!.setMediaButtonPreferences(
                     it, if (isEmpty) emptyList() else
                         ImmutableList.of(getRepeatCommand(), getShufflingCommand())
                 )
