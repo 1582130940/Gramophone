@@ -97,7 +97,8 @@ class PlaylistQueueSheet(
         mediaItem: MediaItem?,
         reason: @Player.MediaItemTransitionReason Int
     ) {
-        playlistAdapter.currentMediaItemIndex = instance?.currentMediaItemIndex
+        val i = instance?.currentMediaItemIndex
+        playlistAdapter.currentMediaItemIndex = i?.let { playlistAdapter.playlist.first.indexOf(i)}
     }
 
     override fun onPositionDiscontinuity(
