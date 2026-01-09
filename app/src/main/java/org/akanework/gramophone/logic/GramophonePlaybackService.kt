@@ -336,6 +336,8 @@ class GramophonePlaybackService : MediaLibraryService(), MediaSessionService.Lis
             }
         }
         rgAp = ReplayGainAudioProcessor()
+        prefs.registerOnSharedPreferenceChangeListener(this)
+        onSharedPreferenceChanged(prefs, null) // read initial values
         val player = EndedWorkaroundPlayer(
             ExoPlayer.Builder(
                 this,
@@ -346,7 +348,7 @@ class GramophonePlaybackService : MediaLibraryService(), MediaSessionService.Lis
                     .setPcmEncodingRestrictionLifted(true)
                     .setEnableDecoderFallback(true)
                     .setEnableAudioTrackPlaybackParams(true)
-                    .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER),
+                    .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON),
                 GramophoneMediaSourceFactory(
                     DefaultDataSource.Factory(this),
                     GramophoneExtractorsFactory().also {
@@ -504,8 +506,6 @@ class GramophonePlaybackService : MediaLibraryService(), MediaSessionService.Lis
         if (controller!!.audioSessionId != C.AUDIO_SESSION_ID_UNSET) {
             onAudioSessionIdChanged(controller!!.audioSessionId)
         }
-        prefs.registerOnSharedPreferenceChangeListener(this)
-        onSharedPreferenceChanged(prefs, null) // read initial values
         ContextCompat.registerReceiver(
             this,
             seekReceiver,
@@ -709,19 +709,19 @@ class GramophonePlaybackService : MediaLibraryService(), MediaSessionService.Lis
         }
         if (key == null || key == "rg_drc") {
             val drc = prefs.getBooleanStrict("rg_drc", true)
-            restart = restart || !rgAp.setReduceGain(!drc)
+            restart = !rgAp.setReduceGain(!drc) || restart
         }
         if (key == null || key == "rg_rg_gain") {
             val rgGain = prefs.getIntStrict("rg_rg_gain", 19)
-            restart = restart || !rgAp.setRgGain(rgGain - 15)
+            restart = !rgAp.setRgGain(rgGain - 15) || restart
         }
         if (key == null || key == "rg_no_rg_gain") {
             val nonRgGain = prefs.getIntStrict("rg_no_rg_gain", 0)
-            restart = restart || !rgAp.setNonRgGain(-nonRgGain)
+            restart = !rgAp.setNonRgGain(-nonRgGain) || restart
         }
         if (key == null || key == "rg_boost_gain") {
             val boostGain = prefs.getIntStrict("rg_boost_gain", 0)
-            restart = restart || !rgAp.setBoostGain(boostGain)
+            restart = !rgAp.setBoostGain(boostGain) || restart
         }
         if (restart) {
             controller?.stop()
@@ -738,10 +738,10 @@ class GramophonePlaybackService : MediaLibraryService(), MediaSessionService.Lis
                 3 -> {
                     val item = controller?.currentMediaItem
                     val idx = controller?.currentMediaItemIndex ?: 0
-                    val count = controller?.mediaItemCount
-                    val next = if (idx + 1 >= (count ?: 0)) null else
+                    val count = controller?.mediaItemCount ?: 0
+                    val next = if (idx + 1 >= count) null else
                         controller?.getMediaItemAt(idx + 1)
-                    val prev = if (idx - 1 < 0 || (count ?: 0) == 0) null else
+                    val prev = if (idx - 1 < 0 || count == 0) null else
                         controller?.getMediaItemAt(idx - 1)
                     if (item != null && (item.mediaMetadata.albumId == next?.mediaMetadata?.albumId ||
                                 item.mediaMetadata.albumId == prev?.mediaMetadata?.albumId)
