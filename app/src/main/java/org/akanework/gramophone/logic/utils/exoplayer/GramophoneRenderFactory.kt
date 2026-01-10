@@ -3,14 +3,17 @@ package org.akanework.gramophone.logic.utils.exoplayer
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
+import androidx.media3.common.AudioAttributes
 import androidx.media3.common.Format
 import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.audio.AudioProcessor
 import androidx.media3.common.audio.AudioProcessorChain
 import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.Renderer
+import androidx.media3.exoplayer.audio.AudioOffloadSupport
 import androidx.media3.exoplayer.audio.AudioRendererEventListener
 import androidx.media3.exoplayer.audio.AudioSink
+import androidx.media3.exoplayer.audio.DefaultAudioOffloadSupportProvider
 import androidx.media3.exoplayer.audio.DefaultAudioSink
 import androidx.media3.exoplayer.audio.ForwardingAudioSink
 import androidx.media3.exoplayer.mediacodec.MediaCodecSelector
@@ -24,7 +27,8 @@ class GramophoneRenderFactory(
     context: Context,
     private val rgAp: ReplayGainAudioProcessor,
     private val configurationListener: (Format?) -> Unit,
-    private val audioSinkListener: (DefaultAudioSink) -> Unit
+    private val audioSinkListener: (DefaultAudioSink) -> Unit,
+    private val disableGaplessOffload: Boolean
 ) :
     DefaultRenderersFactory(context) {
     override fun buildTextRenderers(
@@ -120,6 +124,11 @@ class GramophoneRenderFactory(
                 return 0
             }
         })
+
+        builder.setAudioOffloadSupportProvider(
+            MyAudioOffloadSupportProvider(DefaultAudioOffloadSupportProvider(context), disableGaplessOffload)
+        )
+
         var postAmpAudioSink: PostAmpAudioSink? = null
         val root = builder.setEnableAudioTrackPlaybackParams(enableAudioTrackPlaybackParams)
             .setCanReuse { postAmpAudioSink!!.canReuse() }.build()
@@ -146,6 +155,24 @@ class GramophoneRenderFactory(
         override fun release() {
             super.release()
             configurationListener(null)
+        }
+    }
+
+    class MyAudioOffloadSupportProvider(
+        private val default: DefaultAudioOffloadSupportProvider,
+        private val disableGaplessOffload: Boolean
+    ) : DefaultAudioSink.AudioOffloadSupportProvider by default {
+        override fun getAudioOffloadSupport(
+            format: Format,
+            audioAttributes: AudioAttributes
+        ): AudioOffloadSupport {
+            val defaultResult = default.getAudioOffloadSupport(format, audioAttributes)
+            val audioOffloadSupport = AudioOffloadSupport.Builder()
+            return audioOffloadSupport
+                .setIsFormatSupported(defaultResult.isFormatSupported)
+                .setIsGaplessSupported(defaultResult.isGaplessSupported && !disableGaplessOffload)
+                .setIsSpeedChangeSupported(defaultResult.isSpeedChangeSupported)
+                .build()
         }
     }
 }
