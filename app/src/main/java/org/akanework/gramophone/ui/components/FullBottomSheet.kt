@@ -1281,7 +1281,8 @@ class FullBottomSheet
         }
     }
 
-    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+    // https://developer.android.com/media/implement/surfaces/pause-and-resume-media-playback-with-spacebar
+    override fun onKeyUp(keyCode: Int, event: KeyEvent?): Boolean {
         //androidx.media3.common.util.Log.e("hi","$keyCode") TODO this method is no-op, but why?
         return when (keyCode) {
             KeyEvent.KEYCODE_SPACE -> {
@@ -1296,7 +1297,7 @@ class FullBottomSheet
                 instance?.seekToNext(); true
             }
 
-            else -> super.onKeyDown(keyCode, event)
+            else -> super.onKeyUp(keyCode, event)
         }
     }
 

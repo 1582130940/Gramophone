@@ -66,6 +66,9 @@
         <meta-data
             android:name="androidx.car.app.TintableAttributionIcon"
             android:resource="@drawable/ic_gramophone_monochrome" />
+        <meta-data
+            android:name="com.google.android.gms.car.application.theme"
+            android:resource="@style/Theme.Gramophone"/>
 <!-- TODO uncomment to enable Android Auto when library browsing is implemented
         <meta-data
             android:name="com.google.android.gms.car.application"
@@ -94,13 +97,28 @@
             android:exported="true"
             android:launchMode="singleTop">
             <intent-filter>
+                <!-- no extras -->
                 <action android:name="android.intent.action.MAIN" />
+                <!-- extras: query(str) -->
+                <action android:name="android.intent.action.SEARCH" />
+                <!-- no extras -->
                 <action android:name="android.intent.action.MUSIC_PLAYER" />
+                <!-- extras: borrowed from https://developer.android.com/guide/components/intents-common#PlaySearch -->
+                <action android:name="android.intent.action.MEDIA_SEARCH" />
+                <!-- extras: https://developer.android.com/guide/components/intents-common#PlaySearch -->
+                <action android:name="android.media.action.MEDIA_PLAY_FROM_SEARCH" />
+                <!-- extras: item_name(str) -->
+                <action android:name="org.akanework.gramophone.action.SHUFFLE" />
+                <!-- extras: query(str) -->
+                <action android:name="com.google.android.gms.actions.SEARCH_ACTION"/>
 
                 <category android:name="android.intent.category.LAUNCHER" />
                 <category android:name="android.intent.category.APP_MUSIC" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
+
+            <meta-data android:name="android.app.shortcuts"
+                android:resource="@xml/shortcuts" />
         </activity>
 
         <activity

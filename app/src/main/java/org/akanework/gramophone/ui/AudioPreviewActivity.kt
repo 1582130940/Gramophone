@@ -87,7 +87,6 @@ class AudioPreviewActivity : BaseActivity(), View.OnClickListener {
     private lateinit var progressDrawable: SquigglyProgress
     private lateinit var openIcon: ImageView
     private lateinit var openText: TextView
-    private lateinit var prefs: SharedPreferences
 
     private val scope = CoroutineScope(Dispatchers.IO.limitedParallelism(1))
     private val handler = Handler(Looper.getMainLooper())
@@ -119,7 +118,6 @@ class AudioPreviewActivity : BaseActivity(), View.OnClickListener {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        prefs = PreferenceManager.getDefaultSharedPreferences(applicationContext)
 
         d = MaterialAlertDialogBuilder(this)
             .setView(R.layout.activity_audio_preview)

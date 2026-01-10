@@ -9,7 +9,7 @@ import org.akanework.gramophone.R
 import org.akanework.gramophone.logic.getBooleanStrict
 
 open class BaseActivity : AppCompatActivity() {
-    private lateinit var prefs: SharedPreferences
+    lateinit var prefs: SharedPreferences
     private val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
         if (key == "pureDark" && (resources.configuration.uiMode and
                     Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES

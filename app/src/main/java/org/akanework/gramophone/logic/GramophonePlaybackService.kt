@@ -43,6 +43,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.IntentCompat
+import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.DeviceInfo
@@ -96,6 +97,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.akanework.gramophone.R
@@ -1196,6 +1198,53 @@ class GramophonePlaybackService : MediaLibraryService(), MediaSessionService.Lis
                     )
                 )
             }
+        }
+    }
+
+    override fun onAddMediaItems(
+        mediaSession: MediaSession,
+        controller: MediaSession.ControllerInfo,
+        mediaItems: List<MediaItem>
+    ): ListenableFuture<List<MediaItem>> {
+        if (mediaItems.find { it.localConfiguration == null } == null) // fast path
+            return Futures.immediateFuture(mediaItems)
+        val completion = SettableFuture.create<List<MediaItem>>()
+        lifecycleScope.launch(Dispatchers.Default) {
+            try {
+                val result = mediaItems.flatMap {
+                    if (it.localConfiguration != null)
+                        listOf(it)
+                    else if (it.mediaId != MediaItem.DEFAULT_MEDIA_ID)
+                        gramophoneApplication.reader.songListFlow.first()
+                            .filter { m -> m.mediaId == it.mediaId }
+                    else if (it.requestMetadata.searchQuery != null)
+                        searchForMediaItem(it)
+                    else
+                        throw UnsupportedOperationException("can't do anything with $it")
+                }
+                completion.set(result)
+            } catch (e: UnsupportedOperationException) {
+                completion.setException(e)
+            }
+        }
+        return completion
+    }
+
+    private suspend fun searchForMediaItem(item: MediaItem): List<MediaItem> {
+        val text = item.requestMetadata.searchQuery?.trim() ?: ""
+        val list = gramophoneApplication.reader.songListFlow.first()
+        // TODO support focus and sub queries (see MainActivity)
+        return if (text == "") list else list.filter {
+            // TODO sort results by match quality? (using raw=natural order)
+            // TODO this is copied directly from SearchFragment, which should probably call into
+            //  here for its search needs instead in the future
+            val isMatchingTitle =
+                it.mediaMetadata.title?.contains(text, true) == true
+            val isMatchingAlbum =
+                it.mediaMetadata.albumTitle?.contains(text, true) == true
+            val isMatchingArtist =
+                it.mediaMetadata.artist?.contains(text, true) == true
+            isMatchingTitle || isMatchingAlbum || isMatchingArtist
         }
     }
 

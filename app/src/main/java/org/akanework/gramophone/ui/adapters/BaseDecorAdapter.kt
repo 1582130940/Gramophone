@@ -24,6 +24,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.appcompat.widget.PopupMenu
 import androidx.core.content.edit
+import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.media3.common.Player.REPEAT_MODE_OFF
 import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.LinearSmoothScroller
@@ -181,6 +182,7 @@ open class BaseDecorAdapter<T : AdapterFragment.BaseInterface<*>>(
             }
         }
         holder.shuffleAll.setOnClickListener {
+            ShortcutManagerCompat.reportShortcutUsed(context, "shuffle_all")
             if (adapter is SongAdapter) {
                 val songList = adapter.getSongList()
                 val controller = adapter.getActivity().getPlayer()

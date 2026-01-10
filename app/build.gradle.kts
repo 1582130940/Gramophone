@@ -16,6 +16,7 @@ plugins {
     kotlin("plugin.compose")
     id("com.mikepenz.aboutlibraries.plugin")
     id("com.mikepenz.aboutlibraries.plugin.android")
+    id("pt.jcosta.resourceplaceholders")
 }
 
 android {
@@ -211,6 +212,10 @@ android {
         includeInBundle = false
     }
     testOptions.unitTests.isIncludeAndroidResources = true
+}
+
+resourcePlaceholders {
+    files.set(listOf("xml/shortcuts.xml"))
 }
 
 kotlin {

@@ -61,7 +61,7 @@ class SearchFragment : BaseFragment(true) {
         appBarLayout.enableEdgeToEdgePaddingListener()
         editText = rootView.findViewById(R.id.edit_text)
         val recyclerView = rootView.findViewById<MyRecyclerView>(R.id.recyclerview)
-        val searchTextFlow = MutableStateFlow("")
+        val searchTextFlow = MutableStateFlow(arguments?.getString("query", "") ?: "")
         val songAdapter =
             SongAdapter(
                 this, mainActivity.reader.songListFlow.combine(searchTextFlow.map {

@@ -123,13 +123,6 @@ class PlayerBottomSheet private constructor(
                 instance?.currentMediaItem,
                 Player.MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED
             )
-            if ((activity.consumeAutoPlay() || prefs.getBooleanStrict(
-                    "autoplay",
-                    false
-                )) && instance?.playWhenReady != true
-            ) {
-                instance?.play()
-            }
         }
     }
 

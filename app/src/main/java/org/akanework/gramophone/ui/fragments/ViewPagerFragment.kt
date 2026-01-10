@@ -27,6 +27,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.appcompat.content.res.AppCompatResources
+import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.RecyclerView
@@ -168,6 +169,7 @@ class ViewPagerFragment : BaseFragment(true) {
                 }
 
                 R.id.shuffle -> {
+                    ShortcutManagerCompat.reportShortcutUsed(requireContext(), "shuffle_all")
                     val controller = activity.getPlayer()
                     runBlocking { activity.reader.songListFlow.first() }.takeIf { it.isNotEmpty() }
                         ?.also {

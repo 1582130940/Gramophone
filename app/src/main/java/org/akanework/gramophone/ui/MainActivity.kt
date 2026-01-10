@@ -19,6 +19,10 @@ package org.akanework.gramophone.ui
 
 import android.annotation.SuppressLint
 import android.app.NotificationManager
+import android.app.SearchManager
+import android.app.assist.AssistContent
+import android.content.ClipData
+import android.content.ContentResolver
 import android.content.ContentUris
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -38,7 +42,11 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
+import androidx.core.content.FileProvider
+import androidx.core.content.IntentCompat
+import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.core.net.toUri
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.fragment.app.Fragment
@@ -46,6 +54,7 @@ import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentManager.FragmentLifecycleCallbacks
 import androidx.fragment.app.commit
 import androidx.media3.common.C
+import androidx.media3.common.MediaItem
 import androidx.media3.common.util.Log
 import androidx.media3.session.DefaultMediaNotificationProvider
 import coil3.imageLoader
@@ -61,6 +70,7 @@ import kotlinx.coroutines.withContext
 import org.akanework.gramophone.BuildConfig
 import org.akanework.gramophone.R
 import org.akanework.gramophone.logic.enableEdgeToEdgeProperly
+import org.akanework.gramophone.logic.getBooleanStrict
 import org.akanework.gramophone.logic.gramophoneApplication
 import org.akanework.gramophone.logic.hasAudioPermission
 import org.akanework.gramophone.logic.hasScopedStorageV2
@@ -71,7 +81,9 @@ import org.akanework.gramophone.logic.ui.BaseActivity
 import org.akanework.gramophone.ui.adapters.PlaylistAdapter
 import org.akanework.gramophone.ui.components.PlayerBottomSheet
 import org.akanework.gramophone.ui.fragments.BaseFragment
+import org.akanework.gramophone.ui.fragments.SearchFragment
 import org.akanework.gramophone.ui.fragments.ViewPagerFragment
+import org.json.JSONObject
 import uk.akane.libphonograph.manipulator.ItemManipulator
 import java.io.File
 
@@ -99,7 +111,6 @@ class MainActivity : BaseActivity() {
     private val handler = Handler(Looper.getMainLooper())
     private val reportFullyDrawnRunnable = Runnable { if (!ready) reportFullyDrawn() }
     private var ready = false
-    private var autoPlay = false
     lateinit var playerBottomSheet: PlayerBottomSheet
         private set
     lateinit var intentSender: ActivityResultLauncher<IntentSenderRequest>
@@ -123,6 +134,7 @@ class MainActivity : BaseActivity() {
      * onCreate - core of MainActivity.
      */
     override fun onCreate(savedInstanceState: Bundle?) {
+        Log.i("MainActivity", "onCreate($intent)")
         installSplashScreen().setKeepOnScreenCondition { !ready }
         super.onCreate(savedInstanceState)
         lifecycle.addObserver(controllerViewModel)
@@ -336,15 +348,18 @@ class MainActivity : BaseActivity() {
     }
 
     override fun onNewIntent(intent: Intent) {
+        Log.i("MainActivity", "onNewIntent($intent)")
         super.onNewIntent(intent)
-        autoPlay = intent.extras?.getBoolean(PLAYBACK_AUTO_START_FOR_FGS, false) == true
         if (ready) {
             doPlayFromIntent(intent)
         }
     }
 
     private fun doPlayFromIntent(intent: Intent) {
+        Log.i("MainActivity", "doPlayFromIntent($intent)")
+        var willAutoPlayLater = false
         intent.extras?.getString(PLAYBACK_AUTO_PLAY_ID)?.let { id ->
+            willAutoPlayLater = true
             val pos =
                 intent.extras?.getLong(PLAYBACK_AUTO_PLAY_POSITION, C.TIME_UNSET) ?: C.TIME_UNSET
             controllerViewModel.addControllerCallback(lifecycle) { controller, _ ->
@@ -376,6 +391,148 @@ class MainActivity : BaseActivity() {
                 dispose()
             }
         }
+        if (intent.action == Intent.ACTION_SEARCH ||
+            intent.action == "com.google.android.gms.actions.SEARCH_ACTION") {
+            startFragment(SearchFragment()) {
+                Bundle().apply {
+                    putString("query", intent.getStringExtra(SearchManager.QUERY))
+                }
+            }
+        }
+        if (intent.action == MediaStore.INTENT_ACTION_MEDIA_SEARCH
+            || intent.action == MediaStore.INTENT_ACTION_MEDIA_PLAY_FROM_SEARCH) {
+            // https://developer.android.com/media/implement/assistant#declare_legacy_support_for_voice_actions
+            // https://android-developers.googleblog.com/2010/09/supporting-new-music-voice-action.html
+            // https://developer.android.com/guide/components/intents-common#PlaySearch
+            var focus = intent.getStringExtra(MediaStore.EXTRA_MEDIA_FOCUS)
+                ?: ContentResolver.ANY_CURSOR_ITEM_TYPE
+            // Validate all extras before sending them to service.
+            if (focus != ContentResolver.ANY_CURSOR_ITEM_TYPE &&
+                focus != MediaStore.Audio.Genres.ENTRY_CONTENT_TYPE &&
+                focus != MediaStore.Audio.Artists.ENTRY_CONTENT_TYPE &&
+                focus != MediaStore.Audio.Albums.ENTRY_CONTENT_TYPE &&
+                focus != MediaStore.Audio.Media.ENTRY_CONTENT_TYPE &&
+                focus != (@Suppress("deprecation") MediaStore.Audio.Playlists.ENTRY_CONTENT_TYPE)) {
+                Log.w("MainActivity", "unsupported focus " +
+                        intent.getStringExtra(MediaStore.EXTRA_MEDIA_FOCUS))
+                focus = ContentResolver.ANY_CURSOR_ITEM_TYPE
+            }
+            val mainQuery: String?
+            val subQueries = Bundle()
+            subQueries.putString(MediaStore.EXTRA_MEDIA_FOCUS, focus)
+            when (focus) {
+                MediaStore.Audio.Genres.ENTRY_CONTENT_TYPE -> {
+                    mainQuery = intent.getStringExtra(MediaStore.EXTRA_MEDIA_GENRE)
+                        ?: intent.getStringExtra(SearchManager.QUERY)
+                }
+                MediaStore.Audio.Artists.ENTRY_CONTENT_TYPE -> {
+                    mainQuery = intent.getStringExtra(MediaStore.EXTRA_MEDIA_ARTIST)
+                        ?: intent.getStringExtra(SearchManager.QUERY)
+                    intent.getStringExtra(MediaStore.EXTRA_MEDIA_GENRE)?.let {
+                        subQueries.putString(MediaStore.EXTRA_MEDIA_GENRE, it)
+                    }
+                }
+                MediaStore.Audio.Albums.ENTRY_CONTENT_TYPE -> {
+                    mainQuery = intent.getStringExtra(MediaStore.EXTRA_MEDIA_ALBUM)
+                        ?: intent.getStringExtra(SearchManager.QUERY)
+                    intent.getStringExtra(MediaStore.EXTRA_MEDIA_ARTIST)?.let {
+                        subQueries.putString(MediaStore.EXTRA_MEDIA_ARTIST, it)
+                    }
+                    intent.getStringExtra(MediaStore.EXTRA_MEDIA_GENRE)?.let {
+                        subQueries.putString(MediaStore.EXTRA_MEDIA_GENRE, it)
+                    }
+                }
+                MediaStore.Audio.Media.ENTRY_CONTENT_TYPE -> {
+                    mainQuery = intent.getStringExtra(MediaStore.EXTRA_MEDIA_TITLE)
+                        ?: intent.getStringExtra(SearchManager.QUERY)
+                    intent.getStringExtra(MediaStore.EXTRA_MEDIA_ALBUM)?.let {
+                        subQueries.putString(MediaStore.EXTRA_MEDIA_ALBUM, it)
+                    }
+                    intent.getStringExtra(MediaStore.EXTRA_MEDIA_ARTIST)?.let {
+                        subQueries.putString(MediaStore.EXTRA_MEDIA_ARTIST, it)
+                    }
+                    intent.getStringExtra(MediaStore.EXTRA_MEDIA_GENRE)?.let {
+                        subQueries.putString(MediaStore.EXTRA_MEDIA_GENRE, it)
+                    }
+                }
+                @Suppress("deprecation") MediaStore.Audio.Playlists.ENTRY_CONTENT_TYPE -> {
+                    mainQuery = @Suppress("deprecation")
+                    intent.getStringExtra(MediaStore.EXTRA_MEDIA_PLAYLIST)
+                        ?: intent.getStringExtra(SearchManager.QUERY)
+                    intent.getStringExtra(MediaStore.EXTRA_MEDIA_TITLE)?.let {
+                        subQueries.putString(MediaStore.EXTRA_MEDIA_TITLE, it)
+                    }
+                    intent.getStringExtra(MediaStore.EXTRA_MEDIA_ALBUM)?.let {
+                        subQueries.putString(MediaStore.EXTRA_MEDIA_ALBUM, it)
+                    }
+                    intent.getStringExtra(MediaStore.EXTRA_MEDIA_ARTIST)?.let {
+                        subQueries.putString(MediaStore.EXTRA_MEDIA_ARTIST, it)
+                    }
+                    intent.getStringExtra(MediaStore.EXTRA_MEDIA_GENRE)?.let {
+                        subQueries.putString(MediaStore.EXTRA_MEDIA_GENRE, it)
+                    }
+                }
+                else -> mainQuery = intent.getStringExtra(SearchManager.QUERY)
+            }
+            if (intent.action == MediaStore.INTENT_ACTION_MEDIA_PLAY_FROM_SEARCH) {
+                if (mainQuery != null) {
+                    willAutoPlayLater = true
+                    controllerViewModel.addControllerCallback(lifecycle) { controller, _ ->
+                        controller.setMediaItem(
+                            MediaItem.Builder()
+                                .setRequestMetadata(
+                                    MediaItem.RequestMetadata.Builder()
+                                        .setSearchQuery(mainQuery) // may be empty
+                                        .setExtras(subQueries)
+                                        .build()
+                                )
+                                .build()
+                        )
+                        controller.prepare()
+                        controller.play()
+                        dispose()
+                    }
+                }
+            } else {
+                startFragment(SearchFragment()) {
+                    Bundle().apply {
+                        putString("query", intent.getStringExtra(SearchManager.QUERY))
+                        // TODO: support sub queries or at least focus to use a different type of
+                        //  search fragment.
+                    }
+                }
+            }
+        }
+        if (intent.action == "org.akanework.gramophone.action.SHUFFLE") {
+            ShortcutManagerCompat.reportShortcutUsed(this@MainActivity, "shuffle_all")
+            val query = intent.getStringExtra("item_name") ?: ""
+            willAutoPlayLater = true
+            controllerViewModel.addControllerCallback(lifecycle) { controller, _ ->
+                controller.shuffleModeEnabled = true
+                controller.setMediaItem(
+                    MediaItem.Builder()
+                        .setRequestMetadata(
+                            MediaItem.RequestMetadata.Builder()
+                                .setSearchQuery(query) // empty = every song
+                                .build()
+                        )
+                        .build()
+                )
+                controller.prepare()
+                controller.play()
+                dispose()
+            }
+        }
+        val autoPlay = intent.extras?.getBoolean(PLAYBACK_AUTO_START_FOR_FGS, false) == true
+                || intent.extras?.getBoolean(IntentCompat.EXTRA_START_PLAYBACK, false) == true
+                || prefs.getBooleanStrict("autoplay", false)
+        if (autoPlay && !willAutoPlayLater) {
+            controllerViewModel.addControllerCallback(lifecycle) { controller, _ ->
+                controller.prepare()
+                controller.play()
+                dispose()
+            }
+        }
     }
 
     // https://twitter.com/Piwai/status/1529510076196630528
@@ -397,7 +554,42 @@ class MainActivity : BaseActivity() {
         }
     }
 
+    @RequiresApi(23)
+    override fun onProvideAssistContent(outContent: AssistContent?) {
+        super.onProvideAssistContent(outContent)
+
+        val instance = getPlayer()
+        if (instance != null && outContent != null) {
+            /* TODO implement schema.org MusicRecording creation here
+            https://developer.android.com/training/articles/assistant
+           outContent.structuredData = JSONObject()
+                .put("@type", "MusicRecording")
+                .put("@id", "https://example.com/music/recording")
+                .put("name", "Song Title")
+                .toString() */
+            try {
+                val item = instance.currentMediaItem
+                val uri = item?.requestMetadata?.mediaUri
+                    ?: item?.localConfiguration?.uri
+                val contentUri = if (uri?.scheme == "file") {
+                    FileProvider.getUriForFile(
+                        this,
+                        "$packageName.fileProvider",
+                        File(uri.path!!)
+                    )
+                } else uri
+                if (contentUri != null) {
+                    outContent.clipData = ClipData.newUri(contentResolver,
+                        item?.mediaMetadata?.title ?: "", contentUri)
+                }
+            } catch (e: Exception) {
+                Log.e("MainActivity", "unable to generate clip data", e)
+            }
+        }
+    }
+
     fun onLibraryLoaded() {
+        Log.i("MainActivity", "onLibraryLoaded()")
         doPlayFromIntent(intent)
     }
 
@@ -467,10 +659,6 @@ class MainActivity : BaseActivity() {
      *   Returns a media controller.
      */
     fun getPlayer() = controllerViewModel.get()
-
-    fun consumeAutoPlay(): Boolean {
-        return autoPlay.also { autoPlay = false }
-    }
 
     inline val reader
         get() = gramophoneApplication.reader
