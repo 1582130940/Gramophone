@@ -24,6 +24,7 @@
         android:clipToPadding="false"
         android:elevation="?attr/previewPlayerElevation"
         app:behavior_hideable="true"
+        app:behavior_halfExpandedRatio="0.8"
         app:layout_behavior="org.akanework.gramophone.logic.ui.MyBottomSheetBehavior"
         app:marginLeftSystemWindowInsets="false"
         app:marginRightSystemWindowInsets="false"

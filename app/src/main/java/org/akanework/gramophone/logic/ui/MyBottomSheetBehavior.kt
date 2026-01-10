@@ -22,6 +22,7 @@ import android.content.Context
 import android.util.AttributeSet
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.BackEventCompat
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 
 class MyBottomSheetBehavior<T : View>(context: Context, attrs: AttributeSet) :
@@ -45,12 +46,24 @@ class MyBottomSheetBehavior<T : View>(context: Context, attrs: AttributeSet) :
     }
 
     @SuppressLint("RestrictedApi")
+    override fun startBackProgress(backEvent: BackEventCompat) {
+        state = STATE_HALF_EXPANDED
+        super.startBackProgress(backEvent)
+    }
+
+    @SuppressLint("RestrictedApi")
     override fun handleBackInvoked() {
         if (state != STATE_HIDDEN) {
             setHideableInternal(false)
         }
         super.handleBackInvoked()
         setHideableInternal(true)
+    }
+
+    @SuppressLint("RestrictedApi")
+    override fun cancelBackProgress() {
+        state = STATE_EXPANDED
+        super.cancelBackProgress()
     }
 }
 

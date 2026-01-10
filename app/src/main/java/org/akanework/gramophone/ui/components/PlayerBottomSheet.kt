@@ -219,11 +219,11 @@ class PlayerBottomSheet private constructor(
                             return
                         }
                         @SuppressLint("RestrictedApi")
-                        lyricsBackHelper!!.finishBackProgressNotPersistent(
+                        lyricsBackHelper!!.finishBackProgressPersistent(
                             backEvent,
                             object : AnimatorListenerAdapter() {
-                                override fun onAnimationEnd(animation: Animator) {
-                                    fullPlayer.bottomSheetFullLyricView.visibility = INVISIBLE
+                                override fun onAnimationStart(animation: Animator) {
+                                    fullPlayer.bottomSheetFullLyricView.fadOutAnimation(FullBottomSheet.LYRIC_FADE_TRANSITION_SEC)
                                 }
                             })
                     } else {
