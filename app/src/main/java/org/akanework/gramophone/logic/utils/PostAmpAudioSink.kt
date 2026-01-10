@@ -237,7 +237,7 @@ class PostAmpAudioSink(
         if (isOffload) {
             val calcGainAfter = ReplayGainUtil.calculateGain(
                 pendingTags, mode, rgGain, reduceGain || !hasDpe,
-                if (!hasDpe) ReplayGainUtil.RATIO else null
+                if (hasDpe) ReplayGainUtil.RATIO else null
             )
             // DPE logic relies on flush() when tags change in a way that changes the audio.
             // (Use cached gain as mode may have changed without listener being modified, so a
