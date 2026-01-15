@@ -249,6 +249,7 @@ class DynamicsProcessingEffectWrapper(
                         } catch (e: Throwable) {
                             Log.e(TAG, "failed to release DPE canary", e)
                         }
+                        dpeCanary = null
                         handler.postDelayed(this::tryRecreateIfFailed, 60000)
                     } else {
                         Log.w(TAG, "release dpe canary because we suddenly have control")
