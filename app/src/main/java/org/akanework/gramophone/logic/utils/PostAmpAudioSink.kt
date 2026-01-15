@@ -13,7 +13,6 @@ import android.media.audiofx.DynamicsProcessing
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
-import android.os.StrictMode
 import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import androidx.core.content.getSystemService
@@ -25,9 +24,6 @@ import androidx.media3.common.util.Log
 import androidx.media3.exoplayer.audio.AudioSink
 import androidx.media3.exoplayer.audio.DefaultAudioSink
 import androidx.media3.exoplayer.audio.ForwardingAudioSink
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import org.akanework.gramophone.logic.utils.AudioFormatDetector.audioDeviceTypeToString
 import org.akanework.gramophone.logic.utils.ReplayGainUtil.Mode
 import org.nift4.gramophone.hificore.AudioSystemHiddenApi
@@ -99,11 +95,9 @@ class PostAmpAudioSink(
             false
         }
     }
-    private var volumeEffect: Volume? = null
-    private var dpeEffect: DynamicsProcessing? = null
-    private var dpeCanary: ReflectionAudioEffect? = null
-    private var hasVolume = false
-    private var hasDpe = false
+    private var volumeEffect: VolumeEffectWrapper? = null
+    private var dpeEffect: DynamicsProcessingEffectWrapper? = null
+    private var needToLogWhyNoEffect = true
     private var offloadEnabled: Boolean? = null
     private var format: Format? = null
     private var tags: ReplayGainUtil.ReplayGainInfo? = null
@@ -145,19 +139,97 @@ class PostAmpAudioSink(
             }
             rgAp.boostGainChangedListener = {
                 handler?.post { // if null, there are no effects that need to be notified anyway
-                    if (hasDpe) {
+                    if (dpeEffect != null) {
                         calculateGain()
-                    } else {
+                    } else if (volumeEffect != null) {
                         updateVolumeEffect()
                     }
                 }
             }
             rgAp.offloadEnabledChangedListener = {
+                needToLogWhyNoEffect = true
                 if (offloadEnabled != null) {
                     handler!!.post {
                         mySetAudioSessionId(null)
                     }
                 }
+            }
+        }
+    }
+
+    // These can be created once handler is created and offloadEnabled is loaded, and then never
+    // need to be recycled until we get released.
+    private fun createEffectsIfNeeded() {
+        val offloadEnabled = offloadEnabled!!
+        val handler = handler!!
+        val hasOffloadDpe = isDpeAvailable && isDpeOffloadable && offloadEnabled
+        val useDpeForVolume = !isVolumeAvailable && !offloadEnabled && isDpeAvailable
+        // Set a lower priority when creating effects - we are willing to share.
+        // (User story "EQ is not working and I have to change a obscure setting to fix it"
+        // is worse than user story "it's too quiet when I enable my EQ, but gets louder
+        // when I disable it").
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P &&
+            (hasOffloadDpe || useDpeForVolume)
+        ) {
+            if (dpeEffect != null)
+                return // we already have what we need
+            dpeEffect = DynamicsProcessingEffectWrapper(handler) { audioSessionId ->
+                DynamicsProcessing(
+                    -100000, audioSessionId,
+                    DynamicsProcessing.Config.Builder(
+                        DynamicsProcessing.VARIANT_FAVOR_FREQUENCY_RESOLUTION,
+                        1, false, 0,
+                        false, 0, false,
+                        0, true
+                    )
+                        .setAllChannelsTo(
+                            DynamicsProcessing.Channel(
+                                0f, false,
+                                0, false, 0,
+                                false, 0, true
+                            ).apply {
+                                mbc = DynamicsProcessing.Mbc(
+                                    false, false, 0
+                                )
+                                limiter = DynamicsProcessing.Limiter(
+                                    true, false, 0,
+                                    ReplayGainUtil.TAU_ATTACK * 1000f,
+                                    ReplayGainUtil.TAU_RELEASE * 1000f,
+                                    ReplayGainUtil.RATIO, 0f, 0f
+                                )
+                                preEq = DynamicsProcessing.Eq(
+                                    false, false, 0
+                                )
+                                postEq = DynamicsProcessing.Eq(
+                                    false, false, 0
+                                )
+                            })
+                        .build()
+                )
+            }
+            dpeEffect!!.audioSessionId = audioSessionId
+            dpeEffect!!.hasControlListener = {
+                calculateGain() // switch between DPE and setVolume as relevant
+            }
+        } else {
+            if (isVolumeAvailable && !offloadEnabled) {
+                if (volumeEffect != null)
+                    return // we already have what we need
+                try {
+                    volumeEffect = VolumeEffectWrapper(-100000)
+                    volumeEffect!!.hasControlListener = { hasControl ->
+                        Log.i(TAG, "volume control state is now: $hasControl")
+                        updateVolumeEffect()
+                    }
+                    Log.i(TAG, "init volume, control state is: ${volumeEffect!!.hasControl}")
+                } catch (e: Throwable) {
+                    Log.e(TAG, "failed to init Volume effect", e)
+                }
+            } else {
+                if (needToLogWhyNoEffect)
+                    Log.i(TAG, "didn't init volume or dpe, e=$isVolumeAvailable " +
+                            "E=$isDpeAvailable o=$isDpeOffloadable O=$offloadEnabled")
+                needToLogWhyNoEffect = false
             }
         }
     }
@@ -235,6 +307,7 @@ class PostAmpAudioSink(
                 format?.let { it.sampleMimeType != MimeTypes.AUDIO_RAW } == true ||
                 pendingFormat?.let { it.sampleMimeType != MimeTypes.AUDIO_RAW } == true
         if (isOffload) {
+            val hasDpe = Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && dpeEffect?.hasControl == true
             val calcGainAfter = ReplayGainUtil.calculateGain(
                 pendingTags, mode, rgGain, reduceGain || !hasDpe,
                 if (hasDpe) ReplayGainUtil.RATIO else null
@@ -271,7 +344,7 @@ class PostAmpAudioSink(
     private fun myOnReceiveBroadcast(intent: Intent) {
         if (intent.action == "android.media.VOLUME_CHANGED_ACTION") {
             onVolumeChanged() // The volume changed, notify Volume/DPE to avoid clipping.
-        } else {
+        } else if (volumeEffect != null) {
             updateVolumeEffect() // Someone may have reset volume effect state, configure it again
         }
     }
@@ -288,10 +361,10 @@ class PostAmpAudioSink(
     }
 
     private fun onVolumeChanged() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && hasDpe) {
+        if (dpeEffect != null) {
             // have to recalculate gain to avoid clipping if boost headroom just got too small
             calculateGain()
-        } else if (hasVolume) {
+        } else if (volumeEffect != null) {
             updateVolumeEffect() // external volume change will reset volume effect
         }
     }
@@ -321,12 +394,12 @@ class PostAmpAudioSink(
             boostGainDb = rgAp.boostGain
             reduceGain = rgAp.reduceGain
         }
-        val useDpe = Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && hasDpe
+        val useDpe = Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && dpeEffect?.hasControl == true
         val isOffload = Flags.TEST_RG_OFFLOAD ||
                 format?.let { it.sampleMimeType != MimeTypes.AUDIO_RAW } == true
         if (useDpe) {
             try {
-                dpeEffect!!.enabled = isOffload || boostGainDb > 0/* && !hasVolume*/
+                dpeEffect!!.effect!!.enabled = isOffload || boostGainDb > 0
             } catch (e: IllegalStateException) {
                 Log.e(TAG, "dpe enable=$isOffload failed", e)
             }
@@ -348,8 +421,8 @@ class PostAmpAudioSink(
             rgVolume = if (useDpe) 1f else min(gain, 1f)
             try {
                 if (useDpe) {
-                    dpeEffect!!.setInputGainAllChannelsTo(ReplayGainUtil.amplToDb(gain) + boostGainDbLimited)
-                    dpeEffect!!.setLimiterAllChannelsTo(
+                    dpeEffect!!.effect!!.setInputGainAllChannelsTo(ReplayGainUtil.amplToDb(gain) + boostGainDbLimited)
+                    dpeEffect!!.effect!!.setLimiterAllChannelsTo(
                         DynamicsProcessing.Limiter(
                             true, kneeThresholdDb != null, 0,
                             ReplayGainUtil.TAU_ATTACK * 1000f,
@@ -363,8 +436,8 @@ class PostAmpAudioSink(
             }
         } else {
             if (useDpe && boostGainDb > 0) {
-                dpeEffect!!.setInputGainAllChannelsTo(boostGainDbLimited)
-                dpeEffect!!.setLimiterAllChannelsTo(
+                dpeEffect!!.effect!!.setInputGainAllChannelsTo(boostGainDbLimited)
+                dpeEffect!!.effect!!.setLimiterAllChannelsTo(
                     DynamicsProcessing.Limiter(
                         true, false, 0,
                         ReplayGainUtil.TAU_ATTACK * 1000f,
@@ -387,6 +460,7 @@ class PostAmpAudioSink(
         super.setAudioSessionId(audioSessionId)
     }
 
+    // null = offload enabled changed
     private fun mySetAudioSessionId(id: Int?) {
         if (handler == null)
             handler = Handler(Looper.myLooper()!!)
@@ -394,87 +468,13 @@ class PostAmpAudioSink(
         synchronized(rgAp) {
             offloadEnabled = rgAp.offloadEnabled
         }
-        if (id != null && id != audioSessionId || offloadEnabled != this.offloadEnabled) {
+        this.offloadEnabled = offloadEnabled
+        createEffectsIfNeeded()
+        if (id != null && id != audioSessionId) {
             Log.i(TAG, "set session id to $id")
-            if (audioSessionId != 0) {
-                if (volumeEffect != null) {
-                    volumeEffect!!.let {
-                        CoroutineScope(Dispatchers.Default).launch {
-                            try {
-                                it.enabled = false
-                                it.release()
-                            } catch (e: Throwable) {
-                                Log.e(TAG, "failed to release Volume effect", e)
-                            }
-                        }
-                    }
-                    volumeEffect = null
-                }
-                // DPE must be released synchronously to avoid getting the old effect instance
-                // again, with its old inUse values.
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && dpeCanary != null) {
-                    dpeCanary!!.let {
-                        try {
-                            it.release()
-                        } catch (e: Throwable) {
-                            Log.e(TAG, "failed to release DPE canary", e)
-                        }
-                    }
-                    dpeCanary = null
-                }
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && dpeEffect != null) {
-                    dpeEffect!!.let {
-                        try {
-                            it.enabled = false
-                            it.release()
-                        } catch (e: Throwable) {
-                            Log.e(TAG, "failed to release DPE effect", e)
-                        }
-                    }
-                    dpeEffect = null
-                }
-            }
-            hasVolume = false
-            hasDpe = false
-            this.offloadEnabled = offloadEnabled
-            audioSessionId = id ?: audioSessionId
-            // Set a lower priority when creating effects - we are willing to share.
-            // (User story "EQ is not working and I have to change a obscure setting to fix it"
-            // is worse than user story "it's too quiet when I enable my EQ, but gets louder
-            // when I disable it").
-            if (audioSessionId != 0) {
-                val hasOffloadDpe = isDpeAvailable && isDpeOffloadable && offloadEnabled
-                val useDpeForVolume = !isVolumeAvailable && !offloadEnabled && isDpeAvailable
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P &&
-                    (hasOffloadDpe || useDpeForVolume)
-                ) {
-                    createDpeEffect()
-                } else {
-                    Log.i(
-                        TAG,
-                        "didn't init DPE, e=$isDpeAvailable o=$isDpeOffloadable O=$offloadEnabled"
-                    )
-                    if (isVolumeAvailable && !offloadEnabled) {
-                        try {
-                            volumeEffect = Volume(-100000, audioSessionId)
-                            volumeEffect!!.setControlStatusListener { _, hasControl ->
-                                Log.i(TAG, "volume control state is now: $hasControl")
-                                hasVolume = hasControl
-                                updateVolumeEffect()
-                            }
-                            hasVolume = volumeEffect!!.hasControl()
-                            Log.i(TAG, "init volume, control state is: $hasVolume")
-                        } catch (e: Throwable) {
-                            Log.e(TAG, "failed to init Volume effect", e)
-                        }
-                    } else {
-                        Log.i(
-                            TAG,
-                            "didn't init volume, e=$isVolumeAvailable O=$offloadEnabled"
-                        )
-                    }
-                }
-            }
+            audioSessionId = id
+            dpeEffect!!.audioSessionId = id
+            volumeEffect!!.audioSessionId = id
         }
     }
 
@@ -485,191 +485,36 @@ class PostAmpAudioSink(
                     "(${routedDevice?.type?.let { audioDeviceTypeToString(context, it) }})"
         )
         deviceType = routedDevice?.type
-        if (hasDpe) {
+        if (dpeEffect != null) {
             calculateGain() // device change may have changed available headroom, recalculate boost
         } else {
             updateVolumeEffect() // device change reset the Volume effect state, configure it again
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.P)
-    private fun createDpeEffect() {
-        hasDpe = false
-        // DPE has this behaviour which I can really only call a bug, where inUse values are carried
-        // over from other apps and the only way to reset it is to entirely release all instances
-        // of the effect in ALL apps in this session ID at the same time. Also, sometimes if the
-        // effect is busy the constructor randomly throws because it doesn't support priority well
-        // - it always tries to set values even if we don't have control. Amazing work, Google. For
-        // the DynamicsProcessing DSP to be the best thing ever, the parameter implementation is so
-        // stupid I can't even put it into words.
-        try {
-            try {
-                dpeEffect = DynamicsProcessing(
-                    -100000, audioSessionId,
-                    DynamicsProcessing.Config.Builder(
-                        DynamicsProcessing.VARIANT_FAVOR_FREQUENCY_RESOLUTION,
-                        1, false, 0,
-                        false, 0, false,
-                        0, true
-                    )
-                        .setAllChannelsTo(
-                            DynamicsProcessing.Channel(
-                                0f, false,
-                                0, false, 0,
-                                false, 0, true
-                            ).apply {
-                                mbc = DynamicsProcessing.Mbc(
-                                    false, false, 0
-                                )
-                                limiter = DynamicsProcessing.Limiter(
-                                    true, false, 0,
-                                    ReplayGainUtil.TAU_ATTACK * 1000f,
-                                    ReplayGainUtil.TAU_RELEASE * 1000f,
-                                    ReplayGainUtil.RATIO, 0f, 0f
-                                )
-                                preEq = DynamicsProcessing.Eq(
-                                    false, false, 0
-                                )
-                                postEq = DynamicsProcessing.Eq(
-                                    false, false, 0
-                                )
-                            })
-                        .build()
-                )
-            } catch (t: Throwable) {
-                // DynamicsProcessing does not release() the instance if illegal arguments are
-                // passed to the constructor. We have to rely on finalize to avoid conflicts with
-                // ourselves, hence do a GC. This API is so broken...
-                val policy = StrictMode.getThreadPolicy()
-                try {
-                    StrictMode.setThreadPolicy(StrictMode.ThreadPolicy.LAX)
-                    System.gc()
-                } finally {
-                    StrictMode.setThreadPolicy(policy)
-                }
-                throw t
-            }
-            dpeEffect!!.setControlStatusListener { effect, hasControl ->
-                if (effect != dpeEffect) {
-                    try {
-                        effect.release()
-                    } catch (_: Throwable) {
-                    }
-                    return@setControlStatusListener // stale event
-                }
-                Log.i(TAG, "dpe control state is now: $hasControl")
-                try {
-                    effect.release()
-                } catch (_: Throwable) {
-                }
-                dpeEffect = null
-                hasDpe = false
-                // create new DPE effect without contamination of inUse parameters from other apps
-                if (hasControl) createDpeEffect()
-                else { // user enabled external equalizer
-                    createDpeCanary()
-                    calculateGain() // switch from DPE to setVolume()
-                }
-            }
-            hasDpe = dpeEffect!!.hasControl()
-            // wow, we got here. very good.
-            if (dpeCanary != null) {
-                Log.i(TAG, "release dpe canary because we got real dpe")
-                try {
-                    dpeCanary!!.release()
-                } catch (e: Throwable) {
-                    Log.e(TAG, "failed to release DPE canary", e)
-                }
-                dpeCanary = null
-            }
-            Log.i(TAG, "init dpe, control state is: $hasDpe")
-        } catch (e: Throwable) {
-            if (e is UnsupportedOperationException)
-                Log.w(TAG, "failed to init DPE effect: $e")
-            else
-                Log.e(TAG, "failed to init DPE effect", e)
-            try {
-                dpeEffect?.release()
-            } catch (_: Throwable) {
-            }
-            dpeEffect = null
-            hasDpe = false
-            createDpeCanary()
-        }
-        calculateGain() // switch from setVolume() to DPE (or don't if we did not succeed)
-    }
-
-    @RequiresApi(Build.VERSION_CODES.P)
-    private fun createDpeCanary() {
-        // The bug where constructor sets parameters (which crashes, and hence we can't register a
-        // control listener) can be worked around by using AudioEffect class raw via reflection to
-        // check when we regain control. (Set lower prio to avoid conflicting with ourselves.)
-        if (dpeCanary == null) {
-            try {
-                dpeCanary = ReflectionAudioEffect(
-                    AudioEffect.EFFECT_TYPE_DYNAMICS_PROCESSING,
-                    ReflectionAudioEffect.EFFECT_TYPE_NULL, -100001, audioSessionId
-                )
-                dpeCanary!!.setControlStatusListener { _, controlGranted ->
-                    Log.i(TAG, "dpe canary control state is now: $controlGranted")
-                    if (controlGranted) {
-                        try {
-                            dpeCanary!!.release()
-                        } catch (e: Throwable) {
-                            Log.e(TAG, "failed to release DPE canary", e)
-                        }
-                        dpeCanary = null
-                        createDpeEffect()
-                    } else {
-                        Log.e(TAG, "DPE canary lost control, but why did it ever have it?")
-                        // an invalid state transition occurred, ensure we are using setVolume()
-                        calculateGain()
-                    }
-                }
-                Log.i(TAG, "init dpe canary")
-                if (dpeCanary!!.hasControl()) {
-                    Log.w(TAG, "release dpe canary because we suddenly have control")
-                    try {
-                        dpeCanary!!.release()
-                    } catch (e: Throwable) {
-                        Log.e(TAG, "failed to release DPE canary", e)
-                    }
-                    dpeCanary = null
-                    createDpeEffect()
-                }
-            } catch (e: Throwable) {
-                Log.e(TAG, "failed to init DPE canary", e)
-                try {
-                    dpeCanary?.release()
-                } catch (_: Throwable) {
-                }
-                dpeCanary = null
-                // whatever, I give up.
-            }
-        }
-    }
-
     private fun updateVolumeEffect() {
-        if (!hasVolume) return
+        if (volumeEffect == null) return
         val boostGainDb: Int
         synchronized(rgAp) {
             boostGainDb = rgAp.boostGain
         }
+        volumeEffect!!.created = boostGainDb > 0
+        if (!volumeEffect!!.hasControl /* implied: || boostGainDb <= 0 */) return
         try {
             val curVolumeDb = getCurrentMixerVolume()
             try {
-                volumeEffect!!.enabled = boostGainDb > 0 && curVolumeDb != null
+                volumeEffect!!.effect!!.enabled = curVolumeDb != null
             } catch (e: IllegalStateException) {
                 Log.e(TAG, "volume enable failed", e)
             }
-            if (curVolumeDb == null || boostGainDb <= 0) return
+            if (curVolumeDb == null) return
             val theVolume = min(
-                volumeEffect!!.maxLevel.toInt().toFloat(),
+                volumeEffect!!.effect!!.maxLevel.toInt().toFloat(),
                 (curVolumeDb + ReplayGainUtil.amplToDb(volume) +
                         boostGainDb) * 100f
             ).toInt().toShort()
             repeat(20) { // yes, this is stupid.
-                volumeEffect!!.level = theVolume
+                volumeEffect!!.effect!!.level = theVolume
             }
         } catch (e: Throwable) {
             Log.e(TAG, "failed to update volume effect state", e)
@@ -692,6 +537,15 @@ class PostAmpAudioSink(
     }
 
     override fun release() {
+        synchronized(rgAp) {
+            rgAp.settingsChangedListener = null
+            rgAp.boostGainChangedListener = null
+            rgAp.offloadEnabledChangedListener = null
+        }
+        dpeEffect?.releaseSafe()
+        dpeEffect = null
+        volumeEffect?.releaseSafe()
+        volumeEffect = null
         context.unregisterReceiver(receiver)
         try {
             AudioSystemHiddenApi.removeVolumeCallback(context, this)
