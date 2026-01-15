@@ -393,16 +393,16 @@ class PostAmpAudioSink(
         val isOffload = Flags.TEST_RG_OFFLOAD ||
                 format?.let { it.sampleMimeType != MimeTypes.AUDIO_RAW } == true
         if (useDpe) {
+            val enable = isOffload || boostGainDb > 0
             try {
-                dpeEffect!!.effect!!.enabled = isOffload || boostGainDb > 0
+                dpeEffect!!.effect!!.enabled = enable
             } catch (e: IllegalStateException) {
-                Log.e(TAG, "dpe enable=$isOffload failed", e)
+                Log.e(TAG, "dpe enable=$enable failed", e)
             }
         }
         val boostGainDbLimited =
             if (useDpe && boostGainDb > 0) {
                 val headroomDb = getHeadroomDb()
-                Log.d(TAG, "dpe gain boost: headroom $headroomDb, boost $boostGainDb")
                 min(headroomDb, boostGainDb.toFloat())
             } else 0f
         if (isOffload) {
@@ -589,8 +589,8 @@ class PostAmpAudioSink(
         if (masterVolume != null && masterVolume != 1f &&
             masterBalance != null && masterBalance != 0.5f
         ) {
-            // Later, this could actually adjust computed headroom instead of bailing. But it'd need
-            // good testing first.
+            // TODO: this could actually adjust computed headroom instead of bailing. But it'd need
+            //  good testing first.
             Log.w(TAG, "unsupported master config v=$masterVolume b=$masterBalance")
             return 0f
         }
@@ -622,7 +622,7 @@ class PostAmpAudioSink(
     // If hidden API is not available, we have to be pessimistic and assume no prescale and apply
     // force max based on result of isAbsoluteVolume().
     private fun getCurrentMixerVolume(): Float? {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.BAKLAVA) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.BAKLAVA) { // until incl 15 QPR0
             val track = sink.getAudioTrack()
             var output: Int? = lastOutput
             if (track != null) {
@@ -642,6 +642,7 @@ class PostAmpAudioSink(
                 }
             }
         }
+        // TODO: expose a2dp/cec overrides
         if (deviceType == null || isAbsoluteVolume(deviceType!!)) {
             return null
         }
@@ -687,6 +688,7 @@ class PostAmpAudioSink(
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
             throw IllegalStateException("isAbsoluteVolume($deviceType) before M")
         }
+        // TODO: try detecting absence of bluetooth absolute volume using old AVRCP (oreo era) class
         // LEA having abs vol is a safe assumption, as LEA absolute volume is forced. Same for ASHA.
         return !isA2dpAbsoluteVolumeOff && deviceType == AudioDeviceInfo.TYPE_BLUETOOTH_A2DP ||
                 !isHdmiCecVolumeOff && (deviceType == AudioDeviceInfo.TYPE_LINE_DIGITAL ||
