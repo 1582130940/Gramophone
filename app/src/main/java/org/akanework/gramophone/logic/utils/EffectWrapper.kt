@@ -88,9 +88,12 @@ class VolumeEffectWrapper(private val priority: Int) : EffectWrapper<Volume>() {
 
     override fun destroy() {
         // This could be async if it has to.
-        effect?.release()
-        effect = null
-        hasControlListener?.invoke(false)
+        if (effect != null) {
+            Log.i(TAG, "release volume")
+            effect?.release()
+            effect = null
+            hasControlListener?.invoke(false)
+        }
     }
 }
 
@@ -118,6 +121,7 @@ class DynamicsProcessingEffectWrapper(
 
     override fun destroy() {
         if (effect != null) {
+            Log.i(TAG, "release DPE")
             // DPE must be released synchronously to avoid getting the old effect instance
             // again, with its old inUse values.
             effect?.release()
