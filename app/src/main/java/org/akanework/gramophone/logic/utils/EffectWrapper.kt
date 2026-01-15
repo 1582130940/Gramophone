@@ -13,12 +13,11 @@ abstract class EffectWrapper<T> {
     var created = false
         set(value) {
             if (field != value) {
-                if (field) {
-                    destroy()
-                }
                 field = value
                 if (value) {
                     maybeCreate()
+                } else {
+                    destroy()
                 }
             }
         }
