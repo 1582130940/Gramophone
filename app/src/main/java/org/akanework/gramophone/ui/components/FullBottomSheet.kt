@@ -425,9 +425,19 @@ class FullBottomSheet
             ViewCompat.performHapticFeedback(it, HapticFeedbackConstantsCompat.CONTEXT_CLICK)
             instance?.seekToPrevious()
         }
+        bottomSheetFullPreviousButton.setOnLongClickListener {
+            ViewCompat.performHapticFeedback(it, HapticFeedbackConstantsCompat.LONG_PRESS)
+            instance?.seekBack()
+            true
+        }
         bottomSheetFullNextButton.setOnClickListener {
             ViewCompat.performHapticFeedback(it, HapticFeedbackConstantsCompat.CONTEXT_CLICK)
             instance?.seekToNext()
+        }
+        bottomSheetFullNextButton.setOnLongClickListener {
+            ViewCompat.performHapticFeedback(it, HapticFeedbackConstantsCompat.LONG_PRESS)
+            instance?.seekForward()
+            true
         }
         bottomSheetShuffleButton.addOnCheckedChangeListener { _, isChecked ->
             instance?.shuffleModeEnabled = isChecked
