@@ -49,6 +49,9 @@ abstract class EffectWrapper<T> {
 }
 
 class VolumeEffectWrapper(private val priority: Int) : EffectWrapper<Volume>() {
+    companion object {
+        private const val TAG = "VolumeWrapper"
+    }
     override var effect: Volume? = null
         private set
     override val hasControl: Boolean
@@ -56,17 +59,30 @@ class VolumeEffectWrapper(private val priority: Int) : EffectWrapper<Volume>() {
 
     override fun maybeCreate() {
         if (audioSessionId != 0 && created) {
-            effect = Volume(priority, audioSessionId)
-            effect!!.setControlStatusListener { effect, control ->
-                if (effect != this.effect) {
-                    Log.e("VolumeWrapper", "stale control event: $control")
-                    try {
-                        effect.release()
-                    } catch (_: Throwable) {
+            try {
+                effect = Volume(priority, audioSessionId)
+                effect!!.setControlStatusListener { effect, control ->
+                    if (effect != this.effect) {
+                        Log.e("VolumeWrapper", "stale control event: $control")
+                        try {
+                            effect.release()
+                        } catch (_: Throwable) {
+                        }
+                        return@setControlStatusListener
                     }
-                    return@setControlStatusListener
+                    Log.i(TAG, "volume control state is now: $control")
+                    hasControlListener?.invoke(control)
                 }
+                val control = effect!!.hasControl()
                 hasControlListener?.invoke(control)
+                Log.i(TAG, "init volume, control state is: $control")
+            } catch (e: Throwable) {
+                Log.e(TAG, "failed to init Volume effect", e)
+                try {
+                    effect?.release()
+                } catch (_: Throwable) {
+                }
+                effect = null
             }
         }
     }
@@ -75,6 +91,7 @@ class VolumeEffectWrapper(private val priority: Int) : EffectWrapper<Volume>() {
         // This could be async if it has to.
         effect?.release()
         effect = null
+        hasControlListener?.invoke(false)
     }
 }
 

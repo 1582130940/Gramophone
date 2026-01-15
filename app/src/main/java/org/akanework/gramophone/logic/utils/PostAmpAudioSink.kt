@@ -207,24 +207,19 @@ class PostAmpAudioSink(
                         .build()
                 )
             }
-            dpeEffect!!.audioSessionId = audioSessionId
             dpeEffect!!.hasControlListener = {
                 calculateGain() // switch between DPE and setVolume as relevant
             }
+            dpeEffect!!.audioSessionId = audioSessionId
         } else {
             if (isVolumeAvailable && !offloadEnabled) {
                 if (volumeEffect != null)
                     return // we already have what we need
-                try {
-                    volumeEffect = VolumeEffectWrapper(-100000)
-                    volumeEffect!!.hasControlListener = { hasControl ->
-                        Log.i(TAG, "volume control state is now: $hasControl")
-                        updateVolumeEffect()
-                    }
-                    Log.i(TAG, "init volume, control state is: ${volumeEffect!!.hasControl}")
-                } catch (e: Throwable) {
-                    Log.e(TAG, "failed to init Volume effect", e)
+                volumeEffect = VolumeEffectWrapper(-100000)
+                volumeEffect!!.hasControlListener = {
+                    updateVolumeEffect()
                 }
+                volumeEffect!!.audioSessionId = audioSessionId
             } else {
                 if (needToLogWhyNoEffect)
                     Log.i(TAG, "didn't init volume or dpe, e=$isVolumeAvailable " +
@@ -469,13 +464,13 @@ class PostAmpAudioSink(
             offloadEnabled = rgAp.offloadEnabled
         }
         this.offloadEnabled = offloadEnabled
-        createEffectsIfNeeded()
         if (id != null && id != audioSessionId) {
             Log.i(TAG, "set session id to $id")
             audioSessionId = id
-            dpeEffect!!.audioSessionId = id
-            volumeEffect!!.audioSessionId = id
+            dpeEffect?.audioSessionId = id
+            volumeEffect?.audioSessionId = id
         }
+        createEffectsIfNeeded()
     }
 
     @RequiresApi(Build.VERSION_CODES.M)
