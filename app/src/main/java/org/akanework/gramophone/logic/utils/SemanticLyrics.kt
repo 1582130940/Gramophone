@@ -1304,129 +1304,140 @@ fun parseTtml(audioMimeType: String?, lyricText: String): SemanticLyrics? {
     val itunesTranslations = hashMapOf<String, HashMap<String, String>>()
     val timer = TtmlTimeTracker(parser, hasItunesNamespace)
     parser.nextTag()
-    parser.require(XmlPullParser.START_TAG, tt, "head")
-    // TODO parse and reject based on https://www.w3.org/TR/2018/REC-ttml2-20181108/#feature-profile-version-2 to be compliant
-    while (parser.nextTag() != XmlPullParser.END_TAG) {
-        if (parser.name == "metadata") {
-            while (parser.nextTag() != XmlPullParser.END_TAG) {
-                if (parser.namespace == ttm && parser.name == "agent") {
-                    val id = parser.getAttributeValue("http://www.w3.org/XML/1998/namespace", "id")
-                    val type = parser.getAttributeValue("", "type")
-                    people.getOrPut(type) { mutableListOf() }.add(id)
-                    peopleToType[id] = type
-                    while (parser.nextTag() != XmlPullParser.END_TAG) {
-                        if (parser.namespace == ttm && parser.name == "name") {
-                            // val type = parser.getAttributeValue("", "type")
-                            parser.nextAndThrowIfNotText()
-                            // val name = parser.text
-                            parser.nextAndThrowIfNotEnd()
-                        } else {
-                            throw XmlPullParserException(
-                                "expected <ttm:name>, got " +
-                                        "<${(parser.prefix?.plus(":") ?: "") + parser.name}> " +
-                                        "in <ttm:agent> in <metadata>"
-                            )
-                        }
-                    }
-                } else if (parser.name == "iTunesMetadata") {
-                    while (parser.nextTag() != XmlPullParser.END_TAG) {
-                        when (parser.name) {
-                            "songwriters" -> {
-                                while (parser.nextTag() != XmlPullParser.END_TAG) {
-                                    if (parser.name == "songwriter") {
-                                        parser.nextAndThrowIfNotText()
-                                        // val songwriter = parser.text
-                                        parser.nextAndThrowIfNotEnd()
-                                    } else {
-                                        throw XmlPullParserException(
-                                            "expected <songwriter>, got " +
-                                                    "<${(parser.prefix?.plus(":") ?: "") + parser.name}> " +
-                                                    "in <songwriters> in <iTunesMetadata>"
-                                        )
-                                    }
-                                }
-                            }
-
-                            "audio" -> {
-                                val role = parser.getAttributeValue(null, "role")
-                                if (when (role) {
-                                        "spatial" -> audioMimeType == MimeTypes.AUDIO_AC3 ||
-                                                audioMimeType == MimeTypes.AUDIO_E_AC3 ||
-                                                audioMimeType == MimeTypes.AUDIO_AC4
-                                        // ext- are Gramophone extensions
-                                        "ext-not-spatial" -> !(audioMimeType == MimeTypes.AUDIO_AC3 ||
-                                                audioMimeType == MimeTypes.AUDIO_E_AC3 ||
-                                                audioMimeType == MimeTypes.AUDIO_AC4)
-
-                                        "ext-always" -> true
-                                        else -> throw XmlPullParserException(
-                                            "unsupported offset " +
-                                                    "role $role, can't decide whether to apply offset"
-                                        )
-                                    }
-                                ) {
-                                    val parsed = timer.parseTimestampMs(
-                                        parser.getAttributeValue(
-                                            null,
-                                            "lyricOffset"
-                                        ), 0L, true
-                                    )
-                                    if (timer.audioOffset != null)
-                                        timer.audioOffset = timer.audioOffset!! + (parsed ?: 0L)
-                                    else
-                                        timer.audioOffset = parsed
-                                }
-                                parser.nextAndThrowIfNotEnd()
-                            }
-
-                            "translations" -> {
-                                while (parser.nextTag() != XmlPullParser.END_TAG) {
-                                    if (parser.name == "translation") {
-                                        val type = parser.getAttributeValue(null, "type")
-                                        if (type != "subtitle") {
-                                            throw XmlPullParserException("unsupported translation type $type")
-                                        }
-                                        val lang = parser.getAttributeValue(
-                                            "http://www.w3.org/XML/1998/namespace",
-                                            "lang"
-                                        )
-                                        val out = hashMapOf<String, String>()
-                                        while (parser.nextTag() != XmlPullParser.END_TAG) {
-                                            if (parser.name == "text") {
-                                                val `for` = parser.getAttributeValue(null, "for")
-                                                    ?: throw XmlPullParserException("missing attribute for at $parser")
-                                                parser.nextAndThrowIfNotText()
-                                                out[`for`] = parser.text
-                                                parser.nextAndThrowIfNotEnd()
-                                            } else {
-                                                throw XmlPullParserException(
-                                                    "expected <text>, got " +
-                                                            "<${(parser.prefix?.plus(":") ?: "") + parser.name}> " +
-                                                            "in <translation> in <translations> in <iTunesMetadata>"
-                                                )
-                                            }
-                                        }
-                                        itunesTranslations[lang] = out
-                                    } else {
-                                        throw XmlPullParserException(
-                                            "expected <translation>, got " +
-                                                    "<${(parser.prefix?.plus(":") ?: "") + parser.name}> " +
-                                                    "in <translations> in <iTunesMetadata>"
-                                        )
-                                    }
-                                }
-                            }
-
-                            else -> parser.skipToEndOfTag()
-                        } // there are some others
-                    }
-                } else parser.skipToEndOfTag()
-            }
-        } else // probably <styling> or <layout>
-            parser.skipToEndOfTag()
+    if (parser.eventType == XmlPullParser.END_TAG && parser.namespace == tt && parser.name == "tt") {
+        return null // a valid ttml file could have neither <head> or <body>, but it would be a weird one
     }
-    parser.require(XmlPullParser.END_TAG, tt, "head")
-    parser.nextTag()
+    parser.require(XmlPullParser.START_TAG, tt, null)
+    if (parser.name != "body") { // <head> is optional
+        parser.require(XmlPullParser.START_TAG, tt, "head")
+        // TODO parse and reject based on https://www.w3.org/TR/2018/REC-ttml2-20181108/#feature-profile-version-2 to be compliant
+        while (parser.nextTag() != XmlPullParser.END_TAG) {
+            if (parser.name == "metadata") {
+                while (parser.nextTag() != XmlPullParser.END_TAG) {
+                    if (parser.namespace == ttm && parser.name == "agent") {
+                        val id =
+                            parser.getAttributeValue("http://www.w3.org/XML/1998/namespace", "id")
+                        val type = parser.getAttributeValue("", "type")
+                        people.getOrPut(type) { mutableListOf() }.add(id)
+                        peopleToType[id] = type
+                        while (parser.nextTag() != XmlPullParser.END_TAG) {
+                            if (parser.namespace == ttm && parser.name == "name") {
+                                // val type = parser.getAttributeValue("", "type")
+                                parser.nextAndThrowIfNotText()
+                                // val name = parser.text
+                                parser.nextAndThrowIfNotEnd()
+                            } else {
+                                throw XmlPullParserException(
+                                    "expected <ttm:name>, got " +
+                                            "<${(parser.prefix?.plus(":") ?: "") + parser.name}> " +
+                                            "in <ttm:agent> in <metadata>"
+                                )
+                            }
+                        }
+                    } else if (parser.name == "iTunesMetadata") {
+                        while (parser.nextTag() != XmlPullParser.END_TAG) {
+                            when (parser.name) {
+                                "songwriters" -> {
+                                    while (parser.nextTag() != XmlPullParser.END_TAG) {
+                                        if (parser.name == "songwriter") {
+                                            parser.nextAndThrowIfNotText()
+                                            // val songwriter = parser.text
+                                            parser.nextAndThrowIfNotEnd()
+                                        } else {
+                                            throw XmlPullParserException(
+                                                "expected <songwriter>, got " +
+                                                        "<${(parser.prefix?.plus(":") ?: "") + parser.name}> " +
+                                                        "in <songwriters> in <iTunesMetadata>"
+                                            )
+                                        }
+                                    }
+                                }
+
+                                "audio" -> {
+                                    val role = parser.getAttributeValue(null, "role")
+                                    if (when (role) {
+                                            "spatial" -> audioMimeType == MimeTypes.AUDIO_AC3 ||
+                                                    audioMimeType == MimeTypes.AUDIO_E_AC3 ||
+                                                    audioMimeType == MimeTypes.AUDIO_AC4
+                                            // ext- are Gramophone extensions
+                                            "ext-not-spatial" -> !(audioMimeType == MimeTypes.AUDIO_AC3 ||
+                                                    audioMimeType == MimeTypes.AUDIO_E_AC3 ||
+                                                    audioMimeType == MimeTypes.AUDIO_AC4)
+
+                                            "ext-always" -> true
+                                            else -> throw XmlPullParserException(
+                                                "unsupported offset " +
+                                                        "role $role, can't decide whether to apply offset"
+                                            )
+                                        }
+                                    ) {
+                                        val parsed = timer.parseTimestampMs(
+                                            parser.getAttributeValue(
+                                                null,
+                                                "lyricOffset"
+                                            ), 0L, true
+                                        )
+                                        if (timer.audioOffset != null)
+                                            timer.audioOffset = timer.audioOffset!! + (parsed ?: 0L)
+                                        else
+                                            timer.audioOffset = parsed
+                                    }
+                                    parser.nextAndThrowIfNotEnd()
+                                }
+
+                                "translations" -> {
+                                    while (parser.nextTag() != XmlPullParser.END_TAG) {
+                                        if (parser.name == "translation") {
+                                            val type = parser.getAttributeValue(null, "type")
+                                            if (type != "subtitle") {
+                                                throw XmlPullParserException("unsupported translation type $type")
+                                            }
+                                            val lang = parser.getAttributeValue(
+                                                "http://www.w3.org/XML/1998/namespace",
+                                                "lang"
+                                            )
+                                            val out = hashMapOf<String, String>()
+                                            while (parser.nextTag() != XmlPullParser.END_TAG) {
+                                                if (parser.name == "text") {
+                                                    val `for` =
+                                                        parser.getAttributeValue(null, "for")
+                                                            ?: throw XmlPullParserException("missing attribute for at $parser")
+                                                    parser.nextAndThrowIfNotText()
+                                                    out[`for`] = parser.text
+                                                    parser.nextAndThrowIfNotEnd()
+                                                } else {
+                                                    throw XmlPullParserException(
+                                                        "expected <text>, got " +
+                                                                "<${(parser.prefix?.plus(":") ?: "") + parser.name}> " +
+                                                                "in <translation> in <translations> in <iTunesMetadata>"
+                                                    )
+                                                }
+                                            }
+                                            itunesTranslations[lang] = out
+                                        } else {
+                                            throw XmlPullParserException(
+                                                "expected <translation>, got " +
+                                                        "<${(parser.prefix?.plus(":") ?: "") + parser.name}> " +
+                                                        "in <translations> in <iTunesMetadata>"
+                                            )
+                                        }
+                                    }
+                                }
+
+                                else -> parser.skipToEndOfTag()
+                            } // there are some others
+                        }
+                    } else parser.skipToEndOfTag()
+                }
+            } else // probably <styling> or <layout>
+                parser.skipToEndOfTag()
+        }
+        parser.require(XmlPullParser.END_TAG, tt, "head")
+        parser.nextTag()
+        if (parser.eventType == XmlPullParser.END_TAG && parser.namespace == tt && parser.name == "tt") {
+            return null // a valid ttml file could have no <body>, but it would be a weird one
+        }
+    }
     parser.require(XmlPullParser.START_TAG, tt, "body")
     val state = TtmlParserState(parser, timer)
     state.parse()
