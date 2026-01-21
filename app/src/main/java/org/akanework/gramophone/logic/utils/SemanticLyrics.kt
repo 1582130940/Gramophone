@@ -1535,7 +1535,7 @@ fun parseTtml(audioMimeType: String?, lyricText: String): SemanticLyrics? {
         state.paragraphs.forEach {
             if (agent != it.agent) {
                 agent = it.agent
-                agentToSide.putIfAbsentSupport(it.agent, side)
+                agentToSide.putIfAbsentSupport(it.agent, !side)
                 side = agentToSide[it.agent]!!
             }
         }
