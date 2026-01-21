@@ -49,16 +49,23 @@ private const val TAG = "SemanticLyrics"
  * We completely ignore all ID3 tags from the header as MediaStore is our source of truth.
  */
 
+// This does not encode the full range of possible information in the TTML format, only what's used
+// for actual rendering. This could change in the future, but for now it's like this.
 @Parcelize
 enum class SpeakerEntity(
-    val isVoice2: Boolean = false,
-    val isGroup: Boolean = false,
-    val isBackground: Boolean = false
+    val isVoice2: Boolean = false, // align opposite
+    val isGroup: Boolean = false, // center
+    val isBackground: Boolean = false, // small
+    val isWidthLimited: Boolean = false,
 ) : Parcelable {
-    Voice1,
-    Background(isBackground = true),
-    Voice2(isVoice2 = true),
-    Voice2Background(isVoice2 = true, isBackground = true),
+    // Voice is used if there should be no width limit as it's the only person, Voice1 is used if
+    // there are more and hence width limit should be applied.
+    Voice,
+    VoiceBackground(isBackground = true),
+    Voice1(isWidthLimited = true),
+    Voice1Background(isWidthLimited = true, isBackground = true),
+    Voice2(isWidthLimited = true, isVoice2 = true),
+    Voice2Background(isWidthLimited = true, isVoice2 = true, isBackground = true),
     Group(isGroup = true),
     GroupBackground(isGroup = true, isBackground = true)
 }
@@ -144,7 +151,9 @@ private sealed class SyntacticLrc {
                     // but hey, we tried. Can't do much about it.
                     // If you want to write something that looks like a timestamp into your lyrics,
                     // you'll probably have to delete the following three lines.
-                    if (!(out.lastOrNull() is NewLine? || out.lastOrNull() is SyncPoint))
+                    val lastOrNull = out.lastOrNull()
+                    if (!(lastOrNull is NewLine? || lastOrNull is SyncPoint
+                                || (lastOrNull is SpeakerTag && lastOrNull.speaker.isBackground)))
                         out.add(NewLine.SyntheticNewLine())
                     out.add(SyncPoint(parseTime(tmMatch)))
                     pos += tmMatch.value.length
@@ -212,7 +221,7 @@ private sealed class SyntacticLrc {
                             when {
                                 lastSpeaker?.isGroup == true -> SpeakerEntity.GroupBackground
                                 lastSpeaker?.isVoice2 == true -> SpeakerEntity.Voice2Background
-                                else -> SpeakerEntity.Background
+                                else -> SpeakerEntity.Voice1Background
                             }
                         )
                     )
@@ -518,6 +527,7 @@ fun parseLrc(lyricText: String, trimEnabled: Boolean, multiLineEnabled: Boolean)
     var lastSyncPoint: ULong? = null
     var lastWordSyncPoint: ULong? = null
     var speaker: SpeakerEntity? = null
+    var hadVoice2 = false
     var hadLyricSinceWordSync = true
     var hadWordSyncSinceNewLine = false
     val currentLine = mutableListOf<Pair<ULong, String?>>()
@@ -547,6 +557,9 @@ fun parseLrc(lyricText: String, trimEnabled: Boolean, multiLineEnabled: Boolean)
 
             is SyntacticLrc.SpeakerTag -> {
                 speaker = element.speaker
+                if (element.speaker.isVoice2) {
+                    hadVoice2 = true
+                }
             }
 
             is SyntacticLrc.WordSyncPoint -> {
@@ -683,6 +696,13 @@ fun parseLrc(lyricText: String, trimEnabled: Boolean, multiLineEnabled: Boolean)
     out.sortBy { it.start }
     var previousLyric: LyricLine? = null
     out.forEach { lyric ->
+        if (!hadVoice2) { // If there is no v2: tag, we should avoid width limit.
+            lyric.speaker = when (lyric.speaker) {
+                SpeakerEntity.Voice1 -> SpeakerEntity.Voice
+                SpeakerEntity.Voice1Background -> SpeakerEntity.VoiceBackground
+                else -> lyric.speaker
+            }
+        }
         val mainEnd = if (lyric.start == previousLyric?.start) out.firstOrNull {
             it.start == lyric.start && !it.endIsImplicit
         }?.end else null
@@ -1501,22 +1521,28 @@ fun parseTtml(audioMimeType: String?, lyricText: String): SemanticLyrics? {
         } while (cur != -1)
         out
     }
+    val hasAtLeastTwoPeople = people["person"]?.let { it.size > 1 } == true
     if (paragraphs.find { it.time != null } == null) {
         return UnsyncedLyrics(paragraphs.map {
             val text = it.texts.joinToString("") { it.text }
             val isBg = it.role == "x-bg"
             val isGroup = peopleToType[it.agent] == "group"
+            val isOther = peopleToType[it.agent] == "other"
+            // first person goes left, second right, third left, fourth right, and so on.
+            // and the same goes for "other" except that we start on the right here.
             val isVoice2 =
                 it.agent != null && (people[peopleToType[it.agent]] ?: throw NullPointerException(
                     "expected to find ${it.agent} (${peopleToType[it.agent]}) in $people"
-                )).indexOf(it.agent) % 2 == 1
+                )).indexOf(it.agent) % 2 == (if (isOther) 0 else 1)
             val speaker = when {
                 isGroup && isBg -> SpeakerEntity.GroupBackground
                 isGroup -> SpeakerEntity.Group
                 isVoice2 && isBg -> SpeakerEntity.Voice2Background
                 isVoice2 -> SpeakerEntity.Voice2
-                isBg -> SpeakerEntity.Background
-                else -> SpeakerEntity.Voice1
+                hasAtLeastTwoPeople && isBg -> SpeakerEntity.Voice1Background
+                hasAtLeastTwoPeople -> SpeakerEntity.Voice1
+                isBg -> SpeakerEntity.VoiceBackground
+                else -> SpeakerEntity.Voice
             }
             Pair(text, speaker)
         })
@@ -1536,17 +1562,22 @@ fun parseTtml(audioMimeType: String?, lyricText: String): SemanticLyrics? {
             ?.toMutableList()
         val isBg = it.role == "x-bg"
         val isGroup = peopleToType[it.agent] == "group"
+        val isOther = peopleToType[it.agent] == "other"
+        // first person goes left, second right, third left, fourth right, and so on.
+        // and the same goes for "other" except that we start on the right here.
         val isVoice2 =
             it.agent != null && (people[peopleToType[it.agent]] ?: throw NullPointerException(
                 "expected to find ${it.agent} (${peopleToType[it.agent]}) in $people"
-            )).indexOf(it.agent) % 2 == 1
+            )).indexOf(it.agent) % 2 == (if (isOther) 0 else 1)
         val speaker = when {
             isGroup && isBg -> SpeakerEntity.GroupBackground
             isGroup -> SpeakerEntity.Group
             isVoice2 && isBg -> SpeakerEntity.Voice2Background
             isVoice2 -> SpeakerEntity.Voice2
-            isBg -> SpeakerEntity.Background
-            else -> SpeakerEntity.Voice1
+            hasAtLeastTwoPeople && isBg -> SpeakerEntity.Voice1Background
+            hasAtLeastTwoPeople -> SpeakerEntity.Voice1
+            isBg -> SpeakerEntity.VoiceBackground
+            else -> SpeakerEntity.Voice
         }
         if (it.time == null) {
             throw IllegalArgumentException("it.time == null but some other P has non-null time")

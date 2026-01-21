@@ -531,6 +531,8 @@ class NewLyricsView(context: Context, attrs: AttributeSet?) : ScrollingView2(con
                 else Layout.Alignment.ALIGN_NORMAL
             val tl = syncedLine?.isTranslated == true
             val bg = speaker?.isBackground == true
+            // TODO: width limiting to 85% if there is >1 singer
+            //val widthLimit = speaker?.isWidthLimited == true
             val paddingTop = if (tl) 2 else 18
             val paddingBottom = if (i + 1 < (syncedLines?.size ?: -1) &&
                 syncedLines?.get(i + 1)?.isTranslated == true

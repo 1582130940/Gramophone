@@ -3,6 +3,7 @@ package org.akanework.gramophone
 import androidx.media3.common.MimeTypes
 import org.akanework.gramophone.logic.utils.LrcUtils
 import org.akanework.gramophone.logic.utils.SemanticLyrics
+import org.akanework.gramophone.logic.utils.SpeakerEntity
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
@@ -460,6 +461,32 @@ class LrcUtilsTest {
         assertEquals("bye", lrc[1].text)
         assert(!lrc[0].isTranslated)
         assert(!lrc[1].isTranslated)
+    }
+
+    @Test
+    fun voiceInsteadOfVoice1WhenNoVoice2() {
+        val lrc = parseSynced("[00:00.00]v1:hello\n[bg:[00:01.00]bye]")
+        assertNotNull(lrc)
+        assertEquals(2, lrc!!.size)
+        assertEquals("hello", lrc[0].text)
+        assertEquals("bye", lrc[1].text)
+        assertEquals(SpeakerEntity.Voice, lrc[0].speaker)
+        assertEquals(SpeakerEntity.VoiceBackground, lrc[1].speaker)
+    }
+
+    @Test
+    fun voice1WhenThereIsVoice2() {
+        val lrc = parseSynced("[00:00.00]v1:hello\n[bg:[00:01.00]bye]\n[00:02.00]v2:hello\n[bg:[00:03.00]bye]")
+        assertNotNull(lrc)
+        assertEquals(4, lrc!!.size)
+        assertEquals("hello", lrc[0].text)
+        assertEquals("bye", lrc[1].text)
+        assertEquals("hello", lrc[2].text)
+        assertEquals("bye", lrc[3].text)
+        assertEquals(SpeakerEntity.Voice1, lrc[0].speaker)
+        assertEquals(SpeakerEntity.Voice1Background, lrc[1].speaker)
+        assertEquals(SpeakerEntity.Voice2, lrc[2].speaker)
+        assertEquals(SpeakerEntity.Voice2Background, lrc[3].speaker)
     }
 
     @Test
