@@ -1569,20 +1569,24 @@ fun parseTtml(audioMimeType: String?, lyricText: String): SemanticLyrics? {
             text.append(i.text)
             words += start..<text.length
         }
-        val theWords = it.texts.mapIndexed { i, it -> it to words[i] }
+        // Do not try to use words if timing is set to Line, as those words may actually be x-bg
+        // background lines. We can't assume a x-bg background line with only one word is actually
+        // line synced either as that would break lines with word sync that only consist of one
+        // word. We really have to fall back to header information here.
+        val theWords = if (timing != "Line") it.texts.mapIndexed { i, it -> it to words[i] }
             .filter { it.first.time != null }
             .map { Word(it.first.time!!, it.second, false) }
             .takeIf { it.isNotEmpty() }
-            ?.toMutableList()
+            ?.toMutableList() else null
         val isBg = it.role == "x-bg"
         val isGroup = peopleToType[it.agent] == "group"
         val isOther = peopleToType[it.agent] == "other"
         // first person goes left, second right, third left, fourth right, and so on.
         // and the same goes for "other" except that we start on the right here.
-        val isVoice2 =
-            it.agent != null && (people[peopleToType[it.agent]] ?: throw NullPointerException(
+        val isVoice2 = agentToSide[it.agent] ?:
+            (it.agent != null && (people[peopleToType[it.agent]] ?: throw NullPointerException(
                 "expected to find ${it.agent} (${peopleToType[it.agent]}) in $people"
-            )).indexOf(it.agent) % 2 == (if (isOther) 0 else 1)
+            )).indexOf(it.agent) % 2 == (if (isOther) 0 else 1))
         val speaker = when {
             isGroup && isBg -> SpeakerEntity.GroupBackground
             isGroup -> SpeakerEntity.Group
