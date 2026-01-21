@@ -1148,6 +1148,10 @@ private class TtmlTimeTracker(private val parser: XmlPullParser, private val isA
                 "f" -> time /= effectiveFrameRate / 1000.0
                 "t" -> time /= tickRate / 1000.0
             }
+            if (isApple) {
+                // Apple has no idea how a TTML file works. So omit frame offset just for their broken files
+                return (time.toLong() + (audioOffset ?: 0L)) * multiplier
+            }
             return (time.toLong() + offset + (audioOffset ?: 0L)) * multiplier
         }
         throw XmlPullParserException("can't understand this TTML timestamp: $input")
