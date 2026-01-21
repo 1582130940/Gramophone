@@ -1539,8 +1539,8 @@ fun parseTtml(audioMimeType: String?, lyricText: String): SemanticLyrics? {
                 isGroup -> SpeakerEntity.Group
                 isVoice2 && isBg -> SpeakerEntity.Voice2Background
                 isVoice2 -> SpeakerEntity.Voice2
-                hasAtLeastTwoPeople && isBg -> SpeakerEntity.Voice1Background
-                hasAtLeastTwoPeople -> SpeakerEntity.Voice1
+                (hasAtLeastTwoPeople || isOther) && isBg -> SpeakerEntity.Voice1Background
+                (hasAtLeastTwoPeople || isOther) -> SpeakerEntity.Voice1
                 isBg -> SpeakerEntity.VoiceBackground
                 else -> SpeakerEntity.Voice
             }
