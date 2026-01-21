@@ -1493,11 +1493,16 @@ fun parseTtml(audioMimeType: String?, lyricText: String): SemanticLyrics? {
             )
                 out.add(it.copy(role = it.texts.firstOrNull()?.role ?: it.role))
             else {
+                // trim start...
                 while ((cur < idx || (idx == -1 && cur < it.texts.size)) && it.texts[cur].text.isBlank())
                     cur++
-                if (cur < idx || (idx == -1 && cur < it.texts.size)) {
+                // ...and end
+                var iIdx = idx
+                while (cur < iIdx && iIdx > 0 && it.texts[iIdx - 1].text.isBlank())
+                    iIdx--
+                if (cur < iIdx || (iIdx == -1 && cur < it.texts.size)) {
                     val t =
-                        it.texts.subList(cur, idx.let { i -> if (i == -1) it.texts.size else i })
+                        it.texts.subList(cur, iIdx.let { i -> if (i == -1) it.texts.size else i })
                             .toMutableList()
                     if (t.firstOrNull()?.text?.startsWith('(') == true
                         && t.lastOrNull()?.text?.endsWith(')') == true
