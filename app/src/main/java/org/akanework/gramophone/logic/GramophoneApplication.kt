@@ -128,7 +128,7 @@ class GramophoneApplication : Application(), SingletonImageLoader.Factory,
                         } else it
                     }
                     .let {
-                        if (Debug.isDebuggerConnected())
+                        if (Debug.isDebuggerConnected() || isAlpsBoostFwkPresent())
                             it.permitDiskReads()
                         else it
                     }
@@ -389,5 +389,14 @@ class GramophoneApplication : Application(), SingletonImageLoader.Factory,
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
         startActivity(intent)
         exitProcess(10)
+    }
+
+    private fun isAlpsBoostFwkPresent(): Boolean {
+        try {
+            Class.forName("com.mediatek.boostfwk.BoostFwkManagerImpl")
+            return true
+        } catch (_: Throwable) {
+            return false
+        }
     }
 }
