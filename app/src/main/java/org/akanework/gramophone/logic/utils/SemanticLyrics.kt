@@ -1537,7 +1537,7 @@ fun parseTtml(audioMimeType: String?, lyricText: String): SemanticLyrics? {
         var agent: String? = null
         var side = state.paragraphs.firstOrNull()?.let { peopleToType[it.agent] == "other" } == true
         state.paragraphs.forEach {
-            if (agent != it.agent) {
+            if (agent != it.agent && peopleToType[it.agent] != "group") {
                 agent = it.agent
                 agentToSide.putIfAbsentSupport(it.agent, !side)
                 side = agentToSide[it.agent]!!
