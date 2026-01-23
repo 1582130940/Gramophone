@@ -1,5 +1,6 @@
 package uk.akane.libphonograph.reader
 
+import android.content.ContentResolver
 import android.content.ContentUris
 import android.content.Context
 import android.net.Uri
@@ -169,13 +170,36 @@ internal object Reader {
         val hasVolume = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             MediaStore.getExternalVolumeNames(context).contains(MediaStore.VOLUME_EXTERNAL_PRIMARY)
         } else true
-        val cursor = if (hasVolume) context.contentResolver.query(
-            MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-            projection,
-            selection,
-            null,
-            MediaStore.Audio.Media.TITLE + " COLLATE UNICODE ASC",
-        ) else null
+        val sortOrder = MediaStore.Audio.Media.TITLE + " COLLATE UNICODE ASC"
+        val cursor = if (hasVolume) {
+            // TODO: convert coroutine cancellation to cancellationSignal
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val queryArgs = Bundle()
+                queryArgs.putString(ContentResolver.QUERY_ARG_SQL_SELECTION, selection)
+                queryArgs.putString(ContentResolver.QUERY_ARG_SQL_SORT_ORDER, sortOrder)
+                /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    queryArgs.putInt(MediaStore.QUERY_ARG_MATCH_PENDING, MediaStore.MATCH_INCLUDE)
+                } TODO separately find pending files (but only pending by fuse) and if they
+                   were last modified over Y seconds ago (assumes every write updates mtime), scan
+                   them. in the end we dont do much harm with scanning too early so whatever.*/
+                // TODO: maybe we can use QUERY_ARG_INCLUDE_RECENTLY_UNMOUNTED_VOLUMES?
+                context.contentResolver.query(
+                    MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                    projection,
+                    queryArgs,
+                    null
+                )
+            } else {
+                context.contentResolver.query(
+                    MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                    projection,
+                    selection,
+                    null,
+                    sortOrder,
+                    null
+                )
+            }
+        } else null
         val defaultZone by lazy {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 ZoneId.systemDefault()

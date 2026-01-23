@@ -31,7 +31,6 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.os.PersistableBundle
 import android.provider.MediaStore
 import android.provider.Settings
 import android.view.Choreographer
@@ -83,7 +82,6 @@ import org.akanework.gramophone.ui.components.PlayerBottomSheet
 import org.akanework.gramophone.ui.fragments.BaseFragment
 import org.akanework.gramophone.ui.fragments.SearchFragment
 import org.akanework.gramophone.ui.fragments.ViewPagerFragment
-import org.json.JSONObject
 import uk.akane.libphonograph.manipulator.ItemManipulator
 import java.io.File
 
@@ -228,7 +226,7 @@ class MainActivity : BaseActivity() {
             .setItems((playlists.map {
                 it.title ?: it.path?.absolutePath ?: it.id.toString()
             } + getString(R.string.create_playlist)).toTypedArray())
-            { d, item ->
+            { _, item ->
                 if (playlists.size == item) {
                     PlaylistAdapter.playlistNameDialog(this, R.string.create_playlist, "") { name ->
                         CoroutineScope(Dispatchers.Default).launch {
@@ -340,8 +338,8 @@ class MainActivity : BaseActivity() {
         }
     }
 
-    override fun onSaveInstanceState(outState: Bundle, outPersistentState: PersistableBundle) {
-        super.onSaveInstanceState(outState, outPersistentState)
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
         if (pendingRequest != null) {
             outState.putBundle("AddToPlaylistPendingRequest", pendingRequest)
         }

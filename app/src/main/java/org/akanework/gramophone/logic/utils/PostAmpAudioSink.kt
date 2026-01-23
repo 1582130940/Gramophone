@@ -111,12 +111,14 @@ class PostAmpAudioSink(
     private var rgVolume = 1f
 
     init {
-        var forVolumeChanged = false
-        try {
-            AudioSystemHiddenApi.addVolumeCallback(context, this)
-        } catch (e: Exception) {
-            Log.e(TAG, "failed to register volume cb", e)
-            forVolumeChanged = true
+        var forVolumeChanged = Build.VERSION.SDK_INT < Build.VERSION_CODES.Q
+        if (!forVolumeChanged) {
+            try {
+                AudioSystemHiddenApi.addVolumeCallback(context, this)
+            } catch (e: Exception) {
+                Log.e(TAG, "failed to register volume cb", e)
+                forVolumeChanged = true
+            }
         }
         ContextCompat.registerReceiver(
             context,
@@ -542,10 +544,12 @@ class PostAmpAudioSink(
         volumeEffect?.releaseSafe()
         volumeEffect = null
         context.unregisterReceiver(receiver)
-        try {
-            AudioSystemHiddenApi.removeVolumeCallback(context, this)
-        } catch (e: Exception) {
-            Log.w(TAG, "failed to remove volume cb", e)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            try {
+                AudioSystemHiddenApi.removeVolumeCallback(context, this)
+            } catch (e: Exception) {
+                Log.w(TAG, "failed to remove volume cb", e)
+            }
         }
         super.release()
     }

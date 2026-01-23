@@ -31,6 +31,8 @@ class PlaylistEditFragment : BaseFragment(false) {
     ): View? {
         val theItem = MutableSharedFlow<Playlist?>(replay = 1)
 
+        // TODO(ASAP): show warning and offer to convert (non-destructively) playlist if it's
+        //  MediaStore DB only or unsupported format
         val rootView = inflater.inflate(R.layout.fragment_general_sub, container, false)
         val topAppBar = rootView.findViewById<MaterialToolbar>(R.id.topAppBar)
         val collapsingToolbarLayout =

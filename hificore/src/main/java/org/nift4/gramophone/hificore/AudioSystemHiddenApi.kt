@@ -6,6 +6,7 @@ import android.media.AudioManager
 import android.os.Build
 import android.os.IBinder
 import android.os.Parcel
+import androidx.annotation.RequiresApi
 import androidx.core.content.getSystemService
 import androidx.media3.common.util.Log
 import com.google.common.util.concurrent.MoreExecutors
@@ -272,6 +273,7 @@ object AudioSystemHiddenApi {
     }
 
     @Throws(IllegalStateException::class, IllegalArgumentException::class)
+    @RequiresApi(Build.VERSION_CODES.Q)
     fun addVolumeCallback(context: Context, cb: VolumeChangeListener) {
         if (adapterCache.containsKey(cb))
             throw IllegalArgumentException("already registered $cb")
@@ -310,6 +312,7 @@ object AudioSystemHiddenApi {
     }
 
     @Throws(IllegalStateException::class, IllegalArgumentException::class)
+    @RequiresApi(Build.VERSION_CODES.Q)
     fun removeVolumeCallback(context: Context, cb: VolumeChangeListener) {
         val adapter =
             adapterCache.remove(cb) ?: throw IllegalArgumentException("never registered $cb")

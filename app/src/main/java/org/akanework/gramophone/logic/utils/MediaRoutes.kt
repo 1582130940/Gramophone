@@ -262,7 +262,8 @@ object MediaRoutes {
             // TODO: It seems like speaker is the default fallback for anything. So filtering
             //  for speaker will not work well.
             // https://cs.android.com/android/platform/superproject/+/android10-release:frameworks/base/services/core/java/com/android/server/audio/AudioDeviceInventory.java;l=863;drc=f7345252b8b33fe7cf69622f55e4226b6ef0100d
-                return audioManager.firstOutputDeviceByType(AudioDeviceInfo.TYPE_BUILTIN_SPEAKER)
+                return audioManager.firstOutputDeviceByType(AudioDeviceInfo.TYPE_BUILTIN_SPEAKER,
+                    AudioDeviceInfo.TYPE_BUILTIN_EARPIECE)
         } catch (t: Resources.NotFoundException) {
             Log.w(TAG, "Failed to check if $this is speaker", t)
         }
@@ -307,8 +308,10 @@ object MediaRoutes {
         try {
             if (TextUtils.equals(
                     Resources.getSystem().getText(
-                        Resources.getSystem()
-                            .getIdentifier("default_audio_route_name_hdmi", "string", "android")
+                        Resources.getSystem().getIdentifier(
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P)
+                                "default_audio_route_name_hdmi" else
+                                    "default_media_route_name_hdmi", "string", "android")
                     ), name
                 )
             )
@@ -359,7 +362,8 @@ object MediaRoutes {
             // TODO: It seems like speaker is the default fallback for anything. So filtering
             //  for speaker will not work well.
             // https://cs.android.com/android/platform/superproject/+/android10-release:frameworks/base/services/core/java/com/android/server/audio/AudioDeviceInventory.java;l=863;drc=f7345252b8b33fe7cf69622f55e4226b6ef0100d
-                return audioManager.firstOutputDeviceByType(AudioDeviceInfo.TYPE_BUILTIN_SPEAKER)
+                return audioManager.firstOutputDeviceByType(AudioDeviceInfo.TYPE_BUILTIN_SPEAKER,
+                    AudioDeviceInfo.TYPE_BUILTIN_EARPIECE)
         } catch (t: Resources.NotFoundException) {
             Log.w(TAG, "Failed to check if $this is speaker", t)
         }
