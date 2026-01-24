@@ -289,7 +289,7 @@ Java_org_nift4_gramophone_hificore_AudioSystemHiddenApi_findAfFlagsForPortIntern
         JNIEnv *env, jobject, jint id, jint io) {
     if (!initLib(env))
         return nullptr;
-    jint out[6] = { 0, 0, 0, 0, 0, 0 };
+    jint out[7] = { 0, 0, 0, 0, 0, 0, 0 };
     if (android_get_device_api_level() >= 28) {
         DLSYM_OR_ELSE(libaudioclient, ZN7android11AudioSystem12getAudioPortEP13audio_port_v7) {
             ZN7android11AudioSystem12getAudioPortEP13audio_port_v7 =
@@ -354,7 +354,8 @@ Java_org_nift4_gramophone_hificore_AudioSystemHiddenApi_findAfFlagsForPortIntern
 		    out[5] = (int32_t) (*((uint32_t *) maxPos)); // port.ext.mix.latency_class
 	    }
         /*
-         * unsigned int             sample_rate;       <--- we want to go here
+         * unsigned int             config_mask;       <--- we want to go until here
+         * unsigned int             sample_rate;
          * audio_channel_mask_t     channel_mask;
          * audio_format_t           format;
          * struct audio_gain_config gain;
@@ -376,6 +377,8 @@ Java_org_nift4_gramophone_hificore_AudioSystemHiddenApi_findAfFlagsForPortIntern
         out[1] = (int32_t) (*((uint32_t *) pos));
         pos -= sizeof(unsigned int) / sizeof(uint8_t); // unsigned int (sample_rate)
         out[0] = (int32_t) (*((uint32_t *) pos));
+        pos -= sizeof(unsigned int) / sizeof(uint8_t); // unsigned int (config_mask)
+        out[6] = (int32_t) (*((uint32_t *) pos));
         free(buffer);
     } else {
         DLSYM_OR_ELSE(libaudioclient, ZN7android11AudioSystem14listAudioPortsE17audio_port_role_t17audio_port_type_tPjP13audio_port_v7S3_) {
@@ -464,6 +467,7 @@ Java_org_nift4_gramophone_hificore_AudioSystemHiddenApi_findAfFlagsForPortIntern
                     // out[3] / port.active_config.flags missing in action
                     out[4] = (int32_t) port.active_config.ext.mix.hw_module;
                     out[5] = (int32_t) port.ext.mix.latency_class;
+                    out[6] = (int32_t) port.active_config.config_mask;
                     found = true;
                     break;
                 }
@@ -479,6 +483,7 @@ Java_org_nift4_gramophone_hificore_AudioSystemHiddenApi_findAfFlagsForPortIntern
                     // out[3] / port.active_config.flags missing in action
                     out[4] = (int32_t) port.active_config.ext.mix.hw_module;
                     out[5] = (int32_t) port.ext.mix.latency_class;
+                    out[6] = (int32_t) port.active_config.config_mask;
                     found = true;
                     break;
                 }

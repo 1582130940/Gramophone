@@ -77,6 +77,7 @@ object AudioSystemHiddenApi {
     }
 
     fun getFormat(output: Int): UInt? {
+        // TODO: isn't this kind of exactly the same thing as the mixport format??
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
             TODO("use AudioSystem::getIoDescriptor instead of hardcoded binder numbers")
         val af = getAfService() ?: return null
@@ -173,7 +174,10 @@ object AudioSystemHiddenApi {
         val ioHandle = port.javaClass.getMethod("ioHandle").invoke(port) as Int
         val id = port.javaClass.getMethod("id").invoke(port) as Int
         val name = port.javaClass.getMethod("name").invoke(port) as String?
+        // if audio profiles are ever parsed here, prefer to use the native version because S+ JNI
+        // conversion code adds float profiles to java objects for backwards compatibility with R.
         val mixPortData = getMixPortMetadata(id, ioHandle)
+        val validFlags = mixPortData?.get(6) ?: 0
         // flags exposed to app process since below commit which first appeared in T release.
         // https://cs.android.com/android/_/android/platform/frameworks/av/+/99809024b36b243ad162c780c1191bb503a8df47
         // https://cs.android.com/android/_/android/platform/frameworks/av/+/0805de160715e82fcf59f9367a43b96a352abd11
@@ -181,11 +185,11 @@ object AudioSystemHiddenApi {
             id,
             ioHandle,
             name,
-            flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
-                mixPortData?.get(3) else null,
-            channelMask = mixPortData?.get(2),
-            format = mixPortData?.get(1)?.toUInt(),
-            sampleRate = mixPortData?.get(0)?.toUInt(),
+            flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                (validFlags and 0x10) != 0) mixPortData?.get(3) else null,
+            channelMask = if ((validFlags and 0x2) != 0) mixPortData?.get(2) else null,
+            format = if ((validFlags and 0x4) != 0) mixPortData?.get(1)?.toUInt() else null,
+            sampleRate = if ((validFlags and 0x1) != 0) mixPortData?.get(0)?.toUInt() else null,
             hwModule = mixPortData?.get(4),
             fast = if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU)
                 mixPortData?.let { it[5] == 0 } else null)

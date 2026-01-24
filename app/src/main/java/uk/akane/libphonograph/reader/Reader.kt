@@ -7,6 +7,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
+import androidx.core.database.getStringOrNull
 import androidx.media3.common.HeartRating
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
@@ -56,6 +57,7 @@ internal object Reader {
     private val projection =
         arrayListOf(
             MediaStore.Audio.Media._ID,
+            MediaStore.Audio.Media.DISPLAY_NAME,
             MediaStore.Audio.Media.TITLE,
             MediaStore.Audio.Media.ARTIST,
             MediaStore.Audio.Media.ARTIST_ID,
@@ -209,6 +211,7 @@ internal object Reader {
         cursor?.use {
             // Get columns from mediaStore.
             val idColumn = it.getColumnIndexOrThrow(MediaStore.Audio.Media._ID)
+            val fileName = it.getColumnIndexOrThrow(MediaStore.Audio.Media.DISPLAY_NAME)
             val titleColumn = it.getColumnIndexOrThrow(MediaStore.Audio.Media.TITLE)
             val artistColumn = it.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST)
             val albumColumn = it.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM)
@@ -245,7 +248,7 @@ internal object Reader {
                 val duration =
                     it.getLongOrNullIfThrow(durationColumn)?.let { if (it >= 0) it else null }
                 val pathFile = path?.let { it1 -> File(it1) }
-                val parent = pathFile?.parentFile
+                val parent = pathFile?.parentFile?.takeIf { it.absolutePath != "/" }
                 val fldPath = parent?.absolutePath
                 var isBlacklisted = false
                 if (blackListSet.isNotEmpty()) {
@@ -263,8 +266,8 @@ internal object Reader {
                         || isBlacklisted)
                 // We need to add blacklisted songs to idMap as they can be referenced by playlist
                 if (skip && idMap == null && pathMap == null) continue
-                val id = it.getLongOrNullIfThrow(idColumn)!!
-                val title = it.getStringOrNullIfThrow(titleColumn)!!
+                val id = it.getLong(idColumn)
+                val title = it.getString(titleColumn) ?: path ?: it.getString(fileName)!!
                 val artist: String?
                 val hasNoMetadata: Boolean
                 it.getStringOrNullIfThrow(artistColumn).let {
@@ -276,7 +279,7 @@ internal object Reader {
                 val year = it.getIntOrNullIfThrow(yearColumn).let { v -> if (v == 0) null else v }
                 val albumId = it.getLongOrNullIfThrow(albumIdColumn)
                 val artistId = it.getLongOrNullIfThrow(artistIdColumn)
-                val mimeType = it.getStringOrNullIfThrow(mimeTypeColumn)!!
+                val mimeType = it.getStringOrNull(mimeTypeColumn) // is null for directories
                 var discNumber = discNumberColumn?.let { col -> it.getIntOrNullIfThrow(col) }
                 var trackNumber = it.getIntOrNullIfThrow(trackNumberColumn)
                 var cdTrackNumber =

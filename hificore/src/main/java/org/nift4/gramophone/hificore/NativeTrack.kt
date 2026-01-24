@@ -1083,19 +1083,19 @@ class NativeTrack(
     @RequiresApi(Build.VERSION_CODES.M)
     private external fun getOriginalSampleRateInternal(ptr: Long): Int
 
-    @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE) // TODO qpr
+    @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     fun getHalSampleRate(): UInt {
-        TODO()
+        return AudioTrackHiddenApi.getHalSampleRate(proxy!!) ?: 0u
     }
 
-    @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE) // TODO qpr
-    fun getHalChannelCount(): UInt {
-        TODO()
+    @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
+    fun getHalChannelCount(): Int {
+        return AudioTrackHiddenApi.getHalChannelCount(proxy!!) ?: 0
     }
 
-    @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE) // TODO qpr
+    @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     fun getHalFormat(): UInt {
-        TODO()
+        return AudioTrackHiddenApi.getHalFormat(proxy!!) ?: 0u
     }
 
     @RequiresApi(Build.VERSION_CODES.M)
