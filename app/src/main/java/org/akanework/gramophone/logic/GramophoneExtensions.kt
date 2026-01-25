@@ -87,6 +87,7 @@ import org.akanework.gramophone.logic.utils.SemanticLyrics
 import org.akanework.gramophone.ui.MainActivity
 import org.jetbrains.annotations.Contract
 import java.io.File
+import java.io.FileInputStream
 import java.util.Locale
 import kotlin.math.max
 
@@ -122,15 +123,21 @@ fun MediaItem.requireMediaStoreId(): Long {
 
 fun MediaItem.getBitrate(): Int? {
     val retriever = MediaMetadataRetriever()
+    val file = getFile() ?: return null
+    var fd: FileInputStream? = null
     return try {
-        val filePath = getFile()?.path ?: return null
-        retriever.setDataSource(filePath)
+        fd = file.inputStream()
+        // uses this slightly less straight-forward overload to avoid a resource leak in platform
+        retriever.setDataSource(fd.fd)
+        fd.close()
+        fd = null
         retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_BITRATE)
             ?.toIntOrNull()
     } catch (e: Exception) {
         Log.w("MediaItem", "getBitrate failed", e)
         null
     } finally {
+        fd?.close()
         retriever.release()
     }
 }

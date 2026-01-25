@@ -1203,10 +1203,10 @@ class FullBottomSheet
             )
             CoroutineScope(Dispatchers.Default).launch {
                 val sender = ItemManipulator.setFavorite(activity, setOf(uri), isChecked)
-                if (sender != null)
+                /*if (sender != null)
                     activity.intentSender.launch(
                         IntentSenderRequest.Builder(sender).build()
-                    )
+                    ) TODO(ASAP)*/
             }
         }
     }

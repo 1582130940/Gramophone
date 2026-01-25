@@ -231,21 +231,11 @@ class SdScanner(private val context: Context, var progressFrequencyMs: Int = 250
                 }
             }
             val roots = hashSetOf<File>()
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                for (volume in context.getSystemService<StorageManager>()!!.storageVolumes) {
-                    if (volume.mediaStoreVolumeName == null) continue
-                    if (!volume.state.startsWith(Environment.MEDIA_MOUNTED)) continue
-                    roots.add(volume.directory!!)
-                }
-            } else {
-                val volumes = context.getExternalFilesDirs(null)
-                    .map { it.parentFile!!.parentFile!!.parentFile!!.parentFile!! }
-                for (volume in volumes) {
-                    if (!Environment.getExternalStorageState(volume)
-                            .startsWith(Environment.MEDIA_MOUNTED)
-                    ) continue
-                    roots.add(volume)
-                }
+            for (volume in StorageManagerCompat(context).storageVolumes) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q &&
+                    volume.mediaStoreVolumeName == null) continue
+                if (!volume.state.startsWith(Environment.MEDIA_MOUNTED)) continue
+                roots.add(volume.directory!!)
             }
             scanner.scan(roots, false)
         }

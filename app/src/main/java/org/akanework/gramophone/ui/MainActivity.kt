@@ -18,13 +18,16 @@
 package org.akanework.gramophone.ui
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.app.NotificationManager
 import android.app.SearchManager
 import android.app.assist.AssistContent
+import android.content.ActivityNotFoundException
 import android.content.ClipData
 import android.content.ContentResolver
 import android.content.ContentUris
 import android.content.Intent
+import android.content.IntentSender
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.net.Uri
@@ -111,10 +114,11 @@ class MainActivity : BaseActivity() {
     private var ready = false
     lateinit var playerBottomSheet: PlayerBottomSheet
         private set
-    lateinit var intentSender: ActivityResultLauncher<IntentSenderRequest>
-        private set
+    private lateinit var intentDelete: ActivityResultLauncher<Intent>
+    private lateinit var intentSenderDelete: ActivityResultLauncher<IntentSenderRequest>
     private lateinit var addToPlaylistIntentSender: ActivityResultLauncher<IntentSenderRequest>
     private var pendingRequest: Bundle? = null
+    private var pendingDeleteRequest: Bundle? = null
 
     fun updateLibrary(then: (() -> Unit)? = null) {
         // If library load takes more than 2s, exit splash to avoid ANR
@@ -140,12 +144,32 @@ class MainActivity : BaseActivity() {
         if (savedInstanceState?.containsKey("AddToPlaylistPendingRequest") == true) {
             pendingRequest = savedInstanceState.getBundle("AddToPlaylistPendingRequest")
         }
-        intentSender =
-            registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) {}
+        if (savedInstanceState?.containsKey("DeletePendingRequest") == true) {
+            pendingDeleteRequest = savedInstanceState.getBundle("DeletePendingRequest")
+        }
+        intentDelete =
+            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+                val req = pendingDeleteRequest
+                    ?: throw IllegalStateException("pending delete request is null")
+                pendingDeleteRequest = null
+                CoroutineScope(Dispatchers.Default).launch {
+                    ItemManipulator.continueDeleteFromIntent(this@MainActivity, it.resultCode, it.data, req)
+                }
+            }
+        intentSenderDelete =
+            registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) {
+                val req = pendingDeleteRequest
+                    ?: throw IllegalStateException("pending delete request is null")
+                pendingDeleteRequest = null
+                CoroutineScope(Dispatchers.Default).launch {
+                    ItemManipulator.continueDeleteFromPendingIntent(this@MainActivity, it.resultCode, req)
+                }
+            }
         addToPlaylistIntentSender =
             registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) {
                 val req = pendingRequest
                     ?: throw IllegalStateException("pending playlist add request is null")
+                pendingRequest = null
                 CoroutineScope(Dispatchers.Default).launch {
                     doAddToPlaylist(it.resultCode, req)
                 }
@@ -304,6 +328,36 @@ class MainActivity : BaseActivity() {
         }
     }
 
+    fun runIntentForDelete(intent: Intent, bundle: Bundle) {
+        try {
+            intentDelete.launch(intent)
+            pendingDeleteRequest = bundle
+        } catch (e: ActivityNotFoundException) {
+            Log.e("MainActivity", "error launching intent", e)
+            CoroutineScope(Dispatchers.Default).launch {
+                ItemManipulator.continueDeleteFromIntent(
+                    this@MainActivity, RESULT_CANCELED,
+                    Intent(), bundle
+                )
+            }
+        }
+    }
+
+    fun runIntentForDelete(intent: IntentSender, bundle: Bundle) {
+        try {
+            intentSenderDelete.launch(IntentSenderRequest.Builder(intent).build())
+            pendingDeleteRequest = bundle
+        } catch (e: ActivityNotFoundException) {
+            Log.e("MainActivity", "error launching intent", e)
+            CoroutineScope(Dispatchers.Default).launch {
+                ItemManipulator.continueDeleteFromPendingIntent(
+                    this@MainActivity, RESULT_CANCELED,
+                    bundle
+                )
+            }
+        }
+    }
+
     private suspend fun doAddToPlaylist(resultCode: Int, data: Bundle) {
         if (resultCode == RESULT_OK) {
             val add = data.getBoolean("AddToEnd")
@@ -342,6 +396,9 @@ class MainActivity : BaseActivity() {
         super.onSaveInstanceState(outState)
         if (pendingRequest != null) {
             outState.putBundle("AddToPlaylistPendingRequest", pendingRequest)
+        }
+        if (pendingDeleteRequest != null) {
+            outState.putBundle("DeletePendingRequest", pendingDeleteRequest)
         }
     }
 

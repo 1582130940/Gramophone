@@ -233,11 +233,11 @@ class SongAdapter(
                 R.id.delete -> {
                     CoroutineScope(Dispatchers.Default).launch {
                         val res = ItemManipulator.deleteSong(
-                            context,
+                            mainActivity,
                             item.getFile()!!,
                             item.requireMediaStoreId()
                         )
-                        if (res.continueAction != null) {
+                        if (res != null) {
                             withContext(Dispatchers.Main) {
                                 MaterialAlertDialogBuilder(context)
                                     .setTitle(R.string.delete)
@@ -248,37 +248,11 @@ class SongAdapter(
                                         )
                                     )
                                     .setPositiveButton(R.string.yes) { _, _ ->
-                                        CoroutineScope(Dispatchers.IO).launch {
-                                            try {
-                                                res.continueAction.invoke()
-                                            } catch (e: ItemManipulator.DeleteFailedPleaseTryDeleteRequestException) {
-                                                withContext(Dispatchers.Main) {
-                                                    mainActivity.intentSender.launch(
-                                                        IntentSenderRequest.Builder(e.pendingIntent)
-                                                            .build()
-                                                    )
-                                                }
-                                            } catch (e: Exception) {
-                                                Log.e("SongAdapter", Log.getThrowableString(e)!!)
-                                                withContext(Dispatchers.Main) {
-                                                    Toast.makeText(
-                                                        context, context.getString(
-                                                            R.string.delete_failed,
-                                                            e.javaClass.name + ": " + e.message
-                                                        ),
-                                                        Toast.LENGTH_LONG
-                                                    ).show()
-                                                }
-                                            }
-                                        }
+                                        res.invoke()
                                     }
                                     .setNegativeButton(R.string.no) { _, _ -> }
                                     .show()
                             }
-                        } else {
-                            mainActivity.intentSender.launch(
-                                IntentSenderRequest.Builder(res.startSystemDialog!!).build()
-                            )
                         }
                     }
                     true
