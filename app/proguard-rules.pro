@@ -20,6 +20,7 @@
 # hide the original source file name.
 # -renamesourcefileattribute SourceFile
 
+# enabling obfuscation would break some self-reflection in the app
 -dontobfuscate
 
 # reflection by androidx via theme attr viewInflaterClass

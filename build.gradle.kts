@@ -10,7 +10,7 @@ plugins {
 	kotlin("android") version kotlinVersion apply false
     kotlin("plugin.parcelize") version kotlinVersion apply false
     kotlin("plugin.compose") version kotlinVersion apply false
-    val aboutLibsVersion = "13.1.0"
+    val aboutLibsVersion = "14.0.0-b02"
     id("com.mikepenz.aboutlibraries.plugin") version aboutLibsVersion apply false
     id("com.mikepenz.aboutlibraries.plugin.android") version aboutLibsVersion apply false
     id("com.osacky.doctor") version "0.12.1"

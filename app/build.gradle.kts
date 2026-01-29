@@ -74,6 +74,12 @@ android {
         resources {
             // https://youtrack.jetbrains.com/issue/KT-48019/Bundle-Kotlin-Tooling-Metadata-into-apk-artifacts
             excludes += "kotlin-tooling-metadata.json"
+            // https://issuetracker.google.com/issues/152898926#comment7
+            excludes += "META-INF/*.version"
+            // https://github.com/Kotlin/kotlinx.coroutines?tab=readme-ov-file#avoiding-including-the-debug-infrastructure-in-the-resulting-apk
+            excludes += "DebugProbesKt.bin"
+            // covered by AboutLicenses instead
+            excludes += "META-INF/androidx/*/*/LICENSE.txt"
         }
     }
 
@@ -90,7 +96,7 @@ android {
         applicationId = "org.akanework.gramophone"
         // Reasons to not support KK include me.zhanghai.android.fastscroll, WindowInsets for
         // bottom sheet padding, ExoPlayer requiring multidex, vector drawables and poor SD support
-        // That said, supporting Android 5.0 costs tolerable amounts of tech debt and we plan to
+        // That said, supporting Android 5.0 costs tolerable amounts of tech debt, and we plan to
         // keep support for it for a while.
         minSdk = 21
         targetSdk = 35
@@ -192,6 +198,7 @@ android {
     sourceSets {
         getByName("debug") {
             // This does NOT remove src/debug/ source sets, hence "debug" is a superset of "userdebug"
+            // TODO it seems this broke and that caused Reflections to crash
             java.directories += "src/userdebug/java"
             kotlin.directories += "src/userdebug/kotlin"
             resources.directories += "src/userdebug/resources"
@@ -234,13 +241,6 @@ base {
     archivesName = "Gramophone-${android.defaultConfig.versionName}${android.defaultConfig.versionNameSuffix ?: ""}"
 }
 
-androidComponents {
-    onVariants(selector().withBuildType("release")) {
-        // https://github.com/Kotlin/kotlinx.coroutines?tab=readme-ov-file#avoiding-including-the-debug-infrastructure-in-the-resulting-apk
-        it.packaging.resources.excludes.addAll("META-INF/*.version", "DebugProbesKt.bin")
-    }
-}
-
 baselineProfile {
     dexLayoutOptimization = true
 }
@@ -265,7 +265,7 @@ aboutLibraries {
     }
     license {
         strictMode = com.mikepenz.aboutlibraries.plugin.StrictMode.FAIL
-        allowedLicenses.addAll("Apache-2.0", "MIT", "BSD-2-Clause", "BSD-3-Clause", "LGPL")
+        allowedLicenses.addAll("Apache-2.0", "MIT", "BSD-2-Clause", "BSD-3-Clause")
     }
 }
 
@@ -290,7 +290,7 @@ dependencies {
     implementation("androidx.fragment:fragment-ktx:1.8.9")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.4")
     implementation("androidx.mediarouter:mediarouter:1.8.1")
-    val media3Version = "1.9.0"
+    val media3Version = "1.9.1"
     implementation("androidx.media3:media3-common-ktx:$media3Version")
     implementation("androidx.media3:media3-exoplayer:$media3Version")
     implementation("androidx.media3:media3-exoplayer-midi:$media3Version")
@@ -310,10 +310,8 @@ dependencies {
     "baselineProfile"(project(":baselineprofile"))
     // --- below does not apply to release builds ---
     debugImplementation("com.squareup.leakcanary:leakcanary-android:2.14")
-    // Note: JAudioTagger is not compatible with Android 5, we can't ship it in app
-    debugImplementation("net.jthink:jaudiotagger:3.0.1") // <-- for "SD Exploder"
     testImplementation("junit:junit:4.13.2")
-    testImplementation("org.robolectric:robolectric:4.16")
+    testImplementation("org.robolectric:robolectric:4.16.1")
     "userdebugImplementation"(kotlin("reflect", kotlinVersion)) // who thought String.invoke() is a good idea?????
     debugImplementation(kotlin("reflect", kotlinVersion))
 }
