@@ -67,7 +67,7 @@ This project is licensed under the GNU General Public License v3.0 - see the [LI
 </a>
 
 ## Notice
-- For bug reporting: [Telegram](https://t.me/FoedusDiscussion)
+- Discussion chat: [Telegram](https://t.me/FoedusDiscussion)
 - GitHub/F-Droid/IzzyOnDroid certificate SHA-256 digest: f451197ad7b80bd1bc981ba38a2c49d471856fb38bcc333676d6e8f8f3ce5d6e
 - Play Store certificate SHA-256 digest: 178869b0f9130d145b53404df4d4e5e311095406cb3c51a3e7a4b03bb3e87786
 
