@@ -20,7 +20,6 @@ package org.akanework.gramophone.ui.adapters
 import android.net.Uri
 import android.view.View
 import android.widget.Toast
-import androidx.activity.result.IntentSenderRequest
 import androidx.appcompat.widget.PopupMenu
 import androidx.core.app.ShareCompat
 import androidx.core.content.FileProvider
@@ -29,7 +28,6 @@ import androidx.fragment.app.activityViewModels
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
-import androidx.media3.common.util.Log
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

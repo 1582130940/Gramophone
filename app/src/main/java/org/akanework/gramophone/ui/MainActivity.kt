@@ -18,7 +18,6 @@
 package org.akanework.gramophone.ui
 
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.app.NotificationManager
 import android.app.SearchManager
 import android.app.assist.AssistContent
