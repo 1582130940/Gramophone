@@ -19,10 +19,8 @@ package org.akanework.gramophone.ui.fragments.settings
 
 import android.content.res.ColorStateList
 import android.graphics.drawable.GradientDrawable
-import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
-import android.view.View
 import android.widget.TextView
 import androidx.preference.Preference
 import com.google.android.material.color.MaterialColors

@@ -21,12 +21,8 @@ import android.content.ContentUris
 import android.content.Intent
 import android.provider.MediaStore
 import android.webkit.MimeTypeMap
-import androidx.media3.common.MediaItem
 import org.akanework.gramophone.R
-import org.akanework.gramophone.logic.requireMediaStoreId
 import org.akanework.gramophone.ui.adapters.PlaylistAdapter
-import org.akanework.gramophone.ui.adapters.SongAdapter
-import org.akanework.gramophone.ui.adapters.Sorter
 import org.nift4.mediastorecompat.MediaStoreCompat
 import uk.akane.libphonograph.items.Playlist
 

@@ -8,8 +8,8 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.util.Log
 import androidx.media3.session.LibraryResult
-import androidx.media3.session.MediaLibraryService.LibraryParams
 import androidx.media3.session.MediaConstants
+import androidx.media3.session.MediaLibraryService.LibraryParams
 import com.google.common.collect.ImmutableList
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
@@ -19,16 +19,22 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.guava.future
 import org.akanework.gramophone.R
 import org.akanework.gramophone.logic.comparators.SupportComparator
+import org.akanework.gramophone.ui.LibraryAdapterTypes
 import org.akanework.gramophone.ui.adapters.AlbumAdapter
 import org.akanework.gramophone.ui.adapters.ArtistAdapter
 import org.akanework.gramophone.ui.adapters.DateAdapter
 import org.akanework.gramophone.ui.adapters.GenreAdapter
 import org.akanework.gramophone.ui.adapters.PlaylistAdapter
 import org.akanework.gramophone.ui.adapters.SongAdapter
-import org.akanework.gramophone.ui.LibraryAdapterTypes
 import org.akanework.gramophone.ui.adapters.Sorter
 import org.akanework.gramophone.ui.adapters.ViewPager2Adapter
-import uk.akane.libphonograph.items.*
+import uk.akane.libphonograph.items.Album
+import uk.akane.libphonograph.items.Artist
+import uk.akane.libphonograph.items.Date
+import uk.akane.libphonograph.items.FileNode
+import uk.akane.libphonograph.items.Genre
+import uk.akane.libphonograph.items.Playlist
+import uk.akane.libphonograph.items.albumId
 
 /**
  * Handles the media library browsing logic for [GramophonePlaybackService].

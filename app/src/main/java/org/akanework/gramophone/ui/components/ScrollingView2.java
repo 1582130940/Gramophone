@@ -57,8 +57,6 @@ import androidx.media3.common.util.Log;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
-import kotlin.Pair;
-
 /**
  * NestedScrollView variant that is not a ViewGroup.
  */

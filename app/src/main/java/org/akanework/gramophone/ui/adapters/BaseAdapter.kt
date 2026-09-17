@@ -18,8 +18,6 @@
 package org.akanework.gramophone.ui.adapters
 
 import android.annotation.SuppressLint
-import android.app.Activity
-import android.content.Context
 import android.content.res.Configuration
 import android.net.Uri
 import android.view.LayoutInflater
@@ -42,7 +40,6 @@ import coil3.load
 import coil3.request.crossfade
 import coil3.request.error
 import com.google.android.material.button.MaterialButton
-import com.google.common.collect.Comparators
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
